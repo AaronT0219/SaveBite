@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="login.css">
+
+</head>
+<body>
+    <div class="logreg-box d-flex justify-content-center align-items-center vh-100 m-auto" style="width: 400px;">
+
+    <!-- Login Form -->
+        <div class="form-box login rounded shadow" style="width: 400px; height: 500px;">
+            <form class="p-4 d-flex flex-column justify-content-center h-100">
+                <h1 class="mb-4 fw-bold text-center">Log In</h1>
+                <div class="mb-4 input-box">
+                    <i class="icon" data-lucide="mail"></i>
+                    <input type="email" id="log-email" class="py-2 pe-4" placeholder=" " required>
+                    <label for="log-email">Email</label>
+                    <div class="error-message">Please enter a valid email address</div>
+                </div>
+                <div class="mb-3 input-box">
+                    <i class="icon" data-lucide="lock"></i>
+                    <input type="password" id="password" class="py-2 pe-4" placeholder=" " required>
+                    <label for="password">Password</label>
+                    <div class="error-message">Password is required</div>
+                </div>
+                <div class="mb-3 d-flex justify-content-between">
+                    <div>
+                        <input type="checkbox" value="" id="" />
+                        <label for=""> Remember me </label>
+                    </div>
+                    <p><a href="#" class="link fw-semibold">Forgot password?</a></p>
+                </div>
+                <div class="mb-3 d-flex justify-content-center">
+                    <button type="submit" class="btn btn-primary w-100 py-2">Log In</button>
+                </div>
+                <div>
+                    <p class="text-center">Don't have an account? <a href="#" class="link fw-semibold register-link">Sign up</a></p>
+                </div>
+            </form>
+        </div>
+
+    <!-- Register Form -->
+        <div class="form-box register rounded shadow" style="width: 400px; height: 500px;">
+            <form class="p-4 d-flex flex-column justify-content-center h-100">
+                <h1 class="mb-4 fw-bold text-center">Sign Up</h1>
+                <div class="mb-4 input-box">
+                    <i class="icon" data-lucide="user"></i>
+                    <input type="text" id="fullname" class="py-2 pe-4" placeholder=" " required>
+                    <label for="fullname">Full Name</label>
+                    <div class="error-message">Full name is required</div>
+                </div>
+                <div class="mb-4 input-box">
+                    <i class="icon" data-lucide="mail"></i>
+                    <input type="email" id="reg-email" class="py-2 pe-4" placeholder=" " required>
+                    <label for="reg-email">Email</label>
+                    <div class="error-message">Please enter a valid email address</div>
+                </div>
+                <div class="mb-4 input-box">
+                    <i class="icon" data-lucide="lock"></i>
+                    <input type="password" id="reg-password" class="py-2 pe-4" placeholder=" " required>
+                    <label for="reg-password">Password</label>
+                    <div class="error-message">Password is required</div>
+                </div>
+                <div class="mb-4 input-box">
+                    <i class="icon" data-lucide="house"></i>
+                    <input type="number" id="household-size" min="1" class="py-2 pe-4" placeholder=" " required>
+                    <label for="household-size">Household Size</label>
+                    <div class="error-message">Please enter a valid number (minimum 1)</div>
+                </div>
+                <div class="mb-3 d-flex justify-content-center">
+                    <button type="submit" class="btn btn-primary w-100 py-2">Sign In</button>
+                </div>
+                <div>
+                    <p class="text-center">Already have an account? <a href="#" class="link fw-semibold login-link">Log in</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script>
+    lucide.createIcons();
+    </script>
+    <script src="login.js"></script>
+</body>
+</html>
