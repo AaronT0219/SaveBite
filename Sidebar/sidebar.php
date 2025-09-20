@@ -7,7 +7,7 @@
     <div class="p-3 fs-4 fw-medium d-flex flex-column flex-grow-1 overflow-auto">
         <div class="mb-auto">
             <a href="#" class="nav-link text-light py-2">Food Inventory</a>
-            <a href="#" class="nav-link text-light py-2">Browse Food Items</a>
+            <a href="#BFI" class="nav-link text-light py-2">Browse Food Items</a>
             <a href="#" class="nav-link text-light py-2">Plan Weekly Meals</a>
             <a href="#" class="nav-link text-light py-2">Track and Report</a>
             <a href="#" class="nav-link text-light py-2">Notifications</a>
