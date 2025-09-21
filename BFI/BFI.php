@@ -30,10 +30,12 @@
         </div>
     </div>
 
+    <hr class="mb-5">
+
     <!-- Food Card Items -->
     <?php
         include 'food_card.php';
-        // Example data array for food items
+        //food items sample data
         $food_items = [
             [
                 'name' => 'Apple',
@@ -109,8 +111,10 @@
             ],
         ];
     ?>
+    
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="foodCardContainer">
         <?php
+            //write out sample data
             foreach ($food_items as $item) {
                 echo food_card(
                     $item['name'],
@@ -126,52 +130,50 @@
 </div>
 
 <script>
-// Helper to get all food items from PHP as JS array
-const foodItems = <?php echo json_encode($food_items); ?>;
+    // Get all food items from PHP as JS array
+    const foodItems = <?php echo json_encode($food_items); ?>;
 
-function renderCards(items) {
-    const container = document.getElementById('foodCardContainer');
-    container.innerHTML = '';
-    items.forEach(item => {
-        let donatedTag = item.donated ? '<span class="badge bg-success ms-2">Donated</span>' : '';
-        let expiry = item.expiry ? `<p class=\"card-text mb-1\"><strong>Expiry:</strong> ${item.expiry}</p>` : '';
-        let storage = item.storage ? `<p class=\"card-text\"><strong>Storage:</strong> ${item.storage}</p>` : '';
-        container.innerHTML += `
-        <div class=\"col\">
-            <div class=\"card h-100\">
-                <div class=\"card-body\">
-                    <h5 class=\"card-title\">${item.name} ${donatedTag}</h5>
-                    <p class=\"card-text mb-1\"><strong>Quantity:</strong> ${item.quantity}</p>
-                    <p class=\"card-text mb-1\"><strong>Category:</strong> ${item.category}</p>
-                    ${expiry}
-                    ${storage}
+    function renderCards(items) {
+        const container = document.getElementById('foodCardContainer');
+        container.innerHTML = '';
+        items.forEach(item => {
+            let donatedTag = item.donated ? '<span class="badge bg-success ms-2">Donated</span>' : '';
+            let expiry = item.expiry ? `<p class=\"card-text mb-1\"><strong>Expiry:</strong> ${item.expiry}</p>` : '';
+            let storage = item.storage ? `<p class=\"card-text\"><strong>Storage:</strong> ${item.storage}</p>` : '';
+            container.innerHTML += `
+            <div class=\"col\">
+                <div class=\"card h-100\">
+                    <div class=\"card-body\">
+                        <h5 class=\"card-title\">${item.name} ${donatedTag}</h5>
+                        <p class=\"card-text mb-1\"><strong>Quantity:</strong> ${item.quantity}</p>
+                        <p class=\"card-text mb-1\"><strong>Category:</strong> ${item.category}</p>
+                        ${expiry}
+                        ${storage}
+                    </div>
                 </div>
             </div>
-        </div>
-        `;
-    });
-}
+            `;
+        });
+    }
 
-document.querySelectorAll('.filter-option').forEach(el => {
-    el.addEventListener('click', function(e) {
-        e.preventDefault();
-        const filter = this.getAttribute('data-filter');
-        const value = this.getAttribute('data-value');
-        let filtered = foodItems.slice();
-        if (filter === 'inventory') {
-            filtered = foodItems.filter(item => !item.donated);
-        } else if (filter === 'donation') {
-            filtered = foodItems.filter(item => item.donated);
-        } else if (filter === 'category' && value) {
-            filtered = foodItems.filter(item => item.category === value);
-        } else if (filter === 'expiry') {
-            filtered = foodItems.slice().sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
-        } else if (filter === 'storage' && value) {
-            filtered = foodItems.filter(item => item.storage === value);
-        }
-        renderCards(filtered);
+    document.querySelectorAll('.filter-option').forEach(el => {
+        el.addEventListener('click', function(e) {
+            e.preventDefault();
+            const filter = this.getAttribute('data-filter');
+            const value = this.getAttribute('data-value');
+            let filtered = foodItems.slice();
+            if (filter === 'inventory') {
+                filtered = foodItems.filter(item => !item.donated);
+            } else if (filter === 'donation') {
+                filtered = foodItems.filter(item => item.donated);
+            } else if (filter === 'category' && value) {
+                filtered = foodItems.filter(item => item.category === value);
+            } else if (filter === 'expiry') {
+                filtered = foodItems.slice().sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
+            } else if (filter === 'storage' && value) {
+                filtered = foodItems.filter(item => item.storage === value);
+            }
+            renderCards(filtered);
+        });
     });
-});
 </script>
-
-</div>
