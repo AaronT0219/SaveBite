@@ -1,0 +1,26 @@
+/* browse food items CSS */
+#filterMenu:has(.dropdown-submenu:nth-last-child(1):hover) {
+    padding-bottom: 0 !important;
+}
+
+.dropdown-submenu {
+    position: relative;
+}
+
+.dropdown-submenu .dropdown-menu {
+    position: static;
+    left: auto;
+    top: auto;
+    margin-top: 0;
+    display: none;
+    box-shadow: none;
+}
+
+.dropdown-submenu:hover .dropdown-menu {
+    display: block;
+}
+
+#categoryDropdown, #storageDropdown {
+    color: black;
+    cursor: default;
+}
