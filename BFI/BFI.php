@@ -1,9 +1,9 @@
-<div class="flex-grow-1 pt-3" style="min-height: 100vh;" id="BFI">
+<div class="flex-grow-1 pt-3" style="min-height: 30vh;" id="BFI">
     <!-- Top Nav -->
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1>Browse Food Items</h1>
+        <h1 class="fw-bold">Browse Food Items</h1>
         <div class="dropdown">
-            <button class="btn btn-secondary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <button class="btn dropdown-toggle btn-lg px-4" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                 Filter
             </button>
             <ul class="dropdown-menu" aria-labelledby="filterDropdown" id="filterMenu">
@@ -32,7 +32,6 @@
 
     <!-- Food Card Items -->
     <?php
-        include 'food_card.php';
         // Example data array for food items
         $food_items = [
             [
@@ -109,19 +108,12 @@
             ],
         ];
     ?>
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="foodCardContainer">
-        <?php
-            foreach ($food_items as $item) {
-                echo food_card(
-                    $item['name'],
-                    $item['quantity'],
-                    $item['category'],
-                    $item['donated'],
-                    $item['expiry'],
-                    $item['storage']
-                );
-            }
-        ?>
+
+    <!-- will print actual data from database instead, once there's existing ones -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 py-3" id="foodCardContainer">
+        <div class="d-flex justify-content-center w-100 my-5">
+            <h3 class="opacity-25 mb-0">No Match Items<span class="noMatch-icon ms-2" data-lucide="frown"></span></h3>
+        </div>
     </div>
 </div>
 
@@ -133,14 +125,16 @@ function renderCards(items) {
     const container = document.getElementById('foodCardContainer');
     container.innerHTML = '';
     items.forEach(item => {
-        let donatedTag = item.donated ? '<span class="badge bg-success ms-2">Donated</span>' : '';
+        let donatedTag = item.donated ? '<span class="badge">Donated</span>' : '';
         let expiry = item.expiry ? `<p class=\"card-text mb-1\"><strong>Expiry:</strong> ${item.expiry}</p>` : '';
         let storage = item.storage ? `<p class=\"card-text\"><strong>Storage:</strong> ${item.storage}</p>` : '';
         container.innerHTML += `
         <div class=\"col\">
             <div class=\"card h-100\">
+                <div class=\"card-header\">
+                    <h5 class=\"d-flex justify-content-between mb-0\">${item.name} ${donatedTag}</h5>
+                </div>
                 <div class=\"card-body\">
-                    <h5 class=\"card-title\">${item.name} ${donatedTag}</h5>
                     <p class=\"card-text mb-1\"><strong>Quantity:</strong> ${item.quantity}</p>
                     <p class=\"card-text mb-1\"><strong>Category:</strong> ${item.category}</p>
                     ${expiry}
