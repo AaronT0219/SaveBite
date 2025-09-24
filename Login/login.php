@@ -10,16 +10,16 @@
 
 </head>
 <body>
-    <div class="logreg-box d-flex justify-content-center align-items-center vh-100 m-auto" style="width: 400px;">
+    <div class="logreg-box d-flex align-items-center vh-100 ms-auto" style="width: 500px;">
 
-    <!-- Login Form -->
-        <div class="form-box login rounded shadow" style="width: 400px; height: 500px;">
-            <form class="p-4 d-flex flex-column justify-content-center h-100">
-                <h1 class="mb-4 fw-bold text-center">Log In</h1>
-                <div class="mb-4 input-box">
+        <!-- Login Form -->
+        <div class="form-box login rounded shadow" style="width: 500px;">
+            <form class="p-5 d-flex flex-column justify-content-center h-100">
+                <h1 class="mb-5 fw-bold text-center">Log In</h1>
+                <div class="mb-5 input-box">
                     <i class="icon" data-lucide="mail"></i>
-                    <input type="email" id="log-email" class="py-2 pe-4" placeholder=" " required>
-                    <label for="log-email">Email</label>
+                    <input type="email" id="email" class="py-2 pe-4" placeholder=" " required>
+                    <label for="email">Email</label>
                     <div class="error-message">Please enter a valid email address</div>
                 </div>
                 <div class="mb-3 input-box">
@@ -30,10 +30,11 @@
                 </div>
                 <div class="mb-3 d-flex justify-content-between">
                     <div>
-                        <input type="checkbox" value="" id="" />
-                        <label for=""> Remember me </label>
+                        <label>
+                            <input type="checkbox" value="" id="" /> Remember me
+                        </label>
                     </div>
-                    <p><a href="#" class="link fw-semibold">Forgot password?</a></p>
+                    <p><a href="../ForgotPassword/forgotPassword.php" class="link fw-semibold forgot-link">Forgot password?</a></p>
                 </div>
                 <div class="mb-3 d-flex justify-content-center">
                     <button type="submit" class="btn btn-primary w-100 py-2">Log In</button>
@@ -44,29 +45,29 @@
             </form>
         </div>
 
-    <!-- Register Form -->
-        <div class="form-box register rounded shadow" style="width: 400px; height: 500px;">
-            <form class="p-4 d-flex flex-column justify-content-center h-100">
-                <h1 class="mb-4 fw-bold text-center">Sign Up</h1>
-                <div class="mb-4 input-box">
+        <!-- Register Form -->
+        <div class="form-box register rounded shadow" style="width: 500px; ">
+            <form class="p-5 d-flex flex-column justify-content-center h-100">
+                <h1 class="mb-5 fw-bold text-center">Sign Up</h1>
+                <div class="mb-5 input-box">
                     <i class="icon" data-lucide="user"></i>
                     <input type="text" id="fullname" class="py-2 pe-4" placeholder=" " required>
                     <label for="fullname">Full Name</label>
                     <div class="error-message">Full name is required</div>
                 </div>
-                <div class="mb-4 input-box">
+                <div class="mb-5 input-box">
                     <i class="icon" data-lucide="mail"></i>
-                    <input type="email" id="reg-email" class="py-2 pe-4" placeholder=" " required>
-                    <label for="reg-email">Email</label>
+                    <input type="email" id="email" class="py-2 pe-4" placeholder=" " required>
+                    <label for="email">Email</label>
                     <div class="error-message">Please enter a valid email address</div>
                 </div>
-                <div class="mb-4 input-box">
+                <div class="mb-5 input-box">
                     <i class="icon" data-lucide="lock"></i>
-                    <input type="password" id="reg-password" class="py-2 pe-4" placeholder=" " required>
-                    <label for="reg-password">Password</label>
-                    <div class="error-message">Password is required</div>
+                    <input type="password" id="password" class="py-2 pe-4" placeholder=" " minlength="8" required>
+                    <label for="password">Password</label>
+                    <div class="error-message">Password must be at least 8 characters long</div>
                 </div>
-                <div class="mb-4 input-box">
+                <div class="mb-5 input-box">
                     <i class="icon" data-lucide="house"></i>
                     <input type="number" id="household-size" min="1" class="py-2 pe-4" placeholder=" " required>
                     <label for="household-size">Household Size</label>
@@ -81,6 +82,7 @@
             </form>
         </div>
     </div>
+
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
     <script>
