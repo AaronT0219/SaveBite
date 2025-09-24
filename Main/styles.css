@@ -31,13 +31,13 @@ html {
 }
 
 #filterDropdown {
-    --bs-btn-bg: #E9EDC9;
-    --bs-btn-border-color: #E9EDC9;
-    --bs-btn-hover-bg: #d4d8b6;
-    --bs-btn-active-bg: #d4d8b6;
-    --bs-btn-active-border-color: rgb(160, 168, 136);
+    --bs-btn-bg: #CCD5AE;
+    --bs-btn-border-color: #CCD5AE;
+    --bs-btn-hover-bg: rgb(182, 187, 143);
+    --bs-btn-active-bg: rgb(161, 166, 122);
+    --bs-btn-active-border-color: rgb(161, 166, 122);
     font-weight: 500;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.15s ease-in-out;
 }
 
 #filterDropdown:active {
