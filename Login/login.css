@@ -24,10 +24,6 @@ body {
     background-attachment: fixed;
 }
 
-label {
-    font-weight: 500;
-}
-
 .logreg-box {
     position: relative;
     overflow: hidden;
@@ -101,7 +97,7 @@ label {
 .error-message {
     position: absolute;
     color: #dc3545;
-    font-size: 12px;
+    font-size: 14px;
     display: none;
 }
 
@@ -117,22 +113,32 @@ label {
 
 .link {
     text-decoration: none;
-    color: #000;
+    color: #2d8f76;
+    cursor: pointer;
+}
+
+.link:hover {
+    color: #226e5b;
 }
 
 .btn {
-    background-color: #37a98d;
+    background-color: #2d8f76;
     border: none;
     outline: none;
 }
 
 .btn:active {
-    background-color: #2d8f76 !important;
+    background-color: #226e5b !important;
     cursor: pointer;
 }
 
+.btn:disabled {
+    background-color: #226e5b;
+    cursor: not-allowed;
+}
+
 .btn:hover {
-    background-color: #2d8f76;
+    background-color: #226e5b;
     cursor: pointer;
 }
 

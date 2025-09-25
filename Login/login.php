@@ -1,3 +1,35 @@
+<?php
+
+session_start();
+
+$errors= [
+    'login' => $_SESSION['login_error'] ?? '',
+    'register' => $_SESSION['register_error'] ?? ''
+];
+$activeForm = $_SESSION['active_form'] ?? 'login';
+
+// Get old form data
+$oldData = [
+    'fullname' => $_SESSION['old_fullname'] ?? '',
+    'email' => $_SESSION['old_email'] ?? '',
+    'household_size' => $_SESSION['old_household_size'] ?? '',
+    'password' => $_SESSION['old_password'] ?? '',
+    'login_email' => $_SESSION['old_login_email'] ?? '',
+    'login_password' => $_SESSION['old_login_password'] ?? ''
+];
+
+session_unset();
+
+function showError($error) {
+        return !empty($error) ? "<p class='alert alert-danger text-center' role='alert'>$error</p>" : '';
+}
+
+function isActiveForm($formName, $activeForm) {
+    return $formName === $activeForm ? 'active' : '';
+}
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,21 +42,22 @@
 
 </head>
 <body>
-    <div class="logreg-box d-flex align-items-center vh-100 ms-auto" style="width: 500px;">
+    <div class="logreg-box d-flex align-items-center vh-100 ms-auto <?= $activeForm === 'register' ? 'active' : '' ?>" style="width: 500px;">
 
         <!-- Login Form -->
         <div class="form-box login rounded shadow" style="width: 500px;">
-            <form class="p-5 d-flex flex-column justify-content-center h-100">
+            <form action="log_reg.php" method="post" class="p-5 d-flex flex-column justify-content-center h-100">
                 <h1 class="mb-5 fw-bold text-center">Log In</h1>
+                <div class="mb-4"><?= showError($errors['login']) ?></div>
                 <div class="mb-5 input-box">
                     <i class="icon" data-lucide="mail"></i>
-                    <input type="email" id="email" class="py-2 pe-4" placeholder=" " required>
+                    <input type="email" name="email" class="py-2 pe-4" placeholder=" " value="<?= $oldData['login_email'] ?>" required>
                     <label for="email">Email</label>
                     <div class="error-message">Please enter a valid email address</div>
                 </div>
                 <div class="mb-3 input-box">
                     <i class="icon" data-lucide="lock"></i>
-                    <input type="password" id="password" class="py-2 pe-4" placeholder=" " required>
+                    <input type="password" name="password" class="py-2 pe-4" placeholder=" " value="<?= $oldData['login_password'] ?>" required>
                     <label for="password">Password</label>
                     <div class="error-message">Password is required</div>
                 </div>
@@ -37,47 +70,48 @@
                     <p><a href="../ForgotPassword/forgotPassword.php" class="link fw-semibold forgot-link">Forgot password?</a></p>
                 </div>
                 <div class="mb-3 d-flex justify-content-center">
-                    <button type="submit" class="btn btn-primary w-100 py-2">Log In</button>
+                    <button type="submit" name="login" class="btn btn-primary w-100 py-2">Log In</button>
                 </div>
                 <div>
-                    <p class="text-center">Don't have an account? <a href="#" class="link fw-semibold register-link">Sign up</a></p>
+                    <p class="text-center">Don't have an account? <a class="link fw-semibold register-link">Sign up</a></p>
                 </div>
             </form>
         </div>
 
         <!-- Register Form -->
         <div class="form-box register rounded shadow" style="width: 500px; ">
-            <form class="p-5 d-flex flex-column justify-content-center h-100">
+            <form action="log_reg.php" method="post" class="p-5 d-flex flex-column justify-content-center h-100">
                 <h1 class="mb-5 fw-bold text-center">Sign Up</h1>
+                <div class="mb-4"><?= showError($errors['register']) ?></div>
                 <div class="mb-5 input-box">
                     <i class="icon" data-lucide="user"></i>
-                    <input type="text" id="fullname" class="py-2 pe-4" placeholder=" " required>
+                    <input type="text" name="fullname" class="py-2 pe-4" placeholder=" " value="<?= $oldData['fullname'] ?>" required>
                     <label for="fullname">Full Name</label>
                     <div class="error-message">Full name is required</div>
                 </div>
                 <div class="mb-5 input-box">
                     <i class="icon" data-lucide="mail"></i>
-                    <input type="email" id="email" class="py-2 pe-4" placeholder=" " required>
+                    <input type="email" name="email" class="py-2 pe-4" placeholder=" " value="<?= $oldData['email'] ?>" required>
                     <label for="email">Email</label>
                     <div class="error-message">Please enter a valid email address</div>
                 </div>
                 <div class="mb-5 input-box">
                     <i class="icon" data-lucide="lock"></i>
-                    <input type="password" id="password" class="py-2 pe-4" placeholder=" " minlength="8" required>
+                    <input type="password" name="password" class="py-2 pe-4" placeholder=" " value="<?= $oldData['password'] ?>" minlength="8" required>
                     <label for="password">Password</label>
                     <div class="error-message">Password must be at least 8 characters long</div>
                 </div>
                 <div class="mb-5 input-box">
                     <i class="icon" data-lucide="house"></i>
-                    <input type="number" id="household-size" min="1" class="py-2 pe-4" placeholder=" " required>
-                    <label for="household-size">Household Size</label>
+                    <input type="number" name="household_size" min="1" class="py-2 pe-4" placeholder=" " value="<?= $oldData['household_size'] ?>" required>
+                    <label for="household_size">Household Size</label>
                     <div class="error-message">Please enter a valid number (minimum 1)</div>
                 </div>
                 <div class="mb-3 d-flex justify-content-center">
-                    <button type="submit" class="btn btn-primary w-100 py-2">Sign In</button>
+                    <button type="submit" name="register" class="btn btn-primary w-100 py-2">Sign In</button>
                 </div>
                 <div>
-                    <p class="text-center">Already have an account? <a href="#" class="link fw-semibold login-link">Log in</a></p>
+                    <p class="text-center">Already have an account? <a class="link fw-semibold login-link">Log in</a></p>
                 </div>
             </form>
         </div>
