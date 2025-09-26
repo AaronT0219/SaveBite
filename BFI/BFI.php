@@ -38,8 +38,26 @@
     </div>
 
     <!-- Food Card Items -->
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 py-3" id="foodCardContainer">
-        <!-- cards will be dynamically inserted here by javaScript -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 py-3" id="foodCardContainer">
+            <!-- cards will be dynamically inserted here by javaScript -->
+    </div>
+
+    <!-- Food Item Modal -->
+    <div class="modal fade" id="foodItemModal" tabindex="-1" aria-labelledby="foodItemModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header px-4">
+                    <h5 class="modal-title" id="foodItemModalLabel"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-0 fs-5 fw-medium" id="foodItemModalBody">
+                    <!-- Details will be filled by JS -->
+                </div>
+                <div class="modal-footer" id="foodItemModalFooter">
+                    <!-- Action buttons will be filled by JS -->
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
