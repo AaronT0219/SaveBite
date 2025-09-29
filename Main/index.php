@@ -1,4 +1,14 @@
-<?php include 'config.php'; ?>
+<?php 
+
+include 'config.php'; 
+
+session_start();
+if (!isset($_SESSION['email'])) {
+    header("Location: ../Login/login.php");
+    exit();
+}
+
+?>
 
 <!DOCTYPE html>
 <html lang="en">

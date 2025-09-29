@@ -38,9 +38,9 @@
             <form class="p-5 d-flex flex-column justify-content-center h-100" id="codeForm">
                 <h1 class="mb-5 fw-bold text-center">Verify Code</h1>
                 <div class="mb-3">
-                    <p class="text-center">We've sent a 6-digit verification code to your email. Please enter it below.</p>
+                    <p class="text-center">We've sent a 6-digit verification code to your email. Code expires in <span class="timer-text fw-bold text-danger">1:00</span>.</p>
                 </div>
-                <div class="mb-5">
+                <div class="mb-4">
                     <div class="verification-code-container d-flex justify-content-center gap-3 mb-3">
                         <input type="text" class="verification-digit" data-index="0" maxlength="1" pattern="[0-9]" required>
                         <input type="text" class="verification-digit" data-index="1" maxlength="1" pattern="[0-9]" required>
@@ -55,7 +55,7 @@
                     <button type="submit" class="btn btn-primary w-100 py-2">Verify Code</button>
                 </div>
                 <div class="text-center">
-                    <small><a href="#" id="resendCode" class="text-decoration-none resendCode">Didn't receive the code? Resend</a></small>
+                    <small><a href="#" id="resendCode" class="text-decoration-none fw-semibold resendCode">Didn't receive the code? Resend</a></small>
                 </div>
             </form>
         </div>

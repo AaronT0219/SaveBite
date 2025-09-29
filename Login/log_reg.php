@@ -3,6 +3,9 @@
 session_start();
 require_once '../config.php';
 
+// Set content type for JSON response
+header('Content-Type: application/json');
+
 if (isset($_POST['register'])) {
     $name = $_POST['fullname'];
     $email = $_POST['email'];
@@ -11,19 +14,26 @@ if (isset($_POST['register'])) {
 
     $checkEmail = $conn->query("SELECT Email FROM user WHERE Email = '$email'");
     if ($checkEmail->num_rows > 0) {
-        $_SESSION['register_error'] = "Email is already registered!";
-        $_SESSION['active_form'] = 'register';
-        // Save form data
-        $_SESSION['old_fullname'] = $name;
-        $_SESSION['old_email'] = $email;
-        $_SESSION['old_household_size'] = $household_size;
-        $_SESSION['old_password'] = $_POST['password'];
+        echo json_encode([
+            'success' => false,
+            'error' => 'Email is already registered!'
+        ]);
+        exit();
     } else {
-        $conn->query("INSERT INTO user (User_name, Email, Password, Household_number) VALUES ('$name', '$email', '$password', '$household_size')");
+        $result = $conn->query("INSERT INTO user (User_name, Email, Password, Household_number) VALUES ('$name', '$email', '$password', '$household_size')");
+        if ($result) {
+            echo json_encode([
+                'success' => true,
+                'message' => 'Registration successful! You can now log in.'
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'error' => 'Registration failed. Please try again.'
+            ]);
+        }
+        exit();
     }
-
-    header("Location: login.php");
-    exit();
 }
 
 if (isset($_POST['login'])) {
@@ -36,16 +46,17 @@ if (isset($_POST['login'])) {
         if (password_verify($password, $user['Password'])) {
             $_SESSION['name'] = $user['User_name'];
             $_SESSION['email'] = $user['Email'];
-            header("Location: ../ForgotPassword/forgotPassword.php");
+            echo json_encode([
+                'success' => true,
+                'redirect' => '../Main/index.php'
+            ]);
             exit();
         }
     }
-    $_SESSION['login_error'] = "Invalid email or password.";
-    $_SESSION['active_form'] = 'login';
-    // Save login email and password
-    $_SESSION['old_login_email'] = $email;
-    $_SESSION['old_login_password'] = $password;
-    header("Location: login.php");
+    echo json_encode([
+        'success' => false,
+        'error' => 'Invalid email or password.'
+    ]);
     exit();
 }
 

@@ -14,7 +14,7 @@
         </div>
         <div>
             <a href="#" class="nav-link text-light py-2">Settings</a>
-            <button class="btn text-light m-0 p-0 py-2 fs-4 fw-medium text-start">Logout</button>
+            <button class="btn text-light m-0 p-0 py-2 fs-4 fw-medium text-start" onclick="window.location.href='../Logout/logout.php'">Logout</button>
         </div>
     </div>
 </div>

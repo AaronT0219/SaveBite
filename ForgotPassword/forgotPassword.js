@@ -2,6 +2,8 @@
 document.addEventListener("DOMContentLoaded", function () {
     let currentStep = 1;
     let userEmail = "";
+    let countdownTimer = null;
+    let timeRemaining = 60; // 1 minute in seconds
 
     const steps = {
         1: document.getElementById("step1"),
@@ -25,30 +27,49 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Step 1: Email form submission
     if (emailForm) {
-        emailForm.addEventListener("submit", function (e) {
+        emailForm.addEventListener("submit", async function (e) {
             e.preventDefault();
 
             const emailInput = document.getElementById("email");
             const email = emailInput.value.trim();
+            const submitBtn = emailForm.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.textContent;
 
             if (validateEmail(email)) {
                 userEmail = email;
-                // Simulate sending verification code
-                console.log("Sending verification code to:", email);
 
-                // Show loading state briefly
-                const submitBtn = emailForm.querySelector(
-                    'button[type="submit"]'
-                );
-                const originalText = submitBtn.textContent;
+                // Show loading state
                 submitBtn.textContent = "Sending...";
                 submitBtn.disabled = true;
 
-                setTimeout(() => {
-                    submitBtn.textContent = originalText;
+                try {
+                    const response = await fetch("forgotPasswordHandler.php", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded",
+                        },
+                        body: `action=send_code&email=${encodeURIComponent(
+                            email
+                        )}`,
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showStep(2);
+                        startCountdown(); // Start the countdown when moving to step 2
+                    } else {
+                        showEmailError(data.error);
+                    }
+                } catch (error) {
+                    showEmailError(
+                        "Failed to send verification code. Please try again."
+                    );
+                } finally {
+                    // Reset button state
+                    submitBtn.textContent = originalBtnText;
                     submitBtn.disabled = false;
-                    showStep(2);
-                }, 1500);
+                }
             }
         });
     }
@@ -57,55 +78,72 @@ document.addEventListener("DOMContentLoaded", function () {
     if (codeForm) {
         codeForm.addEventListener("submit", function (e) {
             e.preventDefault();
+            handleCodeSubmission();
+        });
+    }
 
-            const digitInputs = document.querySelectorAll(
-                ".verification-digit"
-            );
-            const code = Array.from(digitInputs)
-                .map((input) => input.value)
-                .join("");
+    // Separate function to handle code verification
+    async function handleCodeSubmission() {
+        const digitInputs = document.querySelectorAll(".verification-digit");
+        const code = Array.from(digitInputs)
+            .map((input) => input.value)
+            .join("");
 
-            if (validateCode(code)) {
-                // Simulate code verification
-                console.log("Verifying code:", code);
+        if (validateCode(code)) {
+            const submitBtn = codeForm.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.textContent;
 
-                // Show loading state briefly
-                const submitBtn = codeForm.querySelector(
-                    'button[type="submit"]'
-                );
-                const originalText = submitBtn.textContent;
-                submitBtn.textContent = "Verifying...";
-                submitBtn.disabled = true;
+            // Show loading state
+            submitBtn.textContent = "Verifying...";
+            submitBtn.disabled = true;
 
-                setTimeout(() => {
-                    submitBtn.textContent = originalText;
-                    submitBtn.disabled = false;
-                    showStep(3);
-                }, 1500);
-            } else {
-                // Show error state
-                digitInputs.forEach((input) => {
-                    input.classList.add("error");
+            try {
+                const response = await fetch("forgotPasswordHandler.php", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: `action=verify_code&code=${encodeURIComponent(code)}`,
                 });
 
-                const errorMessage = document.querySelector(
-                    "#step2 .error-message"
-                );
-                errorMessage.style.display = "block";
+                const data = await response.json();
 
-                setTimeout(() => {
-                    digitInputs.forEach((input) => {
-                        input.classList.remove("error");
-                    });
-                    errorMessage.style.display = "none";
-                }, 3000);
+                if (data.success) {
+                    showStep(3);
+                } else {
+                    showCodeError(data.error);
+                }
+            } catch (error) {
+                showCodeError("Failed to verify code. Please try again.");
+            } finally {
+                // Reset button state
+                submitBtn.textContent = originalBtnText;
+                submitBtn.disabled = false;
             }
-        });
+        } else {
+            // Show error state for invalid format
+            digitInputs.forEach((input) => {
+                input.classList.add("error");
+            });
+
+            const errorMessage = document.querySelector(
+                "#step2 .error-message"
+            );
+            errorMessage.style.display = "block";
+            errorMessage.textContent = "Please enter a valid 6-digit code";
+
+            setTimeout(() => {
+                digitInputs.forEach((input) => {
+                    input.classList.remove("error");
+                });
+                errorMessage.style.display = "none";
+            }, 3000);
+        }
     }
 
     // Step 3: Password form submission
     if (passwordForm) {
-        passwordForm.addEventListener("submit", function (e) {
+        passwordForm.addEventListener("submit", async function (e) {
             e.preventDefault();
 
             const newPasswordInput = document.getElementById("newPassword");
@@ -113,45 +151,86 @@ document.addEventListener("DOMContentLoaded", function () {
                 document.getElementById("confirmPassword");
             const newPassword = newPasswordInput.value.trim();
             const confirmPassword = confirmPasswordInput.value.trim();
+            const submitBtn = passwordForm.querySelector(
+                'button[type="submit"]'
+            );
+            const originalBtnText = submitBtn.textContent;
 
             if (validatePasswords(newPassword, confirmPassword)) {
-                // Simulate password reset
-                console.log("Resetting password for:", userEmail);
-
-                // Show loading state briefly
-                const submitBtn = passwordForm.querySelector(
-                    'button[type="submit"]'
-                );
-                const originalText = submitBtn.textContent;
+                // Show loading state
                 submitBtn.textContent = "Resetting...";
                 submitBtn.disabled = true;
 
-                setTimeout(() => {
-                    submitBtn.textContent = originalText;
+                try {
+                    const response = await fetch("forgotPasswordHandler.php", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded",
+                        },
+                        body: `action=reset_password&password=${encodeURIComponent(
+                            newPassword
+                        )}&confirm_password=${encodeURIComponent(
+                            confirmPassword
+                        )}`,
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showStep("success");
+                    } else {
+                        showPasswordError(data.error);
+                    }
+                } catch (error) {
+                    showPasswordError(
+                        "Failed to reset password. Please try again."
+                    );
+                } finally {
+                    // Reset button state
+                    submitBtn.textContent = originalBtnText;
                     submitBtn.disabled = false;
-                    showStep("success");
-                }, 1500);
+                }
             }
         });
     }
 
     // Resend code functionality
     if (resendCodeLink) {
-        resendCodeLink.addEventListener("click", function (e) {
+        resendCodeLink.addEventListener("click", async function (e) {
             e.preventDefault();
 
             const originalText = resendCodeLink.textContent;
             resendCodeLink.textContent = "Sending...";
-            resendCodeLink.style.pointerEvents = "none";
+
+            try {
+                const response = await fetch("forgotPasswordHandler.php", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: `action=send_code&email=${encodeURIComponent(
+                        userEmail
+                    )}`,
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    resendCodeLink.textContent = "Code sent! Check your email";
+                    // Restart countdown (this will also disable the resend link)
+                    startCountdown();
+                } else {
+                    resendCodeLink.textContent = "Failed to send code";
+                    showCodeError(data.error);
+                }
+            } catch (error) {
+                resendCodeLink.textContent = "Failed to send code";
+                showCodeError("Failed to resend code. Please try again.");
+            }
 
             setTimeout(() => {
-                resendCodeLink.textContent = "Code sent! Check your email";
-
-                setTimeout(() => {
-                    resendCodeLink.textContent = originalText;
-                    resendCodeLink.style.pointerEvents = "auto";
-                }, 3000);
-            }, 1500);
+                resendCodeLink.textContent = originalText;
+            }, 3000);
         });
     }
 
@@ -220,10 +299,52 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function goToPreviousStep() {
         if (currentStep > 1) {
-            showStep(currentStep - 1);
+            // Stop countdown when going back from step 2
+            if (currentStep === 2) {
+                stopCountdown();
+            }
+
+            const targetStep = currentStep - 1;
+
+            // Reset all inputs when going back to step 1
+            if (targetStep === 1) {
+                resetAllInputs();
+            }
+
+            showStep(targetStep);
         } else {
             window.location.href = "../Login/login.php";
         }
+    }
+
+    function resetAllInputs() {
+        // Reset step 2 verification code inputs
+        const digitInputs = document.querySelectorAll(".verification-digit");
+        digitInputs.forEach((input) => {
+            input.value = "";
+            input.classList.remove("error");
+        });
+
+        // Reset step 3 password inputs
+        const newPasswordInput = document.getElementById("newPassword");
+        const confirmPasswordInput = document.getElementById("confirmPassword");
+        if (newPasswordInput) {
+            newPasswordInput.value = "";
+            newPasswordInput.style.borderBottomColor = "";
+        }
+        if (confirmPasswordInput) {
+            confirmPasswordInput.value = "";
+            confirmPasswordInput.style.borderBottomColor = "";
+        }
+
+        // Hide all error messages
+        const errorElements = document.querySelectorAll(".error-message");
+        errorElements.forEach((el) => {
+            el.style.display = "none";
+        });
+
+        // Reset user email variable
+        userEmail = "";
     }
 
     function validateEmail(email) {
@@ -263,6 +384,50 @@ document.addEventListener("DOMContentLoaded", function () {
                 el.style.display = "none";
             });
         }, 3000);
+    }
+
+    // Countdown timer functions
+    function startCountdown() {
+        timeRemaining = 60; // Reset to 1 minute
+        updateTimerDisplay();
+
+        // Disable resend code link
+        if (resendCodeLink) {
+            resendCodeLink.style.pointerEvents = "none";
+            resendCodeLink.style.opacity = "0.5";
+        }
+
+        countdownTimer = setInterval(() => {
+            timeRemaining--;
+            updateTimerDisplay();
+
+            if (timeRemaining <= 0) {
+                stopCountdown();
+                // Re-enable resend code link when timer expires
+                if (resendCodeLink) {
+                    resendCodeLink.style.pointerEvents = "auto";
+                    resendCodeLink.style.opacity = "1";
+                }
+            }
+        }, 1000);
+    }
+
+    function stopCountdown() {
+        if (countdownTimer) {
+            clearInterval(countdownTimer);
+            countdownTimer = null;
+        }
+    }
+
+    function updateTimerDisplay() {
+        const timerElements = document.querySelectorAll("#step2 .timer-text");
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        const timeString = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+
+        timerElements.forEach((element) => {
+            element.textContent = timeString;
+        });
     }
 
     // Handle 6-digit verification code inputs
@@ -306,7 +471,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 );
                 if (allFilled) {
                     setTimeout(() => {
-                        codeForm.dispatchEvent(new Event("submit"));
+                        handleCodeSubmission();
                     }, 300);
                 }
             }
@@ -369,7 +534,7 @@ document.addEventListener("DOMContentLoaded", function () {
             );
             if (allFilled) {
                 setTimeout(() => {
-                    codeForm.dispatchEvent(new Event("submit"));
+                    handleCodeSubmission();
                 }, 300);
             }
         });
@@ -397,5 +562,23 @@ document.addEventListener("DOMContentLoaded", function () {
                 errorMessage.style.display = "none";
             }
         });
+    }
+
+    // Error handling functions
+    function showEmailError(message) {
+        const errorElement = document.querySelector("#step1 .error-message");
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.style.display = "block";
+        }
+    }
+
+    function showCodeError(message) {
+        const errorElement = document.querySelector("#step2 .error-message");
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.style.display = "block";
+            errorElement.style.color = "#dc3545";
+        }
     }
 });
