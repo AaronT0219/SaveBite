@@ -1,246 +1,261 @@
-// BFI.js - Handles rendering and filtering of food cards
+document.addEventListener('DOMContentLoaded', function() {
+    // Show modal with food item details
+    function showFoodModal(item) {
+        const modalTitle = document.getElementById('foodItemModalLabel');
+        const modalBody = document.getElementById('foodItemModalBody');
+        const modalFooter = document.getElementById('foodItemModalFooter');
 
-// Sample food items data in JS
-const foodItems = [
-    {
-        name: 'Apple',
-        quantity: 10,
-        category: 'Fruit',
-        donation: false,
-        reserved: false,
-        used: false,
-        expiry: '2025-09-25',
-        storage: 'Fridge',
-        description: 'Fresh and crisp apples, perfect for snacking or baking.'
-    },
-    {
-        name: 'Milk',
-        quantity: 2,
-        category: 'Dairy',
-        donation: true,
-        reserved: false,
-        used: false,
-        expiry: '2025-09-21',
-        storage: 'Fridge',
-        description: 'Whole milk, great for drinking or cooking.'
-    },
-    {
-        name: 'Bread',
-        quantity: 5,
-        category: 'Bakery',
-        donation: false,
-        reserved: true,
-        used: false,
-        expiry: '2025-09-22',
-        storage: 'Pantry',
-        description: 'Soft bakery bread, ideal for sandwiches.'
-    },
-    {
-        name: 'Banana',
-        quantity: 8,
-        category: 'Fruit',
-        donation: false,
-        reserved: false,
-        used: true,
-        expiry: '2025-09-23',
-        storage: 'Pantry',
-        description: 'Ripe bananas, perfect for smoothies or snacks.'
-    },
-    {
-        name: 'Cheese',
-        quantity: 3,
-        category: 'Dairy',
-        donation: false,
-        reserved: false,
-        used: false,
-        expiry: '2025-09-28',
-        storage: 'Fridge',
-        description: 'Block of cheese, great for grating or slicing.'
-    },
-    {
-        name: 'Frozen Peas',
-        quantity: 6,
-        category: 'Vegetable',
-        donation: false,
-        reserved: false,
-        used: false,
-        expiry: '2025-12-01',
-        storage: 'Freezer',
-        description: 'Frozen green peas, ideal for soups and stir-fries.'
-    },
-    {
-        name: 'Yogurt',
-        quantity: 4,
-        category: 'Dairy',
-        donation: true,
-        reserved: false,
-        used: false,
-        expiry: '2025-09-24',
-        storage: 'Fridge',
-        description: 'Creamy yogurt, delicious as a snack or breakfast.'
-    },
-    {
-        name: 'Orange',
-        quantity: 12,
-        category: 'Fruit',
-        donation: false,
-        reserved: false,
-        used: false,
-        expiry: '2025-09-27',
-        storage: 'Fridge',
-        description: 'Juicy oranges, packed with vitamin C.'
-    },
-    {
-        name: 'Rice',
-        quantity: 1,
-        category: 'Grain',
-        donation: false,
-        reserved: false,
-        used: false,
-        expiry: '2026-01-15',
-        storage: 'Pantry',
-        description: 'Bag of rice, a staple for many meals.'
-    },
-];
+        //icons
+        const usedIcon = lucide.createElement(lucide.CheckCircle);
+        const mealIcon = lucide.createElement(lucide.Calendar);
+        const flagIcon = lucide.createElement(lucide.Flag);
 
-function renderCards(items) {
-    const container = document.getElementById('foodCardContainer');
-    container.innerHTML = '';
-    if (!items.length) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'text-center w-100 my-5';
+        
+        let tags = '';
+        if (item.donation) {
+            tags = '<span class="badge ms-4">Donation</span>';
+        } else if (item.reserved) {
+            tags = '<span class="badge reserved-tag ms-4">Reserved</span>';
+        } else if (item.used) {
+            tags = `<span class="d-flex align-items-center badge bg-secondary ms-4 used-tag-modal">Used</span>`;
+        }
 
-        const h3 = document.createElement('h3');
-        h3.className = 'opacity-25 mb-0';
-        h3.textContent = 'No Match Items';
+        modalTitle.innerHTML = `<h3 class="d-flex align-items-center mb-0 fw-bold">${item.name} ${tags}</h3>`;
 
-        const frownIcon = lucide.createElement(lucide.Frown);
-        frownIcon.classList.add('ms-2');
-        frownIcon.style.width = '1em';
-        frownIcon.style.height = '1em';
+        // Add event listener for remove used tag
+        const removeBtn = document.querySelector('.used-tag-modal');
+        if (removeBtn) {
+            const xIcon = lucide.createElement(lucide.X);
+            xIcon.classList.add('ms-2', 'usedTag_removeBtn');
+            xIcon.style.cursor = 'pointer';
+            removeBtn.appendChild(xIcon);
+            removeBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                // Remove used tag via backend
+                fetch('../BFI/update_fooditem_status.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fooditem_id: item.foodItem_id, used: false })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        item.used = false;
+                        // Close and re-open modal to update UI
+                        const modalEl = document.getElementById('foodItemModal');
+                        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                        if (modalInstance) modalInstance.hide();
+                        setTimeout(() => showFoodModal(item), 300);
+                        updateView();
+                    } else {
+                        alert('Failed to remove used tag.');
+                    }
+                })
+                .catch(() => alert('Failed to remove used tag.'));
+            });
+        }
+        
+        modalBody.innerHTML = `
+        <ul class="list-group list-group-flush">
+        <li class="list-group-item"><strong>Quantity:</strong> ${item.quantity}</li>
+        <li class="list-group-item"><strong>Category:</strong> ${item.category}</li>
+        <li class="list-group-item"><strong>Expiry:</strong> ${item.expiry || 'N/A'}</li>
+        <li class="list-group-item"><strong>Storage:</strong> ${item.storage || 'N/A'}</li>
+        <li class="list-group-item">
+            <div class="d-flex flex-column gap-2 mb-2">
+                <strong>Description:</strong>
+                <text class="border rounded p-2 text-wrap">${item.description || 'No description available.'}</text>
+            </div>
+        </li>
+        </ul>
+        `;
+        // Modal footer: 3 action buttons with icons
+        if (modalFooter) {
+            modalFooter.innerHTML = '';
+            // Create a flex container for horizontal layout
+            const btnContainer = document.createElement('div');
+            btnContainer.className = 'd-flex justify-content-center gap-3 px-5 w-100';
 
-        h3.appendChild(frownIcon);
-        wrapper.appendChild(h3);
-        container.appendChild(wrapper);
-    } else {
-        items.forEach((item, idx) => {
-            let tags = '';
-            if (item.donation) {
-                tags = '<span class="badge">Donation</span>';
+            // Button 1: Mark Used
+            const usedBtn = document.createElement('button');
+            usedBtn.type = 'button';
+            usedBtn.className = 'btn btn-lg flex-fill d-flex justify-content-center align-items-center fw-medium markUsed-btn';
+            usedBtn.appendChild(usedIcon.cloneNode(true));
+            usedBtn.innerHTML += '<span class="ms-2 text-nowrap">Mark as Used</span>';
+
+            // popover message
+            let disableReason = '';
+            if (item.used) {
+                disableReason = 'Card Already Marked as Used';
             } else if (item.reserved) {
-                tags = '<span class="badge reserved-tag">Reserved</span>';
-            } else if (item.used) {
-                tags = '<span class="badge bg-secondary">Used</span>';
+                disableReason = 'Card Already Marked as Reserved';
+            } else if (item.donation) {
+                disableReason = 'Card Is a Donation Listing';
             }
-            let expiry = item.expiry ? `<p class=\"card-text mb-1\"><strong>Expiry:</strong> ${item.expiry}</p>` : '';
-            let storage = item.storage ? `<p class=\"card-text\"><strong>Storage:</strong> ${item.storage}</p>` : '';
-            const cardHtml = `
-            <div class=\"col\">
-                <div class=\"card h-100 food-card\" data-idx=\"${idx}\">
-                    <div class=\"card-header\">
-                        <h5 class=\"d-flex justify-content-between mb-0\">${item.name} ${tags}</h5>
-                    </div>
-                    <div class=\"card-body fw-medium\">
-                        <p class=\"card-text mb-1\"><strong>Quantity:</strong> ${item.quantity}</p>
-                        <p class=\"card-text mb-1\"><strong>Category:</strong> ${item.category}</p>
-                        ${expiry}
-                        ${storage}
+
+            // disable button if already have used/reserved/donation tag
+            if (disableReason) {
+                usedBtn.disabled = true;
+                usedBtn.classList.add('btn-secondary');
+
+                // Create a wrapper span for popover
+                const usedBtnWrapper = document.createElement('span');
+                usedBtnWrapper.className = 'd-inline-block d-flex flex-fill';
+                usedBtnWrapper.setAttribute('tabindex', '0');
+                usedBtnWrapper.setAttribute('data-bs-toggle', 'popover');
+                usedBtnWrapper.setAttribute('data-bs-content', disableReason);
+                usedBtnWrapper.setAttribute('data-bs-trigger', 'hover focus');
+                usedBtnWrapper.setAttribute('data-bs-placement', 'bottom');
+                usedBtnWrapper.setAttribute('data-bs-custom-class', 'custom-popover fw-semibold');
+
+                usedBtnWrapper.appendChild(usedBtn);
+                btnContainer.appendChild(usedBtnWrapper);
+                
+                if (window.bootstrap && window.bootstrap.Popover) {
+                    new bootstrap.Popover(usedBtnWrapper);
+                }
+            } else {
+                btnContainer.appendChild(usedBtn);
+                
+                usedBtn.addEventListener('click', function(e) {
+                    usedBtn.disabled = true;
+                    usedBtn.classList.add('btn-secondary');
+                    // Update backend
+                    fetch('../BFI/update_fooditem_status.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ fooditem_id: item.foodItem_id, used: true })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            item.used = true;
+                            updateView();
+                            // Close modal before re-opening to avoid UI lock
+                            const modalEl = document.getElementById('foodItemModal');
+                            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                            if (modalInstance) modalInstance.hide();
+                            setTimeout(() => showFoodModal(item), 300); // allow modal to close before re-opening
+                        } else {
+                            usedBtn.disabled = false;
+                            usedBtn.classList.remove('btn-secondary');
+                            alert('Failed to mark as used.');
+                        }
+                    })
+                    .catch(() => {
+                        usedBtn.disabled = false;
+                        usedBtn.classList.remove('btn-secondary');
+                        alert('Failed to mark as used.');
+                    });
+                });
+            }
+
+            // Button 2: Plan Meal
+            const planMealBtn = document.createElement('button');
+            planMealBtn.type = 'button';
+            planMealBtn.className = 'btn btn-lg flex-fill d-flex justify-content-center align-items-center fw-medium planMeal-btn';
+            planMealBtn.appendChild(mealIcon.cloneNode(true));
+            planMealBtn.innerHTML += '<span class="ms-2 text-nowrap">Plan Meal</span>';
+
+            // Button 3: Flag Donation
+            const donationBtn = document.createElement('button');
+            donationBtn.type = 'button';
+            donationBtn.className = 'btn btn-lg flex-fill d-flex justify-content-center align-items-center fw-medium flagDonation-btn';
+            donationBtn.appendChild(flagIcon.cloneNode(true));
+            donationBtn.innerHTML += '<span class="ms-2 text-nowrap">Flag Donation</span>';
+
+            btnContainer.appendChild(planMealBtn);
+            btnContainer.appendChild(donationBtn);
+            modalFooter.appendChild(btnContainer);
+        }
+        
+        // Show modal using Bootstrap
+        const modal = new bootstrap.Modal(document.getElementById('foodItemModal'));
+        modal.show();
+    }
+
+    // Render food item cards
+    function renderCards(items) {
+        const container = document.getElementById('foodCardContainer');
+        container.innerHTML = '';
+        // Helper to remove used tag
+        function removeUsedTag(idx) {
+            const item = items[idx];
+            fetch('../BFI/update_fooditem_status.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fooditem_id: item.foodItem_id, used: false })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    item.used = false;
+                    updateView();
+                } else {
+                    alert('Failed to remove used tag.');
+                }
+            })
+            .catch(() => alert('Failed to remove used tag.'));
+        }
+
+        if (!items.length) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'text-center w-100 my-5';
+
+            const h3 = document.createElement('h3');
+            h3.className = 'opacity-25 mb-0';
+            h3.textContent = 'No Items Found';
+
+            const frownIcon = lucide.createElement(lucide.Frown);
+            frownIcon.classList.add('ms-2');
+            frownIcon.style.width = '1em';
+            frownIcon.style.height = '1em';
+
+            h3.appendChild(frownIcon);
+            wrapper.appendChild(h3);
+            container.appendChild(wrapper);
+        } else {
+            items.forEach((item, idx) => {
+                let tags = '';
+                if (item.donation) {
+                    tags = '<span class="badge">Donation</span>';
+                } else if (item.reserved) {
+                    tags = '<span class="badge reserved-tag">Reserved</span>';
+                } else if (item.used) {
+                    tags = `<span class="badge bg-secondary used-tag">Used</span>`;
+                }
+                let expiry = item.expiry ? `<p class=\"card-text mb-1\"><strong>Expiry:</strong> ${item.expiry}</p>` : '';
+                let storage = item.storage ? `<p class=\"card-text\"><strong>Storage:</strong> ${item.storage}</p>` : '';
+                const cardHtml = `
+                <div class=\"col\">
+                    <div class=\"card h-100 food-card\" data-idx=\"${idx}\">
+                        <div class=\"card-header\">
+                            <h5 class=\"d-flex justify-content-between mb-0\">${item.name} ${tags}</h5>
+                        </div>
+                        <div class=\"card-body fw-medium\">
+                            <p class=\"card-text mb-1\"><strong>Quantity:</strong> ${item.quantity}</p>
+                            <p class=\"card-text mb-1\"><strong>Category:</strong> ${item.category}</p>
+                            ${expiry}
+                            ${storage}
+                        </div>
                     </div>
                 </div>
-            </div>
-            `;
-            container.innerHTML += cardHtml;
-        });
-
-        // Add click event to each card to show modal
-        document.querySelectorAll('.food-card').forEach(card => {
-            card.addEventListener('click', function() {
-                const idx = this.getAttribute('data-idx');
-                showFoodModal(items[idx]);
+                `;
+                container.innerHTML += cardHtml;
             });
-        });
-    }
-}
 
-// Show modal with food item details
-function showFoodModal(item) {
-    const modalTitle = document.getElementById('foodItemModalLabel');
-    const modalBody = document.getElementById('foodItemModalBody');
-    const modalFooter = document.getElementById('foodItemModalFooter');
-
-    //icons
-    const usedIcon = lucide.createElement(lucide.CheckCircle);
-    const mealIcon = lucide.createElement(lucide.Calendar);
-    const flagIcon = lucide.createElement(lucide.Flag);
-
-    
-    let tags = '';
-    if (item.donation) {
-        tags = '<span class="badge ms-4">Donation</span>';
-    } else if (item.reserved) {
-        tags = '<span class="badge reserved-tag ms-4">Reserved</span>';
-    } else if (item.used) {
-        tags = '<span class="badge bg-secondary ms-4">Used</span>';
+            // Add click event to each card to show modal
+            document.querySelectorAll('.food-card').forEach(card => {
+                card.addEventListener('click', function(e) {
+                    // Prevent modal if clicking remove-used-x
+                    if (e.target.classList.contains('remove-used-x')) return;
+                    const idx = this.getAttribute('data-idx');
+                    showFoodModal(items[idx]);
+                });
+            });
+        }
     }
 
-    modalTitle.innerHTML = `<h3 class="d-flex align-items-center mb-0 fw-bold">${item.name} ${tags}</h3>`;
-    modalBody.innerHTML = `
-    <ul class="list-group list-group-flush">
-    <li class="list-group-item">Quantity: ${item.quantity}</li>
-    <li class="list-group-item">Category: ${item.category}</li>
-    <li class="list-group-item">Expiry: ${item.expiry || 'N/A'}</li>
-    <li class="list-group-item">Storage: ${item.storage || 'N/A'}</li>
-    <li class="list-group-item">
-        <div class="d-flex flex-column gap-2 mb-2">
-            <strong>Description:</strong>
-            <text class="border rounded p-2">${item.description || 'No description available.'}</text>
-        </div>
-    </li>
-    </ul>
-    `;
-    // Modal footer: 3 action buttons with icons
-    if (modalFooter) {
-        modalFooter.innerHTML = '';
-        // Create a flex container for horizontal layout
-        const btnContainer = document.createElement('div');
-        btnContainer.className = 'd-flex justify-content-center gap-3 px-5 w-100';
-    
-        // Button 1: Mark as Used
-        const usedBtn = document.createElement('button');
-        usedBtn.type = 'button';
-        usedBtn.className = 'btn btn-lg flex-fill d-flex justify-content-center align-items-center fw-medium markUsed-btn';
-        usedBtn.appendChild(usedIcon.cloneNode(true));
-        usedBtn.innerHTML += '<span class="ms-2 text-nowrap">Mark as Used</span>';
-    
-        // Button 2: Add to Meal Plan
-        const planMealBtn = document.createElement('button');
-        planMealBtn.type = 'button';
-        planMealBtn.className = 'btn btn-lg flex-fill d-flex justify-content-center align-items-center fw-medium planMeal-btn';
-        planMealBtn.appendChild(mealIcon.cloneNode(true));
-        planMealBtn.innerHTML += '<span class="ms-2 text-nowrap">Plan Meal</span>';
-    
-        // Button 3: Report Issue
-        const donationBtn = document.createElement('button');
-        donationBtn.type = 'button';
-        donationBtn.className = 'btn btn-lg flex-fill d-flex justify-content-center align-items-center fw-medium flagDonation-btn';
-        donationBtn.appendChild(flagIcon.cloneNode(true));
-        donationBtn.innerHTML += '<span class="ms-2 text-nowrap">Flag Donation</span>';
-    
-        btnContainer.appendChild(usedBtn);
-        btnContainer.appendChild(planMealBtn);
-        btnContainer.appendChild(donationBtn);
-        modalFooter.appendChild(btnContainer);
-    }
-    
-    // Show modal using Bootstrap
-    const modal = new bootstrap.Modal(document.getElementById('foodItemModal'));
-    modal.show();
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    // State for active filters
-    let activeFilters = [];
-    
     // Helper to get display name for filter
     function getFilterLabel(filter, value) {
         switch (filter) {
@@ -252,8 +267,10 @@ document.addEventListener('DOMContentLoaded', function() {
             default: return filter;
         }
     }
+    
+    // Render filter tags with smart add/remove
+    let activeFilters = [];
 
-    // Render filter tags with smart add/remove and animation
     function renderTags() {
         const tagContainer = document.getElementById('filterTagContainer');
         // Get current tags in DOM
@@ -306,6 +323,25 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Fetch food items from the backend and initialize the app
+    let foodItems = [];
+
+    function fetchFoodItemsAndInit() {
+        fetch('../BFI/get_fooditems.php')
+        .then(response => response.json())
+        .then(data => {
+            foodItems = data;
+            if (typeof updateView === 'function') {
+                updateView();
+            } else {
+                console.warn('updateView function is not defined.');
+            }
+        })
+        .catch(err => {
+            console.error('Failed to fetch food items:', err);
+        });
+    }
+
     // Apply all active filters to foodItems
     function getFilteredItems() {
         let filtered = foodItems.slice();
@@ -335,8 +371,8 @@ document.addEventListener('DOMContentLoaded', function() {
         renderCards(getFilteredItems());
     }
 
-    // Initial render
-    updateView();
+    // Initial fetch and render
+    fetchFoodItemsAndInit();
 
     // Add filter on click
     document.querySelectorAll('.filter-option').forEach(el => {

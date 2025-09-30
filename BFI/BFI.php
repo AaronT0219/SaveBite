@@ -13,9 +13,11 @@
                     <li class="dropdown-submenu">
                         <span class="dropdown-item disabled" id="categoryDropdown" aria-expanded="false">Categories</span>
                         <ul class="dropdown-menu" aria-labelledby="categoryDropdown">
-                            <li><a class="dropdown-item filter-option" data-filter="category" data-value="Fruit" href="#">Fruit</a></li>
-                            <li><a class="dropdown-item filter-option" data-filter="category" data-value="Dairy" href="#">Dairy</a></li>
-                            <li><a class="dropdown-item filter-option" data-filter="category" data-value="Bakery" href="#">Bakery</a></li>
+                            <li><a class="dropdown-item filter-option" data-filter="category" data-value="Produce" href="#">Produce</a></li>
+                            <li><a class="dropdown-item filter-option" data-filter="category" data-value="Protein" href="#">Protein</a></li>
+                            <li><a class="dropdown-item filter-option" data-filter="category" data-value="Dairy & Bakery" href="#">Dairy & Bakery</a></li>
+                            <li><a class="dropdown-item filter-option" data-filter="category" data-value="Grains & Pantry" href="#">Grains & Pantry</a></li>
+                            <li><a class="dropdown-item filter-option" data-filter="category" data-value="Snacks & Beverages" href="#">Snacks & Beverages</a></li>
                         </ul>
                     </li>
                     <li><a class="dropdown-item filter-option" data-filter="expiry" href="#">Expiry Date (Soonest First)</a></li>
@@ -25,6 +27,7 @@
                             <li><a class="dropdown-item filter-option" data-filter="storage" data-value="Fridge" href="#">Fridge</a></li>
                             <li><a class="dropdown-item filter-option" data-filter="storage" data-value="Freezer" href="#">Freezer</a></li>
                             <li><a class="dropdown-item filter-option" data-filter="storage" data-value="Pantry" href="#">Pantry</a></li>
+                            <li><a class="dropdown-item filter-option" data-filter="storage" data-value="Countertop" href="#">Countertop</a></li>
                         </ul>
                     </li>
                 </ul>

@@ -16,6 +16,31 @@ html {
     color: #222222 !important;
 }
 
+.custom-popover {
+    --bs-popover-border-color: #91af2e !important;
+    --bs-popover-border-width: 2px !important;
+}
+
+.usedTag_removeBtn{
+    width: 0;
+    overflow: hidden;
+    transition: all 0.1s ease-in-out;
+}
+
+.used-tag-modal:hover .usedTag_removeBtn {
+    width: 1em;
+    overflow: auto;
+}
+
+/* food item css */
+#foodCardContainer .col {
+    transition: all 0.1s ease-in-out;
+}
+
+#foodCardContainer .col:active {
+    transform: scale(.98);
+}
+
 /* modal css */
 .modal-header {
     background-color: #21252908;
@@ -46,7 +71,7 @@ html {
     max-height: 0;
     opacity: 0;
     position: relative;
-    transition: all 0.3s ease;
+    transition: all 0.3s ease-in-out;
 }
 
 .filter-tag.show {
