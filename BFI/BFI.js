@@ -1,47 +1,38 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Helper for backend update
+    function updateFoodStatus(fooditem_id, used) {
+        return fetch('../BFI/update_fooditem_status.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fooditem_id, used })
+        }).then(res => res.json());
+    }
+    
     // Show modal with food item details
     function showFoodModal(item) {
         const modalTitle = document.getElementById('foodItemModalLabel');
         const modalBody = document.getElementById('foodItemModalBody');
         const modalFooter = document.getElementById('foodItemModalFooter');
 
-        //icons
         const usedIcon = lucide.createElement(lucide.CheckCircle);
         const mealIcon = lucide.createElement(lucide.Calendar);
         const flagIcon = lucide.createElement(lucide.Flag);
 
-        
-        let tags = '';
-        if (item.donation) {
-            tags = '<span class="badge ms-4">Donation</span>';
-        } else if (item.reserved) {
-            tags = '<span class="badge reserved-tag ms-4">Reserved</span>';
-        } else if (item.used) {
-            tags = `<span class="d-flex align-items-center badge bg-secondary ms-4 used-tag-modal">Used</span>`;
-        }
-
+        let tags = item.donation ? '<span class="badge ms-4">Donation</span>' : item.reserved ? '<span class="badge reserved-tag ms-4">Reserved</span>' : item.used ? `<span class="d-flex align-items-center badge bg-secondary ms-4 used-tag-modal">Used</span>` : '';
         modalTitle.innerHTML = `<h3 class="d-flex align-items-center mb-0 fw-bold">${item.name} ${tags}</h3>`;
 
-        // Add event listener for remove used tag
         const removeBtn = document.querySelector('.used-tag-modal');
         if (removeBtn) {
             const xIcon = lucide.createElement(lucide.X);
             xIcon.classList.add('ms-2', 'usedTag_removeBtn');
             xIcon.style.cursor = 'pointer';
             removeBtn.appendChild(xIcon);
-            removeBtn.addEventListener('click', function(e) {
+            xIcon.addEventListener('click', function(e) {
                 e.stopPropagation();
-                // Remove used tag via backend
-                fetch('../BFI/update_fooditem_status.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ fooditem_id: item.foodItem_id, used: false })
-                })
-                .then(res => res.json())
+                updateFoodStatus(item.foodItem_id, false)
                 .then(data => {
                     if (data.success) {
                         item.used = false;
-                        // Close and re-open modal to update UI
                         const modalEl = document.getElementById('foodItemModal');
                         const modalInstance = bootstrap.Modal.getInstance(modalEl);
                         if (modalInstance) modalInstance.hide();
@@ -54,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 .catch(() => alert('Failed to remove used tag.'));
             });
         }
-        
+
         modalBody.innerHTML = `
         <ul class="list-group list-group-flush">
         <li class="list-group-item"><strong>Quantity:</strong> ${item.quantity}</li>
@@ -69,73 +60,86 @@ document.addEventListener('DOMContentLoaded', function() {
         </li>
         </ul>
         `;
-        // Modal footer: 3 action buttons with icons
+
         if (modalFooter) {
             modalFooter.innerHTML = '';
-            // Create a flex container for horizontal layout
             const btnContainer = document.createElement('div');
             btnContainer.className = 'd-flex justify-content-center gap-3 px-5 w-100';
 
-            // Button 1: Mark Used
             const usedBtn = document.createElement('button');
             usedBtn.type = 'button';
             usedBtn.className = 'btn btn-lg flex-fill d-flex justify-content-center align-items-center fw-medium markUsed-btn';
             usedBtn.appendChild(usedIcon.cloneNode(true));
             usedBtn.innerHTML += '<span class="ms-2 text-nowrap">Mark as Used</span>';
 
-            // popover message
-            let disableReason = '';
-            if (item.used) {
-                disableReason = 'Card Already Marked as Used';
-            } else if (item.reserved) {
-                disableReason = 'Card Already Marked as Reserved';
-            } else if (item.donation) {
-                disableReason = 'Card Is a Donation Listing';
+            const planMealBtn = document.createElement('button');
+            planMealBtn.type = 'button';
+            planMealBtn.className = 'btn btn-lg flex-fill d-flex justify-content-center align-items-center fw-medium planMeal-btn';
+            planMealBtn.appendChild(mealIcon.cloneNode(true));
+            planMealBtn.innerHTML += '<span class="ms-2 text-nowrap">Plan Meal</span>';
+
+            const donationBtn = document.createElement('button');
+            donationBtn.type = 'button';
+            donationBtn.className = 'btn btn-lg flex-fill d-flex justify-content-center align-items-center fw-medium flagDonation-btn';
+            donationBtn.appendChild(flagIcon.cloneNode(true));
+            donationBtn.innerHTML += '<span class="ms-2 text-nowrap">Flag Donation</span>';
+
+            const usedBtnWrapper = document.createElement('span');
+            const donationBtnWrapper = document.createElement('span');
+
+            function appendBtn(btn, btn2, btn3) {
+                for (const b of [btn, btn2, btn3]) {
+                    btnContainer.appendChild(b);
+                }
             }
 
-            // disable button if already have used/reserved/donation tag
+            let disableReason = item.used ? 'Card Already Marked as Used' : item.reserved ? 'Card Already Marked as Reserved' : item.donation ? 'Card Is a Donation Listing' : '';
             if (disableReason) {
+                // Disable used and donation buttons
                 usedBtn.disabled = true;
                 usedBtn.classList.add('btn-secondary');
+                donationBtn.disabled = true;
+                donationBtn.classList.add('btn-secondary');
 
-                // Create a wrapper span for popover
-                const usedBtnWrapper = document.createElement('span');
-                usedBtnWrapper.className = 'd-inline-block d-flex flex-fill';
-                usedBtnWrapper.setAttribute('tabindex', '0');
-                usedBtnWrapper.setAttribute('data-bs-toggle', 'popover');
-                usedBtnWrapper.setAttribute('data-bs-content', disableReason);
-                usedBtnWrapper.setAttribute('data-bs-trigger', 'hover focus');
-                usedBtnWrapper.setAttribute('data-bs-placement', 'bottom');
-                usedBtnWrapper.setAttribute('data-bs-custom-class', 'custom-popover fw-semibold');
+                const wrapper_attrs = {
+                    class: 'd-flex flex-fill',
+                    tabindex: '0',
+                    'data-bs-toggle': 'popover',
+                    'data-bs-content': disableReason,
+                    'data-bs-trigger': 'hover focus',
+                    'data-bs-placement': 'bottom',
+                    'data-bs-custom-class': 'custom-popover fw-semibold'
+                };
+
+                for (const [k, v] of Object.entries(wrapper_attrs)) {
+                    usedBtnWrapper.setAttribute(k, v);
+                    donationBtnWrapper.setAttribute(k, v);
+                }
 
                 usedBtnWrapper.appendChild(usedBtn);
-                btnContainer.appendChild(usedBtnWrapper);
-                
+                donationBtnWrapper.appendChild(donationBtn);
+
+                appendBtn(usedBtnWrapper, planMealBtn, donationBtnWrapper);
+
                 if (window.bootstrap && window.bootstrap.Popover) {
                     new bootstrap.Popover(usedBtnWrapper);
+                    new bootstrap.Popover(donationBtnWrapper);
                 }
             } else {
-                btnContainer.appendChild(usedBtn);
-                
+                appendBtn(usedBtn, planMealBtn, donationBtn);
+
                 usedBtn.addEventListener('click', function(e) {
                     usedBtn.disabled = true;
                     usedBtn.classList.add('btn-secondary');
-                    // Update backend
-                    fetch('../BFI/update_fooditem_status.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ fooditem_id: item.foodItem_id, used: true })
-                    })
-                    .then(res => res.json())
+                    updateFoodStatus(item.foodItem_id, true)
                     .then(data => {
                         if (data.success) {
                             item.used = true;
                             updateView();
-                            // Close modal before re-opening to avoid UI lock
                             const modalEl = document.getElementById('foodItemModal');
                             const modalInstance = bootstrap.Modal.getInstance(modalEl);
                             if (modalInstance) modalInstance.hide();
-                            setTimeout(() => showFoodModal(item), 300); // allow modal to close before re-opening
+                            setTimeout(() => showFoodModal(item), 300);
                         } else {
                             usedBtn.disabled = false;
                             usedBtn.classList.remove('btn-secondary');
@@ -148,28 +152,18 @@ document.addEventListener('DOMContentLoaded', function() {
                         alert('Failed to mark as used.');
                     });
                 });
+
+                //donation btn event listener
+                donationBtn.addEventListener('click', function(e) {
+                    //slide to another modal (to prompt details)
+                    
+
+                    //after hit confirm, collect all necessary data and send to database 
+                });
             }
 
-            // Button 2: Plan Meal
-            const planMealBtn = document.createElement('button');
-            planMealBtn.type = 'button';
-            planMealBtn.className = 'btn btn-lg flex-fill d-flex justify-content-center align-items-center fw-medium planMeal-btn';
-            planMealBtn.appendChild(mealIcon.cloneNode(true));
-            planMealBtn.innerHTML += '<span class="ms-2 text-nowrap">Plan Meal</span>';
-
-            // Button 3: Flag Donation
-            const donationBtn = document.createElement('button');
-            donationBtn.type = 'button';
-            donationBtn.className = 'btn btn-lg flex-fill d-flex justify-content-center align-items-center fw-medium flagDonation-btn';
-            donationBtn.appendChild(flagIcon.cloneNode(true));
-            donationBtn.innerHTML += '<span class="ms-2 text-nowrap">Flag Donation</span>';
-
-            btnContainer.appendChild(planMealBtn);
-            btnContainer.appendChild(donationBtn);
             modalFooter.appendChild(btnContainer);
         }
-        
-        // Show modal using Bootstrap
         const modal = new bootstrap.Modal(document.getElementById('foodItemModal'));
         modal.show();
     }
@@ -178,52 +172,22 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderCards(items) {
         const container = document.getElementById('foodCardContainer');
         container.innerHTML = '';
-        // Helper to remove used tag
-        function removeUsedTag(idx) {
-            const item = items[idx];
-            fetch('../BFI/update_fooditem_status.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ fooditem_id: item.foodItem_id, used: false })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    item.used = false;
-                    updateView();
-                } else {
-                    alert('Failed to remove used tag.');
-                }
-            })
-            .catch(() => alert('Failed to remove used tag.'));
-        }
-
         if (!items.length) {
             const wrapper = document.createElement('div');
             wrapper.className = 'text-center w-100 my-5';
-
             const h3 = document.createElement('h3');
             h3.className = 'opacity-25 mb-0';
             h3.textContent = 'No Items Found';
-
             const frownIcon = lucide.createElement(lucide.Frown);
             frownIcon.classList.add('ms-2');
             frownIcon.style.width = '1em';
             frownIcon.style.height = '1em';
-
             h3.appendChild(frownIcon);
             wrapper.appendChild(h3);
             container.appendChild(wrapper);
         } else {
             items.forEach((item, idx) => {
-                let tags = '';
-                if (item.donation) {
-                    tags = '<span class="badge">Donation</span>';
-                } else if (item.reserved) {
-                    tags = '<span class="badge reserved-tag">Reserved</span>';
-                } else if (item.used) {
-                    tags = `<span class="badge bg-secondary used-tag">Used</span>`;
-                }
+                let tags = item.donation ? '<span class="badge">Donation</span>' : item.reserved ? '<span class="badge reserved-tag">Reserved</span>' : item.used ? `<span class="badge bg-secondary used-tag">Used</span>` : '';
                 let expiry = item.expiry ? `<p class=\"card-text mb-1\"><strong>Expiry:</strong> ${item.expiry}</p>` : '';
                 let storage = item.storage ? `<p class=\"card-text\"><strong>Storage:</strong> ${item.storage}</p>` : '';
                 const cardHtml = `
@@ -243,11 +207,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 container.innerHTML += cardHtml;
             });
-
-            // Add click event to each card to show modal
             document.querySelectorAll('.food-card').forEach(card => {
                 card.addEventListener('click', function(e) {
-                    // Prevent modal if clicking remove-used-x
                     if (e.target.classList.contains('remove-used-x')) return;
                     const idx = this.getAttribute('data-idx');
                     showFoodModal(items[idx]);

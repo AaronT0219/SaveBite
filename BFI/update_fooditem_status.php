@@ -1,27 +1,33 @@
 <?php
 include '../Main/config.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['error' => 'Method not allowed']);
+// error handling function
+function respond($code, $msg) {
+    http_response_code($code);
+    echo json_encode($msg);
     exit;
+}
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    respond(405, ['success' => false, 'error' => 'Method not allowed']);
 }
 
 $data = json_decode(file_get_contents('php://input'), true);
-
-if (!isset($data['fooditem_id']) || !isset($data['used'])) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Missing parameters']);
-    exit;
+if (!$data || !isset($data['fooditem_id']) || !isset($data['used'])) {
+    respond(400, ['success' => false, 'error' => 'Missing parameters']);
 }
 
-$fooditem_id = intval($data['fooditem_id']);
+//
+$foodItem_id = intval($data['fooditem_id']);
 $used = $data['used'] ? 'used' : '';
 
-$update = "UPDATE fooditem SET status='$used' WHERE fooditem_id=$fooditem_id";
-if (mysqli_query($conn, $update)) {
-    echo json_encode(['success' => true]);
+$stmt = $conn->prepare("UPDATE fooditem SET status=? WHERE fooditem_id=?");
+if (!$stmt) respond(500, ['success' => false, 'error' => 'Failed to prepare statement']);
+
+$stmt->bind_param('si', $used, $foodItem_id);
+if ($stmt->execute()) {
+    respond(200, ['success' => true]);
 } else {
-    http_response_code(500);
-    echo json_encode(['error' => 'Failed to update status']);
+    respond(500, ['success' => false, 'error' => 'Failed to update status']);
 }
+
+$stmt->close();
