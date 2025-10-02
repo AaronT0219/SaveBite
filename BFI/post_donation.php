@@ -1,5 +1,6 @@
 <?php
-include '../Main/config.php';
+header('Content-Type: application/json');
+require_once '../Main/config.php';
 
 function respond($code, $msg) {
     http_response_code($code);
@@ -13,24 +14,33 @@ if (!$data || !isset($data['fooditem_id']) || !isset($data['donation']) || !isse
 }
 
 // Change food item's status
-$foodItem_id = intval($data['fooditem_id']);
+$fooditem_id = intval($data['fooditem_id']);
+$quantity = intval($data['quantity']);
 $donation = $data['donation'] ? 'donation' : '';
 $pickup_location = trim($data['pickup_location']);
 $availability = trim($data['availability']);
 
-$pdo->beingTransaction();
+try {
+    $pdo->beginTransaction();
+    
+    // user_id as 1 temporarily
+    $post_donation = $pdo->prepare("INSERT INTO donation (donor_user_id, status, pickup_location, donation_date) VALUES (?, ?, ?, ?)");
+    $post_donation->execute([1, 'pending', $pickup_location, $availability]);
 
-// user_id as 1 temporarily
-$post_donation = $pdo->prepare("INSERT INTO donation (donor_user_id, status, pickup_location, donation_date) VALUES (?, ?, ?, ?)");
-$post_donation->execute([1, 'pending', $pickup_location, $availability]);
+    $donation_id = $pdo->lastInsertId();
 
-$update_fooditem = $pdo->prepare("UPDATE fooditem SET status=? FROM fooditem_id=?");
-$update_fooditem->execute([$donation, $foodItem_id]);
-
-$pdo->commit();
-
-if($pdo) {
-    respond(200, ['success' => true]);
-} else {
-    respond(500, ['success' => false, 'error' => 'Failed to update status']);
+    $post_donation_fooditem = $pdo->prepare("INSERT INTO donation_fooditem (donation_id, fooditem_id, quantity) VALUES (?, ?, ?)");
+    $post_donation_fooditem->execute([$donation_id, $fooditem_id, $quantity]);
+    
+    $update_fooditem = $pdo->prepare("UPDATE fooditem SET status=? WHERE fooditem_id=?");
+    $update_fooditem->execute([$donation, $fooditem_id]);
+    
+    $pdo->commit();
+    
+    respond(200, ["success" => true, "message" => "Donation stored successfully"]);
+} catch (Exception $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    respond(500, ["success" => false, "message" => $e->getMessage()]);
 }

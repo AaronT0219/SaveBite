@@ -1,5 +1,6 @@
 <?php
-include '../Main/config.php';
+header('Content-Type: application/json');
+require_once '../Main/config.php';
 
 $result = mysqli_query($conn, "SELECT * FROM fooditem");
 if (!$result) {
@@ -14,7 +15,7 @@ $foodItems = array_map(function($row) {
         'name' => $row['food_name'],
         'quantity' => (int)$row['quantity'],
         'category' => $row['category'],
-        'donation' => $row['status'] === 'donated',
+        'donation' => $row['status'] === 'donation',
         'reserved' => $row['status'] === 'reserved',
         'used' => $row['status'] === 'used',
         'expiry' => $row['expiry_date'],

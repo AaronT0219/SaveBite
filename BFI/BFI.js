@@ -156,6 +156,45 @@ document.addEventListener('DOMContentLoaded', function() {
                         alert('Failed to mark as used.');
                     });
                 });
+
+                // donation form submit handler
+                const donationForm_submit_btn = document.getElementById('donationForm-submit-btn');
+
+                donationForm_submit_btn.addEventListener('click', function(e) {
+                    const pickup_location = document.getElementById('pickup_location').value;
+                    const availability = document.getElementById('availability').value;
+                    const form = document.getElementById('donation-form');
+
+                    if (form.checkValidity()) {
+                        e.preventDefault();
+                        const fooditem_id = item.foodItem_id;
+                        const quantity = item.quantity;
+                        let donation = true;
+    
+                        fetch('../BFI/post_donation.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ fooditem_id, donation, quantity, pickup_location, availability })
+                        }).then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                item.donation = true;
+                                updateView();
+                                const modalEl = document.getElementById('donationFormModal');
+                                const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                                if (modalInstance) modalInstance.hide();
+                            } else {
+                                alert("Failed to store donation.");
+                            }
+                        })
+                        .catch(() => {
+                            alert('Error: Failed to send donation data.');
+                        });
+                    } else {
+                        form.classList.add('was-validated');
+                    }
+                    
+                });
             }
 
             modalFooter.appendChild(btnContainer);
@@ -163,36 +202,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const modal = new bootstrap.Modal(document.getElementById('foodItemModal'));
         modal.show();
     }
-
-    //form on submit
-    pickup_location = document.getElementById('pickup_location').value;
-    availability = document.getElementById('availability').value;
-    form_submit_btn = document.querySelector('donationForm-submit-btn');
-
-    form_submit_btn.addEventListener('click', function(e) {
-        e.preventDefault();
-        let fooditem_id = item.foodItem_id;
-
-        fetch('../BFI/post_donation.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fooditem_id, donation, pickup_location, availability })
-        }).then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                item.donation = true;
-                updateView();
-                const modalEl = document.getElementById('donationFormModal');
-                const modalInstance = bootstrap.Modal.getInstance(modalEl);
-                if (modalInstance) modalInstance.hide();
-            } else {
-                alert("Failed to store donation.");
-            }
-        })
-        .catch(() => {
-            alert('Error: Failed to send donation data.');
-        });
-    });
 
     // Render food item cards
     function renderCards(items) {
@@ -333,7 +342,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let filtered = foodItems.slice();
         activeFilters.forEach(f => {
             if (f.filter === 'inventory') {
-                filtered = filtered.filter(item => !item.donation);
+                filtered = filtered.filter(item => !item.donation && !item.used);
             } else if (f.filter === 'donation') {
                 filtered = filtered.filter(item => item.donation);
             } else if (f.filter === 'reserved') {

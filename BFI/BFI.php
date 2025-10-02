@@ -59,20 +59,25 @@
                     <div class="modal-title" id="donationFormModalLabel"><h3 class="fw-bold">Donation Form</h3></div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form class="donation-form">
-                    <div class="modal-body py-0 fs-5 fw-medium">
+                <form id="donation-form">
+                    <div class="modal-body py-0">
                         <div class="mb-3 mt-2">
-                            <label for="pickup_location" class="form-label">Pickup Location</label>
+                            <label for="pickup_location" class="form-label fs-5 fw-medium">Pickup Location</label>
                             <input type="text" name="pickup_location" class="form-control" id="pickup_location" placeholder="Enter pickup location" required>
-                            <div class="valid-feedback">Very Good!</div>
+                            <div class="invalid-feedback">
+                                Field can't be empty
+                            </div>
                         </div>
                         <div class="mb-3">
-                            <label for="availability" class="form-label">Availability</label>
+                            <label for="availability" class="form-label fs-5 fw-medium">Availability</label>
                             <input type="date" name="availability" class="form-control" id="availability" required>
+                            <div class="invalid-feedback">
+                                Field can't be empty
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-lg btn-secondary fw-medium w-100" type="submit">Submit</button>
+                        <button class="btn btn-lg btn-secondary fw-medium w-100" id="donationForm-submit-btn" type="button">Submit</button>
                     </div>
                 </form>
             </div>

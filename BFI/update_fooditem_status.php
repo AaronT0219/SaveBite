@@ -1,5 +1,6 @@
 <?php
-include '../Main/config.php';
+header('Content-Type: application/json');
+require_once '../Main/config.php';
 
 // error handling function
 function respond($code, $msg) {
