@@ -1,4 +1,5 @@
 <div id="BFI" class="pt-3" style="min-height:30vh;">
+    <!-- Top Nav -->
     <div class="d-flex justify-content-between align-items-center mb-2">
         <h1 class="fw-bold">Browse Food Items</h1>
         <div class="dropdown">
@@ -29,8 +30,14 @@
             </ul>
         </div>
     </div>
+
+    <!-- Active Filter Container -->
     <div class="w-75 d-flex flex-wrap gap-4" id="filterTagContainer"></div>
+
+    <!-- Food Item Container -->
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 py-3" id="foodCardContainer"></div>
+
+    <!-- Food Item Modal -->
     <div class="modal fade" id="foodItemModal" tabindex="-1" aria-labelledby="foodItemModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
@@ -40,6 +47,34 @@
                 </div>
                 <div class="modal-body py-0 fs-5 fw-medium" id="foodItemModalBody"></div>
                 <div class="modal-footer" id="foodItemModalFooter"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Donation Form Modal -->
+    <div class="modal fade" id="donationFormModal" tabindex="-1" aria-labelledby="donationFormModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">\
+            <div class="modal-content">
+                <div class="modal-header px-4">
+                    <div class="modal-title" id="donationFormModalLabel"><h3 class="fw-bold">Donation Form</h3></div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form class="donation-form">
+                    <div class="modal-body py-0 fs-5 fw-medium">
+                        <div class="mb-3 mt-2">
+                            <label for="pickup_location" class="form-label">Pickup Location</label>
+                            <input type="text" name="pickup_location" class="form-control" id="pickup_location" placeholder="Enter pickup location" required>
+                            <div class="valid-feedback">Very Good!</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="availability" class="form-label">Availability</label>
+                            <input type="date" name="availability" class="form-control" id="availability" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-lg btn-secondary fw-medium w-100" type="submit">Submit</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

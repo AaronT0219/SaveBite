@@ -16,7 +16,7 @@ if (!$data || !isset($data['fooditem_id']) || !isset($data['used'])) {
     respond(400, ['success' => false, 'error' => 'Missing parameters']);
 }
 
-//
+// Change food item's status
 $foodItem_id = intval($data['fooditem_id']);
 $used = $data['used'] ? 'used' : '';
 
