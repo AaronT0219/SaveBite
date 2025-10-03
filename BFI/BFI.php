@@ -1,6 +1,6 @@
 <div id="BFI" class="pt-3" style="min-height:30vh;">
     <!-- Top Nav -->
-    <div class="d-flex justify-content-between align-items-center mb-2">
+    <div class="d-flex justify-content-between align-items-center rounded mb-2 py-2 px-4 bg-light shadow">
         <h1 class="fw-bold">Browse Food Items</h1>
         <div class="dropdown">
             <button class="btn dropdown-toggle btn-lg px-4 filter-btn" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">Filter</button>

@@ -2,11 +2,43 @@ html {
     user-select: none;
 }
 
-/* Browse food items CSS */
-.card {
-    background-color: white !important;
+/* Index CSS */
+.content-container {
+    background-color: #efefef;
 }
 
+/* Sidebar CSS */
+.side-nav {
+    background-color: #CCD5AE !important;
+}
+
+a.nav-link {
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    transition: all 0.1s ease-in-out;
+}
+
+.nav-icon {
+    width: 28px;
+    height: 28px;
+    transition: all 0.1s ease-in-out;
+}
+
+a.nav-link:hover, .nav-icon:hover {
+    color: #000000;
+    transform: scale(1.1);
+}
+
+a.nav-link:active, .nav-icon:active {
+    transform: scale(1);
+}
+
+#nav-logout-btn:hover {
+    color: red;
+}
+
+/* Browse food items CSS */
 .item-tag {
     background-color: #D4A373;
 }
