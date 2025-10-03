@@ -227,7 +227,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 let storage = item.storage ? `<p class=\"card-text\"><strong>Storage:</strong> ${item.storage}</p>` : '';
                 const cardHtml = `
                 <div class=\"col\">
-                    <div class=\"card h-100 food-card\" data-idx=\"${idx}\">
+                    <div class=\"card h-100\" data-idx=\"${idx}\">
                         <div class=\"card-header\">
                             <h5 class=\"d-flex justify-content-between mb-0\">${item.name} ${tags}</h5>
                         </div>
