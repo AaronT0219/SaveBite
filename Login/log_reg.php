@@ -12,7 +12,7 @@ if (isset($_POST['register'])) {
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
     $household_size = $_POST['household_size'];
 
-    $checkEmail = $conn->query("SELECT Email FROM user WHERE Email = '$email'");
+    $checkEmail = $conn->query("SELECT email FROM user WHERE email = '$email'");
     if ($checkEmail->num_rows > 0) {
         echo json_encode([
             'success' => false,
@@ -20,7 +20,7 @@ if (isset($_POST['register'])) {
         ]);
         exit();
     } else {
-        $result = $conn->query("INSERT INTO user (User_name, Email, Password, Household_number) VALUES ('$name', '$email', '$password', '$household_size')");
+        $result = $conn->query("INSERT INTO user (user_name, email, password, household_number) VALUES ('$name', '$email', '$password', '$household_size')");
         if ($result) {
             echo json_encode([
                 'success' => true,
@@ -40,12 +40,12 @@ if (isset($_POST['login'])) {
     $email = $_POST['email'];
     $password = $_POST['password'];
 
-    $result = $conn->query("SELECT * FROM user WHERE Email = '$email'");
+    $result = $conn->query("SELECT * FROM user WHERE email = '$email'");
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
-        if (password_verify($password, $user['Password'])) {
-            $_SESSION['name'] = $user['User_name'];
-            $_SESSION['email'] = $user['Email'];
+        if (password_verify($password, $user['password'])) {
+            $_SESSION['name'] = $user['user_name'];
+            $_SESSION['email'] = $user['email'];
             echo json_encode([
                 'success' => true,
                 'redirect' => '../templates/base.php?page=inventory'
