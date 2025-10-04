@@ -1,0 +1,154 @@
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+body {
+    background-color: #d4a373;
+    background-image: url("../assets/images/background.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+.logreg-box {
+    position: relative;
+    overflow: hidden;
+    margin-right: 10%;
+}
+
+.logreg-box .form-box.login {
+    transform: translateX(0);
+    transition: transform 0.5s ease;
+}
+
+.logreg-box.active .form-box.login {
+    transform: translateX(-550px);
+    transition-delay: 0s;
+}
+
+.logreg-box .form-box.register {
+    transform: translateX(550px);
+    transition: transform 0.5s ease;
+}
+
+.logreg-box.active .form-box.register {
+    transform: translateX(0);
+}
+
+.form-box {
+    background: rgba(250, 237, 205, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    position: absolute;
+}
+
+.input-box {
+    position: relative;
+    border-bottom: 2px solid #000;
+}
+
+.input-box input {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+}
+
+.input-box label {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    font-size: 16px;
+    pointer-events: none;
+    transition: 0.5s ease;
+}
+
+.input-box input:focus ~ label,
+.input-box input:valid ~ label,
+.input-box input:invalid:not(:placeholder-shown) ~ label {
+    top: -5px;
+}
+
+.input-box input:invalid:not(:placeholder-shown) {
+    border-bottom-color: #dc3545;
+}
+
+.input-box input:invalid:not(:placeholder-shown) ~ label {
+    color: #dc3545;
+}
+
+.error-message {
+    position: absolute;
+    color: #dc3545;
+    font-size: 14px;
+    display: none;
+}
+
+.input-box input:invalid:not(:placeholder-shown) ~ .error-message {
+    display: block;
+}
+
+.input-box .icon {
+    position: absolute;
+    top: 6px;
+    right: 0;
+}
+
+.input-box span {
+    font-style: italic;
+    font-size: 13px;
+}
+
+.link {
+    text-decoration: none;
+    color: #2d8f76;
+    cursor: pointer;
+}
+
+.link:hover {
+    color: #226e5b;
+}
+
+.btn {
+    background-color: #2d8f76;
+    border: none;
+    outline: none;
+}
+
+.btn:active {
+    background-color: #226e5b !important;
+    cursor: pointer;
+}
+
+.btn:disabled {
+    background-color: #226e5b;
+    cursor: not-allowed;
+}
+
+.btn:hover {
+    background-color: #226e5b;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .logreg-box {
+        margin: auto;
+    }
+}
