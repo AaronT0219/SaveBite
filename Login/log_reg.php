@@ -48,7 +48,7 @@ if (isset($_POST['login'])) {
             $_SESSION['email'] = $user['Email'];
             echo json_encode([
                 'success' => true,
-                'redirect' => '../Main/index.php'
+                'redirect' => '../templates/base.php?page=inventory'
             ]);
             exit();
         }

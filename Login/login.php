@@ -79,9 +79,9 @@ function showError($error) {
                 </div>
                 <div class="mb-5 input-box">
                     <i class="icon" data-lucide="house"></i>
-                    <input type="number" name="household_size" min="1" class="py-2 pe-4" placeholder=" " required>
-                    <label for="household_size">Household Size</label>
-                    <div class="error-message">Please enter a valid number (minimum 1)</div>
+                    <input type="number" name="household_size" min="0" class="py-2 pe-4" placeholder=" " value="0" required>
+                    <label for="household_size">Household Size <span>(optional)</span></label>
+                    <div class="error-message">Please enter a valid number (minimum 0)</div>
                 </div>
                 <div class="mb-3 d-flex justify-content-center">
                     <button type="submit" name="register" class="btn btn-primary w-100 py-2">Sign Up</button>

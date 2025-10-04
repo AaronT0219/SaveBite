@@ -1,20 +1,44 @@
-<div class="bg-dark text-white d-flex flex-column" style="width: 300px; height: 100vh;">
-    <div class="d-flex justify-content-between align-items-center p-3 border-bottom border-secondary">
-        <i data-lucide="circle-user-round"></i>
-        <i data-lucide="arrow-left-to-line"></i>
+<link rel="stylesheet" href="../sidebar/sidebar.css">
+<script src="../sidebar/sidebar.js"></script>
+
+<div id="sidebar" class="sidebar bg-dark text-white d-flex flex-column" style="height: 100vh;">
+    <div class="sidebar-header d-flex justify-content-between align-items-center px-3 py-2 border-bottom border-secondary" style="height: 55px;">
+        <img src="../assets/images/logo.png" alt="Logo" class="logo" style="height: 35px;">
+        <i data-lucide="menu" class="menu-icon" onclick="toggleSidebar()"></i>
     </div>
 
-    <div class="p-3 fs-4 fw-medium d-flex flex-column flex-grow-1 overflow-auto">
+    <div class="sidebar-content py-3 fs-4 fw-medium d-flex flex-column flex-grow-1 overflow-auto">
         <div class="mb-auto">
-            <a href="#" class="nav-link text-light py-2">Food Inventory</a>
-            <a href="#" class="nav-link text-light py-2">Browse Food Items</a>
-            <a href="#" class="nav-link text-light py-2">Plan Weekly Meals</a>
-            <a href="#" class="nav-link text-light py-2">Track and Report</a>
-            <a href="#" class="nav-link text-light py-2">Notifications</a>
+            <a class="nav-link" data-page="inventory" data-tooltip="Food Inventory">
+                <i data-lucide="shopping-cart" class="me-3 icon"></i>
+                <span class="nav-text">Food Inventory</span>
+            </a>
+            <a class="nav-link" data-page="browse" data-tooltip="Browse Food Items">
+                <i data-lucide="search" class="me-3 icon"></i>
+                <span class="nav-text">Browse Food Items</span>
+            </a>
+            <a class="nav-link" data-page="meals" data-tooltip="Plan Weekly Meals">
+                <i data-lucide="calendar" class="me-3 icon"></i>
+                <span class="nav-text">Plan Weekly Meals</span>
+            </a>
+            <a class="nav-link" data-page="reports" data-tooltip="Track and Report">
+                <i data-lucide="chart-no-axes-column" class="me-3 icon"></i>
+                <span class="nav-text">Track and Report</span>
+            </a>
+            <a class="nav-link" data-page="notifications" data-tooltip="Notifications">
+                <i data-lucide="bell" class="me-3 icon"></i>
+                <span class="nav-text">Notifications</span>
+            </a>
         </div>
         <div>
-            <a href="#" class="nav-link text-light py-2">Settings</a>
-            <button class="btn text-light m-0 p-0 py-2 fs-4 fw-medium text-start" onclick="window.location.href='../Logout/logout.php'">Logout</button>
+            <a class="nav-link" data-page="settings" data-tooltip="Settings">
+                <i data-lucide="settings" class="me-3 icon"></i>
+                <span class="nav-text">Settings</span>
+            </a>
+            <a href="../Logout/logout.php" class="nav-link" data-tooltip="Logout">
+                <i data-lucide="log-out" class="me-3 icon"></i>
+                <span class="nav-text">Logout</span>
+            </a>
         </div>
     </div>
 </div>

@@ -111,6 +111,11 @@ body {
     right: 0;
 }
 
+.input-box span {
+    font-style: italic;
+    font-size: 13px;
+}
+
 .link {
     text-decoration: none;
     color: #2d8f76;
