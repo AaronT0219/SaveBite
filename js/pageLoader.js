@@ -33,8 +33,14 @@ class PageLoader {
             // Show loading indicator
             this.showLoading();
 
-            // Fetch page content
-            const response = await fetch(`../pages/${page}.php`);
+            // Try to fetch page from folder structure first, then fallback to direct file
+            let response = await fetch(`../pages/${page}/${page}.php`);
+
+            // If folder structure doesn't exist, try direct file
+            if (!response.ok) {
+                response = await fetch(`../pages/${page}.php`);
+            }
+
             if (!response.ok) {
                 throw new Error(`Failed to load page: ${response.status}`);
             }
@@ -128,7 +134,7 @@ class PageLoader {
     // Load initial page based on URL parameter
     loadInitialPage() {
         const urlParams = new URLSearchParams(window.location.search);
-        const page = urlParams.get("page") || "dashboard"; // default page
+        const page = urlParams.get("page") || "inventory"; // default page
         this.loadPage(page, false);
     }
 }

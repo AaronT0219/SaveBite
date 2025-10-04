@@ -1,3 +1,5 @@
+<link rel="stylesheet" href="../pages/browse/browse.css">
+
 <div class="container-fluid p-4">
     <div class="row">
         <div class="col-12">
