@@ -54,7 +54,7 @@ function sendVerificationCode() {
         }
         
         // Check if email exists in database
-        $stmt = $conn->prepare("SELECT User_id FROM user WHERE Email = ?");
+        $stmt = $conn->prepare("SELECT user_id FROM user WHERE email = ?");
         if (!$stmt) {
             echo json_encode(['success' => false, 'error' => 'Database prepare failed']);
             return;
@@ -162,7 +162,7 @@ function resetPassword() {
     $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
     
     // Update password in database
-    $stmt = $conn->prepare("UPDATE user SET Password = ? WHERE Email = ?");
+    $stmt = $conn->prepare("UPDATE user SET password = ? WHERE email = ?");
     $stmt->bind_param("ss", $hashedPassword, $email);
     
     if ($stmt->execute()) {
