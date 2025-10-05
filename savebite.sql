@@ -118,7 +118,7 @@ CREATE TABLE `notification` (
 --
 
 CREATE TABLE `user` (
-  `user_id` int(20) NOT NULL,
+  `user_id` int(20) UNSIGNED NOT NULL,
   `user_name` varchar(50) NOT NULL,
   `email` varchar(50) NOT NULL,
   `password` varchar(80) NOT NULL,
