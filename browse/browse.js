@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Helper for backend update
     function updateFoodStatus(fooditem_id, used) {
-        return fetch('../BFI/update_fooditem_status.php', {
+        return fetch('../browse/update_fooditem_status.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ fooditem_id, used })
@@ -171,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         const quantity = item.quantity;
                         let donation = true;
     
-                        fetch('../BFI/post_donation.php', {
+                        fetch('../browse/post_donation.php', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ fooditem_id, donation, quantity, pickup_location, availability })
@@ -322,7 +322,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let foodItems = [];
 
     function fetchFoodItemsAndInit() {
-        fetch('../BFI/get_fooditems.php')
+        fetch('../browse/get_fooditems.php')
         .then(response => response.json())
         .then(data => {
             foodItems = data;

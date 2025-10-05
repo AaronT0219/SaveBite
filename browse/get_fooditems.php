@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-require_once '../Main/config.php';
+require_once '../config.php';
 
 $result = mysqli_query($conn, "SELECT * FROM fooditem");
 if (!$result) {

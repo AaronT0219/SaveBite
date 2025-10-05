@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-require_once '../Main/config.php';
+require_once '../config.php';
 
 function respond($code, $msg) {
     http_response_code($code);

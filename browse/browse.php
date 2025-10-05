@@ -1,3 +1,5 @@
+<link rel="stylesheet" href="../browse/browse.css">
+
 <div id="BFI" class="pt-3" style="min-height:30vh;">
     <!-- Top Nav -->
     <div class="d-flex justify-content-between align-items-center rounded mb-2 py-2 px-4 bg-light shadow">
@@ -84,4 +86,4 @@
         </div>
     </div>
 </div>
-<script src="../BFI/BFI.js"></script>
+<script src="../browse/browse.js"></script>
