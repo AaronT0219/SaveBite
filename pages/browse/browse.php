@@ -2,9 +2,9 @@
     <link rel="stylesheet" href="../pages/browse/browse.css">
 </head>
 <body>
-    <div id="BFI" class="pt-3" style="min-height:30vh;">
+    <div id="BFI" class="container-fluid p-4" style="min-height:30vh;">
         <!-- Top Nav -->
-        <div class="d-flex justify-content-between align-items-center mb-2 py-2 px-4 bg-light shadow">
+        <div class="d-flex justify-content-between align-items-center mb-2 py-3 px-4 bg-light rounded shadow">
             <h1 class="fw-bold">Browse Food Items</h1>
             <div class="dropdown">
                 <button class="btn dropdown-toggle btn-lg px-4 filter-btn" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">Filter</button>
@@ -36,11 +36,11 @@
         </div>
     
         <!-- Active Filter Container -->
-        <div class="w-75 d-flex flex-wrap gap-4" id="filterTagContainer"></div>
-    
+        <div class="w-75 d-flex flex-wrap gap-4 px-4 my-4" id="filterTagContainer"></div>
+
         <!-- Food Item Container -->
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 py-3" id="foodCardContainer"></div>
-    
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4 px-3" id="foodCardContainer"></div>
+ 
         <!-- Food Item Modal -->
         <div class="modal fade" id="foodItemModal" tabindex="-1" aria-labelledby="foodItemModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg">

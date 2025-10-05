@@ -34,7 +34,7 @@ if (!isset($_SESSION['email'])) {
         <?php include '../sidebar/sidebar.php'; ?>
         
         <!-- Main content area -->
-        <div id="main-content" class="flex-grow-1" style="min-height: 100vh; transition: margin-left 0.3s ease;">
+        <div id="main-content" class="w-100" style="min-height: 100vh; transition: margin-left 0.3s ease;">
             <!-- Page content will be loaded here -->
             <?php if (isset($pageContent)): ?>
                 <?php echo $pageContent; ?>
