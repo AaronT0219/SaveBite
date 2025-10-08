@@ -91,9 +91,12 @@
             <div class="p-5 d-flex flex-column justify-content-center h-100 text-center">
                 <i data-lucide="check-circle" class="mx-auto mb-4" style="width: 64px; height: 64px; color: #37a98d;"></i>
                 <h1 class="mb-4 fw-bold text-center text-success">Password Reset Successfully!</h1>
-                <p class="mb-5">Your password has been successfully reset. You can now login with your new password.</p>
+                <p class="mb-4">Your password has been successfully reset. You can now login with your new password.</p>
                 <div class="d-flex justify-content-center">
-                    <a href="../Login/login.php" class="btn btn-primary w-100 py-2 text-decoration-none">Go to Login</a>
+                    <a href="../Login/login.php" id="loginRedirectBtn" class="btn btn-primary w-100 py-2 text-decoration-none">Go to Login</a>
+                </div>
+                <div class="mt-3 text-center">
+                    <small class="text-muted">Redirecting to login page in <span id="redirectTimer" class="fw-bold text-primary">3</span> seconds...</small>
                 </div>
             </div>
         </div>
