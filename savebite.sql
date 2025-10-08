@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 25, 2025 at 02:32 PM
+-- Generation Time: Oct 05, 2025 at 08:26 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,8 @@ SET time_zone = "+00:00";
 --
 -- Database: `savebite`
 --
+CREATE DATABASE IF NOT EXISTS `savebite` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `savebite`;
 
 -- --------------------------------------------------------
 
@@ -29,12 +31,12 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `donation` (
   `donation_id` int(20) NOT NULL,
-  `donor_user_id` int(20) NOT NULL,
-  `claimant_user_id` int(20) NOT NULL,
-  `status` enum('pending','picked_up','','') NOT NULL,
+  `status` enum('pending','picked_up') NOT NULL,
   `pickup_location` varchar(60) NOT NULL,
   `description` varchar(80) DEFAULT NULL,
-  `donation_date` date NOT NULL
+  `donation_date` date NOT NULL,
+  `donor_user_id` int(20) UNSIGNED NOT NULL,
+  `claimant_user_id` int(20) UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -57,14 +59,14 @@ CREATE TABLE `donation_fooditem` (
 
 CREATE TABLE `fooditem` (
   `foodItem_id` int(20) NOT NULL,
-  `user_id` int(20) NOT NULL,
   `category` varchar(40) NOT NULL,
   `food_name` varchar(20) NOT NULL,
   `quantity` int(10) NOT NULL,
   `expiry_date` date NOT NULL,
   `storage_location` varchar(80) NOT NULL,
   `description` varchar(80) DEFAULT NULL,
-  `status` enum('used','donated','reserved','') NOT NULL
+  `status` enum('used','donation','reserved','') NOT NULL,
+  `user_id` int(20) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -75,11 +77,11 @@ CREATE TABLE `fooditem` (
 
 CREATE TABLE `mealplan` (
   `mealplan_id` int(20) NOT NULL,
-  `user_id` int(20) NOT NULL,
   `meal_name` varchar(50) NOT NULL,
   `mealplan_date` date NOT NULL,
   `meal_type` enum('breakfast','lunch','dinner','snack') NOT NULL,
-  `description` varchar(80) DEFAULT NULL
+  `description` varchar(80) DEFAULT NULL,
+  `user_id` int(20) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -102,13 +104,13 @@ CREATE TABLE `mealplan_fooditem` (
 
 CREATE TABLE `notification` (
   `notification_id` int(20) NOT NULL,
-  `user_id` int(20) NOT NULL,
   `title` varchar(30) NOT NULL,
   `description` varchar(80) NOT NULL,
   `notification_date` date NOT NULL,
   `status` enum('new','seen','','') NOT NULL,
   `target_type` enum('fooditem','donation','meal_plan','') NOT NULL,
-  `target_id` int(20) NOT NULL
+  `target_id` int(20) NOT NULL,
+  `user_id` int(20) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -118,12 +120,19 @@ CREATE TABLE `notification` (
 --
 
 CREATE TABLE `user` (
-  `user_id` int(20) NOT NULL,
+  `user_id` int(20) UNSIGNED NOT NULL,
   `user_name` varchar(50) NOT NULL,
   `email` varchar(50) NOT NULL,
   `password` varchar(80) NOT NULL,
   `household_number` int(20) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `user`
+--
+
+INSERT INTO `user` (`user_id`, `user_name`, `email`, `password`, `household_number`) VALUES
+(7, 'Aaron', 'brabrab@gmail.com', '$2y$10$ONo/hJPFgUFKsiIbGvSEg.QFuOagb0J7nwppCxN2FGiepRtzLLjEK', 3);
 
 --
 -- Indexes for dumped tables
@@ -176,7 +185,8 @@ ALTER TABLE `notification`
 -- Indexes for table `user`
 --
 ALTER TABLE `user`
-  ADD PRIMARY KEY (`user_id`);
+  ADD PRIMARY KEY (`user_id`),
+  ADD UNIQUE KEY `email_unique` (`email`);
 
 --
 -- AUTO_INCREMENT for dumped tables
@@ -186,13 +196,13 @@ ALTER TABLE `user`
 -- AUTO_INCREMENT for table `donation`
 --
 ALTER TABLE `donation`
-  MODIFY `donation_id` int(20) NOT NULL AUTO_INCREMENT;
+  MODIFY `donation_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `fooditem`
 --
 ALTER TABLE `fooditem`
-  MODIFY `foodItem_id` int(20) NOT NULL AUTO_INCREMENT;
+  MODIFY `foodItem_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `mealplan`
@@ -210,7 +220,7 @@ ALTER TABLE `notification`
 -- AUTO_INCREMENT for table `user`
 --
 ALTER TABLE `user`
-  MODIFY `user_id` int(20) NOT NULL AUTO_INCREMENT;
+  MODIFY `user_id` int(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- Constraints for dumped tables
@@ -220,27 +230,27 @@ ALTER TABLE `user`
 -- Constraints for table `donation`
 --
 ALTER TABLE `donation`
-  ADD CONSTRAINT `claimantUser_user_id_fk` FOREIGN KEY (`claimant_user_id`) REFERENCES `user` (`user_id`),
-  ADD CONSTRAINT `donorUser_user_id_fk` FOREIGN KEY (`donor_user_id`) REFERENCES `user` (`user_id`);
+  ADD CONSTRAINT `claimantUser_user_id_fk` FOREIGN KEY (`claimant_user_id`) REFERENCES `user` (`User_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `donorUser_user_id_fk` FOREIGN KEY (`donor_user_id`) REFERENCES `user` (`User_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `donation_fooditem`
 --
 ALTER TABLE `donation_fooditem`
-  ADD CONSTRAINT `donation_fooditem_fk` FOREIGN KEY (`donation_id`) REFERENCES `donation` (`donation_id`),
-  ADD CONSTRAINT `fooditem_donation_fk` FOREIGN KEY (`fooditem_id`) REFERENCES `fooditem` (`foodItem_id`);
+  ADD CONSTRAINT `donation_fooditem_fk` FOREIGN KEY (`donation_id`) REFERENCES `donation` (`donation_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fooditem_donation_fk` FOREIGN KEY (`fooditem_id`) REFERENCES `fooditem` (`foodItem_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `fooditem`
 --
 ALTER TABLE `fooditem`
-  ADD CONSTRAINT `fooditem_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`);
+  ADD CONSTRAINT `fooditem_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`User_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `mealplan`
 --
 ALTER TABLE `mealplan`
-  ADD CONSTRAINT `mealplan_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`);
+  ADD CONSTRAINT `mealplan_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`User_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `mealplan_fooditem`
@@ -253,7 +263,7 @@ ALTER TABLE `mealplan_fooditem`
 -- Constraints for table `notification`
 --
 ALTER TABLE `notification`
-  ADD CONSTRAINT `notification_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`);
+  ADD CONSTRAINT `notification_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`User_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

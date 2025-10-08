@@ -115,6 +115,50 @@ class PageLoader {
                 return new bootstrap.Modal(modalEl);
             });
         }
+
+        // Skip if no current page
+        if (!this.currentPage) return;
+
+        const pageScriptPath = `../pages/${this.currentPage}/${this.currentPage}.js`;
+        const existingScript = document.querySelector(`script[src="${pageScriptPath}"]`);
+
+        // load javascript if not exist and run init function / else, just run init function
+        if (!existingScript) {
+            fetch(pageScriptPath, { method: "HEAD" })
+            .then(response => {
+                if (response.ok) {
+                    const script = document.createElement("script");
+                    script.src = pageScriptPath;
+                    script.onload = () => {
+                        console.log(`✅ ${this.currentPage}.js loaded successfully`);
+
+                        // run init function on script load
+                        this.runPageInit();
+                    }
+                    script.onerror = () => console.error(`❌ Failed to load ${pageScriptPath}`);
+                    document.body.appendChild(script);
+                } else {
+                    console.warn(`⚠️ No JS file found for page "${this.currentPage}" — skipping script load.`);
+                }
+            })
+            .catch(err => {
+                console.error(`⚠️ Error checking for ${this.currentPage}.js:`, err);
+            });
+        } else {
+            this.runPageInit();
+        }
+
+    }
+    
+    // search for init function on current page, and run them
+    runPageInit() {
+        const initFnName = `init${this.currentPage.charAt(0).toUpperCase() + this.currentPage.slice(1)}Page`;
+        if (typeof window[initFnName] === "function") {
+            console.log(`🔁 Initializing ${this.currentPage} page...`);
+            window[initFnName]();
+        } else {
+            console.log(`⚠️ No init function found for page "${this.currentPage}".`);
+        }
     }
 
     // Update active navigation link
@@ -143,4 +187,5 @@ class PageLoader {
 document.addEventListener("DOMContentLoaded", () => {
     const pageLoader = new PageLoader();
     pageLoader.loadInitialPage();
+    pageLoader.reinitializePageScripts();
 });

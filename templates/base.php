@@ -17,7 +17,9 @@ if (!isset($_SESSION['email'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SaveBite</title>
 
+    <link rel="icon" type="image/x-icon" href="../assets/images/icon_pure.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="base.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <!-- Additional page-specific CSS -->
@@ -33,7 +35,7 @@ if (!isset($_SESSION['email'])) {
         <?php include '../sidebar/sidebar.php'; ?>
         
         <!-- Main content area -->
-        <div id="main-content" class="flex-grow-1" style="min-height: 100vh; transition: margin-left 0.3s ease;">
+        <div id="main-content" class="w-100" style="min-height: 100vh; transition: margin-left 0.3s ease;">
             <!-- Page content will be loaded here -->
             <?php if (isset($pageContent)): ?>
                 <?php echo $pageContent; ?>
