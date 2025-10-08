@@ -1,3 +1,14 @@
 html {
     user-select: none;
+    scroll-behavior: smooth;
+}
+
+#main-content {
+    height: 100vh; 
+    transition: margin-left 0.3s ease; 
+    overflow-y: scroll;
+}
+
+#main-content::-webkit-scrollbar {
+    display: none;
 }

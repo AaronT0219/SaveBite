@@ -1,9 +1,9 @@
 // Helper for backend update
-function updateFoodStatus(fooditem_id, used) {
-    return fetch('../pages/browse/update_fooditem_status.php', {
+function updateFoodStatus(fooditem_id, tagClassName, status) {
+    return fetch('../pages/browse/update_fooditem_status.php' , {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fooditem_id, used })
+        body: JSON.stringify({ fooditem_id, tagClassName, status })
     }).then(res => res.json());
 }
 
@@ -17,33 +17,48 @@ function showFoodModal(item) {
     const mealIcon = lucide.createElement(lucide.Calendar);
     const flagIcon = lucide.createElement(lucide.Flag);
 
-    let tags = item.donation ? '<span class="badge item-tag ms-4">Donation</span>' : item.reserved ? '<span class="badge reserved-tag ms-4">Reserved</span>' : item.used ? `<span class="d-flex align-items-center badge bg-secondary ms-4 used-tag-modal">Used</span>` : '';
+    let tags = item.donation ? '<span class="d-flex align-items-center badge donation-tag ms-4 donation-tag-modal">Donation</span>' : 
+    item.reserved ? '<span class="badge reserved-tag ms-4">Reserved</span>' : 
+    item.used ? `<span class="d-flex align-items-center badge bg-secondary ms-4 used-tag-modal">Used</span>` : '';
+
     modalTitle.innerHTML = `<h3 class="d-flex align-items-center mb-0 fw-bold">${item.name} ${tags}</h3>`;
 
-    const removeBtn = document.querySelector('.used-tag-modal');
-    if (removeBtn) {
-        const xIcon = lucide.createElement(lucide.X);
-        xIcon.classList.add('ms-2', 'usedTag_removeBtn');
-        xIcon.style.cursor = 'pointer';
-        removeBtn.appendChild(xIcon);
-        xIcon.addEventListener('click', function(e) {
-            e.stopPropagation();
-            updateFoodStatus(item.foodItem_id, false)
-            .then(data => {
-                if (data.success) {
-                    item.used = false;
-                    const modalEl = document.getElementById('foodItemModal');
-                    const modalInstance = bootstrap.Modal.getInstance(modalEl);
-                    if (modalInstance) modalInstance.hide();
-                    setTimeout(() => showFoodModal(item), 300);
-                    updateView();
-                } else {
-                    alert('Failed to remove used tag.');
-                }
-            })
-            .catch(() => alert('Failed to remove used tag.'));
-        });
+    function tag_Remove_UpdateStatus(tagClassName) {
+        const removeBtn = document.querySelector(tagClassName);
+
+        if (removeBtn) {
+            const xIcon = lucide.createElement(lucide.X);
+            xIcon.classList.add('ms-2', 'tag_removeBtn');
+            xIcon.style.cursor = 'pointer';
+            removeBtn.appendChild(xIcon);
+            xIcon.addEventListener('click', function(e) {
+                e.stopPropagation();
+                updateFoodStatus(item.foodItem_id, tagClassName, false)
+                .then(data => {
+                    if (data.success) {
+                        if (tagClassName === '.used-tag-modal') {
+                            item.used = false;
+                        } else {
+                            item.donation = false;
+                        }
+
+                        const modalEl = document.getElementById('foodItemModal');
+                        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                        if (modalInstance) modalInstance.hide();
+                        setTimeout(() => showFoodModal(item), 300);
+                        updateView();
+                    } else {
+                        alert('Failed to remove tag.');
+                    }
+                })
+                .catch(() => alert('Failed to remove tag.'));
+            });
+        }
     }
+
+    tag_Remove_UpdateStatus('.used-tag-modal');
+    tag_Remove_UpdateStatus('.donation-tag-modal');
+
 
     modalBody.innerHTML = `
     <ul class="list-group list-group-flush">
@@ -134,7 +149,7 @@ function showFoodModal(item) {
             usedBtn.addEventListener('click', function(e) {
                 usedBtn.disabled = true;
                 usedBtn.classList.add('btn-secondary');
-                updateFoodStatus(item.foodItem_id, true)
+                updateFoodStatus(item.foodItem_id, '.used-tag-modal', true)
                 .then(data => {
                     if (data.success) {
                         item.used = true;
@@ -221,7 +236,7 @@ function renderCards(items) {
         container.appendChild(wrapper);
     } else {
         items.forEach((item, idx) => {
-            let tags = item.donation ? '<span class="badge item-tag">Donation</span>' : item.reserved ? '<span class="badge reserved-tag">Reserved</span>' : item.used ? `<span class="badge bg-secondary used-tag">Used</span>` : '';
+            let tags = item.donation ? '<span class="badge donation-tag">Donation</span>' : item.reserved ? '<span class="badge reserved-tag">Reserved</span>' : item.used ? `<span class="badge bg-secondary used-tag">Used</span>` : '';
             let expiry = item.expiry ? `<p class=\"card-text mb-1\"><strong>Expiry:</strong> ${item.expiry}</p>` : '';
             let storage = item.storage ? `<p class=\"card-text\"><strong>Storage:</strong> ${item.storage}</p>` : '';
             const cardHtml = `

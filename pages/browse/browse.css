@@ -1,4 +1,4 @@
-.item-tag {
+.donation-tag {
     background-color: #D4A373;
 }
 
@@ -12,13 +12,13 @@
     --bs-popover-border-width: 2px !important;
 }
 
-.usedTag_removeBtn{
+.tag_removeBtn{
     width: 0;
     overflow: hidden;
     transition: all 0.1s ease-in-out;
 }
 
-.used-tag-modal:hover .usedTag_removeBtn {
+.used-tag-modal:hover .tag_removeBtn, .donation-tag-modal:hover .tag_removeBtn  {
     width: 1em;
     overflow: auto;
 }
