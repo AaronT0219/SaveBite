@@ -47,6 +47,7 @@ if (isset($_POST['login'])) {
             $_SESSION['id'] = $user['user_id'];
             $_SESSION['name'] = $user['user_name'];
             $_SESSION['email'] = $user['email'];
+            $_SESSION['household_size'] = $user['household_number'];
             echo json_encode([
                 'success' => true,
                 'redirect' => '../templates/base.php?page=inventory'
