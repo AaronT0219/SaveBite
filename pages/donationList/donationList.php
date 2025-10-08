@@ -23,7 +23,7 @@
 <body>
   <header class="topbar">
     <h1 class="title">Donation List</h1>
-    <div class="top_botton"><a class="go_manage_btn" href="manageFoodItem.php">Back to Manage</a></div>
+    <div class="top_botton"><a class="go_manage_btn" data-page="inventory">Back to Manage</a></div>
   </header>
 
   <main class="content" id="list"></main>
