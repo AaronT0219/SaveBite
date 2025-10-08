@@ -19,7 +19,7 @@ if (isset($_SESSION['id'])) {
     // Change food item's status
     $fooditem_id = intval($data['fooditem_id']);
     $quantity = intval($data['quantity']);
-    $donation = $data['donation'] ? 'donation' : '';
+    $donation = $data['donation'] ? 'donation' : null;
     $pickup_location = trim($data['pickup_location']);
     $availability = trim($data['availability']);
     

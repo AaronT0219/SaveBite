@@ -9,6 +9,9 @@ function updateFoodStatus(fooditem_id, tagClassName, status) {
 
 // Show modal with food item details
 function showFoodModal(item) {
+    // replace to the current opened modal
+    currentItem = item;
+
     const modalTitle = document.getElementById('foodItemModalLabel');
     const modalBody = document.getElementById('foodItemModalBody');
     const modalFooter = document.getElementById('foodItemModalFooter');
@@ -111,7 +114,7 @@ function showFoodModal(item) {
             }
         }
 
-        let disableReason = item.used ? 'Card Already Marked as Used' : item.reserved ? 'Card Already Marked as Reserved' : item.donation ? 'Card Is a Donation Listing' : '';
+        let disableReason = item.used ? 'Item Already Marked as Used' : item.reserved ? 'Item Already Marked as Reserved' : item.donation ? 'Item Is a Donation Listing' : '';
         if (disableReason) {
             // Disable used and donation buttons
             usedBtn.disabled = true;
@@ -169,45 +172,6 @@ function showFoodModal(item) {
                     usedBtn.classList.remove('btn-secondary');
                     alert('Failed to mark as used.');
                 });
-            });
-
-            // donation form submit handler
-            const donationForm_submit_btn = document.getElementById('donationForm-submit-btn');
-
-            donationForm_submit_btn.addEventListener('click', function(e) {
-                const pickup_location = document.getElementById('pickup_location').value;
-                const availability = document.getElementById('availability').value;
-                const form = document.getElementById('donation-form');
-
-                if (form.checkValidity()) {
-                    e.preventDefault();
-                    const fooditem_id = item.foodItem_id;
-                    const quantity = item.quantity;
-                    let donation = true;
-
-                    fetch('../pages/browse/post_donation.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ fooditem_id, donation, quantity, pickup_location, availability })
-                    }).then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            item.donation = true;
-                            updateView();
-                            const modalEl = document.getElementById('donationFormModal');
-                            const modalInstance = bootstrap.Modal.getInstance(modalEl);
-                            if (modalInstance) modalInstance.hide();
-                        } else {
-                            alert("Failed to store donation.");
-                        }
-                    })
-                    .catch(() => {
-                        alert('Error: Failed to send donation data.');
-                    });
-                } else {
-                    form.classList.add('was-validated');
-                }
-                
             });
         }
 
@@ -400,9 +364,55 @@ function setupFilterListeners() {
     });
 }
 
+// use to keep track current opened modal
+let currentItem = null;
+
+function donationSubmitBtn_Listener() {
+    const donationForm_submit_btn = document.getElementById('donationForm-submit-btn');
+
+    donationForm_submit_btn.addEventListener('click', function(e) {
+        const form = document.getElementById('donation-form');
+        if (!currentItem) return alert("No food item selected.");
+
+        if (form.checkValidity()) {
+            e.preventDefault();
+
+            const pickup_location = document.getElementById('pickup_location').value;
+            const availability = document.getElementById('availability').value;
+            const fooditem_id = currentItem.foodItem_id;
+            const quantity = currentItem.quantity;
+            const donation = true;
+
+            fetch('../pages/browse/post_donation.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fooditem_id, donation, quantity, pickup_location, availability })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    currentItem.donation = true;
+                    updateView();
+                    const modalEl = document.getElementById('donationFormModal');
+                    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                    if (modalInstance) modalInstance.hide();
+                } else {
+                    alert("Failed to store donation.");
+                }
+            })
+            .catch(() => {
+                alert('Error: Failed to send donation data.');
+            });
+        } else {
+            form.classList.add('was-validated');
+        }
+    });
+}
+
 // init function for page loader to run
 function initBrowsePage() {
     fetchFoodItemsAndInit();
+    donationSubmitBtn_Listener();
     setupFilterListeners();
 }
 window.initBrowsePage = initBrowsePage;
