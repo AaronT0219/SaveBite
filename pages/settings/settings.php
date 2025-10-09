@@ -1,10 +1,10 @@
 <?php
 session_start();
 
-echo "<pre>";
-print_r($_SESSION);
-echo "</pre>";
-echo "</div>";
+// echo "<pre>";
+// print_r($_SESSION);
+// echo "</pre>";
+// echo "</div>";
 
 ?>
 
@@ -34,19 +34,20 @@ echo "</div>";
                     <input type="number" class="form-control" id="household_size" placeholder="Enter your household size" required value="<?php echo isset($_SESSION['household_size']) ? htmlspecialchars($_SESSION['household_size']) : ''; ?>">
                     <div class="error-message">Please enter a valid number (minimum 0)</div>
                 </div>
+                <div class="mb-4 input-box">
+                    <button class="btn btn-primary">Change Password</button>
+                </div>
             </div>
-            <div class="col-md-4">
 
-            </div>
         </div>
     </div>
     <div class="mt-4 px-4"> 
         <h3 class="fw-bold mb-3">Privacy & Security</h3>
         <div class="row">
             <div class="col-md-8">
-                <div class="mb-3 ">
-                    <label class="form-check-label" for="two_factor_auth">Enable Two-Factor Authentication</label>
-                    <input type="checkbox" class="form-check-input" id="two_factor_auth" name="two_factor_auth">
+                <div class="mb-3 form-check form-switch">
+                    <label class="form-check-label" for="switchCheckDefault">Enable Two-Factor Authentication</label>
+                    <input type="checkbox" class="form-check-input" role="switch" id="switchCheckDefault">
                 </div>
             </div>
         </div>
