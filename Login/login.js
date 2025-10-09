@@ -55,18 +55,7 @@ loginForm.addEventListener("submit", async (e) => {
                 window.location.href = data.redirect;
             }
         } else {
-            if (data.needsVerification) {
-                // Show error with option to resend verification
-                showError(
-                    loginError,
-                    data.error +
-                        '<br><a href="verification.php?email=' +
-                        encodeURIComponent(data.email) +
-                        '" class="text-primary">Click here to verify your account</a>'
-                );
-            } else {
-                showError(loginError, data.error);
-            }
+            showError(loginError, data.error);
         }
     } catch (error) {
         showError(loginError, "An error occurred. Please try again.");

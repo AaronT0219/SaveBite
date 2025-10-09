@@ -74,7 +74,7 @@
                 <h1 class="mb-4 fw-bold text-center text-success">Account Created Successfully!</h1>
                 <p class="mb-4">Your SaveBite account has been created and verified. You can now login and start reducing food waste!</p>
                 <div class="d-flex justify-content-center">
-                    <a href="login.php" id="loginRedirectBtn" class="btn btn-primary w-100 py-2 text-decoration-none">Go to Login</a>
+                    <a href="../Login/login.php" id="loginRedirectBtn" class="btn btn-primary w-100 py-2 text-decoration-none">Go to Login</a>
                 </div>
                 <div class="mt-3 text-center">
                     <small class="text-muted">Redirecting to login page in <span id="redirectTimer" class="fw-bold text-primary">3</span> seconds...</small>
@@ -89,7 +89,7 @@
                 <h1 class="mb-4 fw-bold text-center text-success">Account Already Activated!</h1>
                 <p class="mb-4">Your SaveBite account is already active and verified. You can login using your credentials.</p>
                 <div class="d-flex justify-content-center">
-                    <a href="login.php" id="loginRedirectBtnActivated" class="btn btn-primary w-100 py-2 text-decoration-none">Go to Login</a>
+                    <a href="../Login/login.php" id="loginRedirectBtnActivated" class="btn btn-primary w-100 py-2 text-decoration-none">Go to Login</a>
                 </div>
                 <div class="mt-3 text-center">
                     <small class="text-muted">Redirecting to login page in <span id="redirectTimerActivated" class="fw-bold text-primary">3</span> seconds...</small>

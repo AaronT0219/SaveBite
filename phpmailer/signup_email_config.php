@@ -115,7 +115,7 @@ function sendSignupEmailBasic($toEmail, $verificationCode) {
 }
 
 function getSignupEmailTemplate($verificationCode, $email) {
-    $verificationLink = "http://localhost/Projects/SaveBite/Login/verification.php?email=" . urlencode($email) . "&code=" . $verificationCode;
+    $verificationLink = "http://localhost/Projects/SaveBite/verification/verification.php?email=" . urlencode($email) . "&code=" . $verificationCode;
     
     return "
     <html>

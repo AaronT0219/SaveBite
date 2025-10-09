@@ -411,7 +411,7 @@ const backIcon = document.querySelector(".back-icon");
 
 if (backIcon) {
     backIcon.addEventListener("click", function () {
-        window.location.href = "login.php";
+        window.location.href = "../Login/login.php";
     });
 }
 
@@ -431,7 +431,7 @@ function startRedirectCountdown() {
 
         if (countdown <= 0) {
             clearInterval(interval);
-            window.location.href = "login.php";
+            window.location.href = "../Login/login.php";
         }
     }, 1000);
 }
@@ -447,7 +447,7 @@ function startRedirectCountdownActivated() {
 
         if (countdown <= 0) {
             clearInterval(interval);
-            window.location.href = "login.php";
+            window.location.href = "../Login/login.php";
         }
     }, 1000);
 }
@@ -455,7 +455,7 @@ function startRedirectCountdownActivated() {
 // Auto-redirect on login button click
 document.getElementById("loginRedirectBtn").addEventListener("click", (e) => {
     e.preventDefault();
-    window.location.href = "login.php";
+    window.location.href = "../Login/login.php";
 });
 
 // Auto-redirect on login button click for already activated
@@ -463,7 +463,7 @@ document
     .getElementById("loginRedirectBtnActivated")
     .addEventListener("click", (e) => {
         e.preventDefault();
-        window.location.href = "login.php";
+        window.location.href = "../Login/login.php";
     });
 
 // Add real-time password confirmation validation
