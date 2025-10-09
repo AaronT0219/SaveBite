@@ -1,11 +1,11 @@
 <?php
-// PHPMailer email configuration for SaveBite Signup Verification
+// PHPMailer email configuration for SaveBite Signup Activation
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
-function sendSignupEmail($toEmail, $verificationCode) {
-    error_log("Attempting to send signup verification email to: $toEmail from directory: " . getcwd());
+function sendSignupEmail($toEmail, $activationCode) {
+    error_log("Attempting to send signup activation email to: $toEmail from directory: " . getcwd());
     
     // Check for PHPMailer in multiple locations
     $phpmailerPaths = [
@@ -29,7 +29,7 @@ function sendSignupEmail($toEmail, $verificationCode) {
     
     if (!$phpmailerPath) {
         error_log("PHPMailer not found in any expected location. Tried: " . implode(', ', $phpmailerPaths));
-        return sendSignupEmailBasic($toEmail, $verificationCode);
+        return sendSignupEmailBasic($toEmail, $activationCode);
     }
     
     // Load email credentials - check multiple locations
@@ -82,9 +82,9 @@ function sendSignupEmail($toEmail, $verificationCode) {
         
         // Content
         $mail->isHTML(true);
-        $mail->Subject = 'Welcome to SaveBite - Verify Your Account';
-        $mail->Body    = getSignupEmailTemplate($verificationCode, $toEmail);
-        $mail->AltBody = "Welcome to SaveBite! Your account verification code is: $verificationCode. This code expires in 1 minute. Complete your registration by entering this code on our verification page.";
+        $mail->Subject = 'Welcome to SaveBite - Activate Your Account';
+        $mail->Body    = getSignupEmailTemplate($activationCode, $toEmail);
+        $mail->AltBody = "Welcome to SaveBite! Your account activation code is: $activationCode. This code expires in 1 minute. Complete your registration by entering this code on our activation page.";
         
         return $mail->send();
         
@@ -96,9 +96,9 @@ function sendSignupEmail($toEmail, $verificationCode) {
 }
 
 // Basic fallback email function
-function sendSignupEmailBasic($toEmail, $verificationCode) {
-    $subject = "Welcome to SaveBite - Verify Your Account";
-    $message = getSignupEmailTemplate($verificationCode, $toEmail);
+function sendSignupEmailBasic($toEmail, $activationCode) {
+    $subject = "Welcome to SaveBite - Activate Your Account";
+    $message = getSignupEmailTemplate($activationCode, $toEmail);
     
     $headers = array(
         'MIME-Version' => '1.0',
@@ -114,8 +114,8 @@ function sendSignupEmailBasic($toEmail, $verificationCode) {
     return mail($toEmail, $subject, $message, $headerString);
 }
 
-function getSignupEmailTemplate($verificationCode, $email) {
-    $verificationLink = "http://localhost/Projects/SaveBite/verification/verification.php?email=" . urlencode($email) . "&code=" . $verificationCode;
+function getSignupEmailTemplate($activationCode, $email) {
+    $activationLink = "http://localhost/Projects/SaveBite/verification/verification.php?email=" . urlencode($email) . "&code=" . $activationCode;
     
     return "
     <html>
@@ -130,19 +130,19 @@ function getSignupEmailTemplate($verificationCode, $email) {
             </div>
             
             <div style='background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;'>
-                <h3 style='color: #333; margin-bottom: 15px;'>Account Verification Required</h3>
+                <h3 style='color: #333; margin-bottom: 15px;'>Account Activation Required</h3>
                 <p style='color: #666; line-height: 1.6;'>
                     <strong>Important:</strong> Thank you for joining SaveBite! To complete your registration and start reducing food waste, 
-                    you must verify your account by clicking the link below and entering your verification code.
+                    you must activate your account by clicking the link below and entering your activation code.
                 </p>
                 <p style='color: #666; line-height: 1.6;'>
-                    <strong>This is a required step</strong> - your account will remain inactive until verified.
+                    <strong>This is a required step</strong> - your account will remain inactive until activated.
                 </p>
             </div>
             
             <div style='text-align: center; margin: 30px 0;'>
                 <div style='background-color: #37a98d; color: white; font-size: 32px; font-weight: bold; padding: 20px; border-radius: 8px; letter-spacing: 5px; margin-bottom: 20px;'>
-                    " . $verificationCode . "
+                    " . $activationCode . "
                 </div>
                 <p style='color: #666; margin-bottom: 20px;'>This code will expire in 1 minute</p>
                 
@@ -150,8 +150,8 @@ function getSignupEmailTemplate($verificationCode, $email) {
                     <table cellpadding='0' cellspacing='0' border='0' style='margin: 0 auto;'>
                         <tr>
                             <td style='background-color: #37a98d; border-radius: 5px; padding: 0;'>
-                                <a href='" . $verificationLink . "' style='display: block; color: white !important; padding: 15px 30px; text-decoration: none; font-weight: bold; font-size: 16px; border-radius: 5px;' target='_blank'>
-                                    Complete Registration
+                                <a href='" . $activationLink . "' style='display: block; color: white !important; padding: 15px 30px; text-decoration: none; font-weight: bold; font-size: 16px; border-radius: 5px;' target='_blank'>
+                                    Activate Account Now
                                 </a>
                             </td>
                         </tr>
@@ -160,15 +160,15 @@ function getSignupEmailTemplate($verificationCode, $email) {
                 
                 <p style='color: #666; font-size: 14px;'>
                     Or copy and paste this link in your browser:<br>
-                    <a href='" . $verificationLink . "' style='color: #37a98d; word-break: break-all; text-decoration: underline;' target='_blank'>" . $verificationLink . "</a>
+                    <a href='" . $activationLink . "' style='color: #37a98d; word-break: break-all; text-decoration: underline;' target='_blank'>" . $activationLink . "</a>
                 </p>
             </div>
             
             <div style='background-color: #e8f5e8; border: 1px solid #37a98d; padding: 15px; border-radius: 8px; margin-bottom: 20px;'>
                 <h4 style='color: #37a98d; margin-top: 0;'>✅ Next Steps to Activate Your Account:</h4>
                 <ol style='color: #333; margin: 0; padding-left: 20px;'>
-                    <li><strong>Click the 'Complete Registration Now' button above</strong></li>
-                    <li>Enter your 6-digit verification code: <strong style='color: #37a98d;'>" . $verificationCode . "</strong></li>
+                    <li><strong>Click the 'Activate Account Now' button above</strong></li>
+                    <li>Enter your 6-digit activation code: <strong style='color: #37a98d;'>" . $activationCode . "</strong></li>
                     <li>Set your account password</li>
                     <li>Start using SaveBite to reduce food waste!</li>
                 </ol>
@@ -177,7 +177,7 @@ function getSignupEmailTemplate($verificationCode, $email) {
             <div style='background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 8px; margin-bottom: 20px;'>
                 <p style='color: #856404; margin: 0;'>
                     <strong>Security Note:</strong> If you didn't create this account, please ignore this email. 
-                    No account will be created without completing the verification process.
+                    No account will be created without completing the activation process.
                 </p>
             </div>
             

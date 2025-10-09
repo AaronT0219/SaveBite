@@ -33,16 +33,16 @@ if (isset($_POST['register'])) {
                 throw new Exception('Failed to create user account');
             }
             
-            // Generate verification code
-            $verificationCode = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+            // Generate activation code
+            $activationCode = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
             $expiresAt = date('Y-m-d H:i:s', time() + 60); // 1 minute from now
             
-            // Store verification code
+            // Store activation code
             $stmt = $conn->prepare("INSERT INTO verification_codes (email, code, expires_at) VALUES (?, ?, ?)");
-            $stmt->bind_param("sss", $email, $verificationCode, $expiresAt);
+            $stmt->bind_param("sss", $email, $activationCode, $expiresAt);
             
             if (!$stmt->execute()) {
-                throw new Exception('Failed to generate verification code');
+                throw new Exception('Failed to generate activation code');
             }
             
             // Store temp password in session for later use
@@ -51,17 +51,17 @@ if (isset($_POST['register'])) {
                 'password' => $temp_password
             ];
             
-            // Send verification email
+            // Send activation email
             require_once '../phpmailer/signup_email_config.php';
-            if (!sendSignupEmail($email, $verificationCode)) {
-                throw new Exception('Failed to send verification email');
+            if (!sendSignupEmail($email, $activationCode)) {
+                throw new Exception('Failed to send activation email');
             }
             
             $conn->commit();
             
             echo json_encode([
                 'success' => true,
-                'message' => 'Registration initiated! Please check your email for a verification link to complete your account setup.',
+                'message' => 'Registration initiated! Please check your email for an activation link to complete your account setup.',
                 'showEmailMessage' => true
             ]);
             
@@ -88,7 +88,7 @@ if (isset($_POST['login'])) {
         if ($user['isAuthActive'] == 0) {
             echo json_encode([
                 'success' => false,
-                'error' => 'Account not verified. Please check your email for verification instructions.',
+                'error' => 'Account not activated. Please check your email for activation instructions.',
                 'needsVerification' => true,
                 'email' => $email
             ]);
@@ -100,6 +100,7 @@ if (isset($_POST['login'])) {
             $_SESSION['name'] = $user['user_name'];
             $_SESSION['email'] = $user['email'];
             $_SESSION['household_size'] = $user['household_number'];
+            $_SESSION['isAuthActive'] = $user['isAuthActive'];
             echo json_encode([
                 'success' => true,
                 'redirect' => '../templates/base.php?page=inventory'

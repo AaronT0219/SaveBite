@@ -47,7 +47,7 @@ session_start();
             <div class="col-md-8">
                 <div class="mb-3 form-check form-switch">
                     <label class="form-check-label" for="switchCheckDefault">Enable Two-Factor Authentication</label>
-                    <input type="checkbox" class="form-check-input" role="switch" id="switchCheckDefault">
+                    <input type="checkbox" class="form-check-input" role="switch" id="switchCheckDefault" <?php echo (isset($_SESSION['isAuthActive']) && $_SESSION['isAuthActive'] == 1) ? 'checked' : ''; ?>>
                 </div>
             </div>
         </div>
