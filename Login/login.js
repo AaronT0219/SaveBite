@@ -79,13 +79,25 @@ registerForm.addEventListener("submit", async (e) => {
         const data = await response.json();
 
         if (data.success) {
-            showSuccess(registerError, data.message);
-            registerForm.reset();
-            // Switch to login form after successful registration
-            setTimeout(() => {
-                logregBox.classList.remove("active");
-                clearErrors();
-            }, 2000);
+            if (data.showEmailMessage) {
+                // Show success message and tell user to check email
+                showSuccess(
+                    registerError,
+                    data.message +
+                        '<br><small class="text-muted">Check your spam folder if you don\'t see the email within a few minutes.</small>'
+                );
+                registerForm.reset();
+                // Switch to login form after showing message
+                setTimeout(() => {
+                    logregBox.classList.remove("active");
+                    clearErrors();
+                }, 5000); // Give user more time to read the message
+            } else if (data.redirect) {
+                // Fallback redirect (shouldn't happen now)
+                window.location.href = data.redirect;
+            } else {
+                showSuccess(registerError, data.message);
+            }
         } else {
             showError(registerError, data.error);
         }

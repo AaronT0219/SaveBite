@@ -33,6 +33,8 @@ if (!isset($_SESSION['email'])) {
     <div class="d-flex">
         <!-- Sidebar -->
         <?php include '../sidebar/sidebar.php'; ?>
+
+        <i data-lucide="bell" data-page="notifications" class="notification-icon"></i>
         
         <!-- Main content area -->
         <div id="main-content" class="w-100">

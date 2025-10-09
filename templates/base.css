@@ -4,11 +4,18 @@ html {
 }
 
 #main-content {
-    height: 100vh; 
-    transition: margin-left 0.3s ease; 
+    height: 100vh;
+    transition: margin-left 0.3s ease;
     overflow-y: scroll;
 }
 
 #main-content::-webkit-scrollbar {
     display: none;
+}
+
+.notification-icon {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    cursor: pointer;
 }

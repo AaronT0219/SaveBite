@@ -1,53 +1,53 @@
+<?php
+session_start();
+
+// echo "<pre>";
+// print_r($_SESSION);
+// echo "</pre>";
+// echo "</div>";
+
+?>
+
 <link rel="stylesheet" href="../pages/settings/settings.css">
 
 <div class="container-fluid p-4">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="mb-4">Settings</h1>
-            
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="mb-0">Profile Settings</h5>
-                        </div>
-                        <div class="card-body">
-                            <form>
-                                <div class="mb-3">
-                                    <label for="username" class="form-label">Username</label>
-                                    <input type="text" class="form-control" id="username" value="user@example.com">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="fullName" class="form-label">Full Name</label>
-                                    <input type="text" class="form-control" id="fullName" value="John Doe">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="email" class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="email" value="john@example.com">
-                                </div>
-                                <button type="submit" class="btn btn-primary">Save Changes</button>
-                            </form>
-                        </div>
-                    </div>
+    <div class="d-flex mb-2 py-3 px-4 bg-light rounded shadow">
+        <h1 class="fw-bold">Settings</h1>
+    </div>
+
+    <div class="mt-4 px-4"> 
+        <h3 class="fw-bold mb-3">Profile</h3>
+        <div class="row">
+            <div class="col-md-8">
+                <div class="mb-4 input-box">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" class="form-control" id="username" placeholder="Enter your username" required value="<?php echo isset($_SESSION['name']) ? htmlspecialchars($_SESSION['name']) : ''; ?>">
+                    <div class="error-message">Please enter a username</div>
                 </div>
-                
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="mb-0">Account Actions</h5>
-                        </div>
-                        <div class="card-body">
-                            <button class="btn btn-outline-warning w-100 mb-2">
-                                <i data-lucide="key" class="me-2"></i>Change Password
-                            </button>
-                            <button class="btn btn-outline-info w-100 mb-2">
-                                <i data-lucide="download" class="me-2"></i>Export Data
-                            </button>
-                            <button class="btn btn-outline-danger w-100">
-                                <i data-lucide="trash-2" class="me-2"></i>Delete Account
-                            </button>
-                        </div>
-                    </div>
+                <div class="mb-4 input-box">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" placeholder="Enter your email" required value="<?php echo isset($_SESSION['email']) ? htmlspecialchars($_SESSION['email']) : ''; ?>">
+                    <div class="error-message">Please enter a valid email address</div>
+                </div>
+                <div class="mb-4 input-box">
+                    <label for="household_size" class="form-label">Household Size</label>
+                    <input type="number" class="form-control" id="household_size" placeholder="Enter your household size" required value="<?php echo isset($_SESSION['household_size']) ? htmlspecialchars($_SESSION['household_size']) : ''; ?>">
+                    <div class="error-message">Please enter a valid number (minimum 0)</div>
+                </div>
+                <div class="mb-4 input-box">
+                    <button class="btn btn-primary">Change Password</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="mt-4 px-4"> 
+        <h3 class="fw-bold mb-3">Privacy & Security</h3>
+        <div class="row">
+            <div class="col-md-8">
+                <div class="mb-3 form-check form-switch">
+                    <label class="form-check-label" for="switchCheckDefault">Enable Two-Factor Authentication</label>
+                    <input type="checkbox" class="form-check-input" role="switch" id="switchCheckDefault" <?php echo (isset($_SESSION['isAuthActive']) && $_SESSION['isAuthActive'] == 1) ? 'checked' : ''; ?>>
                 </div>
             </div>
         </div>

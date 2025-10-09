@@ -4,6 +4,8 @@ document.addEventListener("DOMContentLoaded", function () {
     let userEmail = "";
     let countdownTimer = null;
     let timeRemaining = 60; // 1 minute in seconds
+    let redirectTimer = null;
+    let redirectTimeRemaining = 3; // 3 seconds for redirect
 
     const steps = {
         1: document.getElementById("step1"),
@@ -17,6 +19,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const codeForm = document.getElementById("codeForm");
     const passwordForm = document.getElementById("passwordForm");
     const resendCodeLink = document.getElementById("resendCode");
+    const loginRedirectBtn = document.getElementById("loginRedirectBtn");
 
     // Back icon handling
     const backIcon = document.querySelector(".back-icon");
@@ -254,6 +257,15 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    // Redirect button handling
+    if (loginRedirectBtn) {
+        loginRedirectBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+            stopRedirectTimer(); // Stop the auto-redirect timer
+            window.location.href = "../Login/login.php";
+        });
+    }
+
     // Functions
     function showStep(stepNumber) {
         // Hide all steps
@@ -273,6 +285,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         currentStep = stepNumber;
+
+        // Start redirect timer if showing success step
+        if (stepNumber === "success") {
+            startRedirectTimer();
+        }
 
         // Focus on first input of the step
         setTimeout(() => {
@@ -428,6 +445,37 @@ document.addEventListener("DOMContentLoaded", function () {
         timerElements.forEach((element) => {
             element.textContent = timeString;
         });
+    }
+
+    // Redirect timer functions
+    function startRedirectTimer() {
+        redirectTimeRemaining = 3; // Reset to 3 seconds
+        updateRedirectTimerDisplay();
+
+        redirectTimer = setInterval(() => {
+            redirectTimeRemaining--;
+            updateRedirectTimerDisplay();
+
+            if (redirectTimeRemaining <= 0) {
+                stopRedirectTimer();
+                // Redirect to login page
+                window.location.href = "../Login/login.php";
+            }
+        }, 1000);
+    }
+
+    function stopRedirectTimer() {
+        if (redirectTimer) {
+            clearInterval(redirectTimer);
+            redirectTimer = null;
+        }
+    }
+
+    function updateRedirectTimerDisplay() {
+        const timerElement = document.getElementById("redirectTimer");
+        if (timerElement) {
+            timerElement.textContent = redirectTimeRemaining;
+        }
     }
 
     // Handle 6-digit verification code inputs
