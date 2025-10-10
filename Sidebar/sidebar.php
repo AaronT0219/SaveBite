@@ -1,7 +1,7 @@
-<link rel="stylesheet" href="../sidebar/sidebar.css">
-<script src="../sidebar/sidebar.js"></script>
+<link rel="stylesheet" href="../Sidebar/sidebar.css">
+<script src="../Sidebar/sidebar.js"></script>
 
-<div id="sidebar" class="sidebar bg-dark text-white d-flex flex-column" style="height: 100vh;">
+<div id="sidebar" class="sidebar d-flex flex-column shadow" style="height: 100vh;">
     <div class="sidebar-header d-flex justify-content-between align-items-center px-3 py-2 border-bottom border-secondary" style="height: 55px;">
         <img src="../assets/images/logo.png" alt="Logo" class="logo" style="height: 35px;">
         <i data-lucide="menu" class="menu-icon" onclick="toggleSidebar()"></i>

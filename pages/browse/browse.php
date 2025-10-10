@@ -21,7 +21,7 @@
                             <li><a class="dropdown-item filter-option" data-filter="category" data-value="Snacks & Beverages" href="#">Snacks & Beverages</a></li>
                         </ul>
                     </li>
-                    <li><a class="dropdown-item filter-option" data-filter="expiry" href="#">Expiry Date (Soonest First)</a></li>
+                    <li><a class="dropdown-item filter-option" data-filter="expiry" href="#">Expiry Date (Soonest to Latest)</a></li>
                     <li class="dropdown-submenu">
                         <span id="storageDropdown" class="dropdown-item disabled">Storage Type</span>
                         <ul class="dropdown-menu">
@@ -81,7 +81,7 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button class="btn btn-lg btn-secondary fw-medium w-100" id="donationForm-submit-btn" type="button">Submit</button>
+                            <button class="btn btn-lg fw-medium w-100" id="donationForm-submit-btn" type="button">Submit</button>
                         </div>
                     </form>
                 </div>

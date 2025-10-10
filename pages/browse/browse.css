@@ -1,3 +1,35 @@
+/* food item css */
+#foodCardContainer .col {
+    transition: all 0.1s ease-in-out;
+}
+
+#foodCardContainer .col:active {
+    transform: scale(.98);
+}
+
+/* modal css */
+.modal-header {
+    background-color: #21252908;
+}
+
+.planMeal-btn, .flagDonation-btn, .markUsed-btn, #donationForm-submit-btn {
+    --bs-btn-bg: #CCD5AE !important;
+    --bs-btn-border-color: #CCD5AE;
+    --bs-btn-hover-bg: rgb(182, 187, 143);
+    --bs-btn-active-bg: rgb(182, 187, 143);
+    --bs-btn-active-border-color: rgb(135, 139, 102);
+    transition: all 0.1s ease-in-out !important;
+}
+
+.planMeal-btn:active, .flagDonation-btn:active, .markUsed-btn:active {
+    transform: scale(0.9);
+}
+
+#donationForm-submit-btn:active {
+    transform: scale(.97);
+}
+
+/* modal tag css */
 .donation-tag {
     background-color: #D4A373;
 }
@@ -22,34 +54,6 @@
     width: 1em;
     overflow: auto;
 }
-
-/* food item css */
-#foodCardContainer .col {
-    transition: all 0.1s ease-in-out;
-}
-
-#foodCardContainer .col:active {
-    transform: scale(.98);
-}
-
-/* modal css */
-.modal-header {
-    background-color: #21252908;
-}
-
-.planMeal-btn, .flagDonation-btn, .markUsed-btn {
-    --bs-btn-bg: #CCD5AE !important;
-    --bs-btn-border-color: #CCD5AE;
-    --bs-btn-hover-bg: rgb(182, 187, 143);
-    --bs-btn-active-bg: rgb(182, 187, 143);
-    --bs-btn-active-border-color: rgb(135, 139, 102);
-    transition: all 0.1s ease-in-out !important;
-}
-
-.planMeal-btn:active, .flagDonation-btn:active, .markUsed-btn:active {
-    transform: scale(0.9);
-}
-
 
 /* filter btn & dropdown css */
 #filterTagContainer {

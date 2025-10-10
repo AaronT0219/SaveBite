@@ -20,12 +20,14 @@ function showFoodModal(item) {
     const mealIcon = lucide.createElement(lucide.Calendar);
     const flagIcon = lucide.createElement(lucide.Flag);
 
+    // tags template
     let tags = item.donation ? '<span class="d-flex align-items-center badge donation-tag ms-4 donation-tag-modal">Donation</span>' : 
     item.reserved ? '<span class="badge reserved-tag ms-4">Reserved</span>' : 
     item.used ? `<span class="d-flex align-items-center badge bg-secondary ms-4 used-tag-modal">Used</span>` : '';
 
-    modalTitle.innerHTML = `<h3 class="d-flex align-items-center mb-0 fw-bold">${item.name} ${tags}</h3>`;
+    modalTitle.innerHTML = `<h3 class="d-flex align-items-center mb-0 ms-3 fw-bold">${item.name} ${tags}</h3>`;
 
+    // tag removing operation handler
     function tag_Remove_UpdateStatus(tagClassName) {
         const removeBtn = document.querySelector(tagClassName);
 
@@ -235,7 +237,7 @@ function getFilterLabel(filter, value) {
         case 'inventory': return 'Inventory Only';
         case 'donation': return 'Donation Listings';
         case 'category': return value;
-        case 'expiry': return 'Expiry Date (Soonest First)';
+        case 'expiry': return 'Expiry Date (Soonest to Latest)';
         case 'storage': return value;
         default: return filter;
     }

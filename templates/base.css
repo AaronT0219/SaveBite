@@ -3,19 +3,22 @@ html {
     scroll-behavior: smooth;
 }
 
-#main-content {
+#main-content-container {
+    background-color: rgb(255, 255, 255, 0.9);
+    background-blend-mode: lighten;
+    background-image: url("../assets/images/icon&title.png");
+    background-position: center;
+    background-size: 50rem;
+    background-repeat: no-repeat;
     height: 100vh;
     transition: margin-left 0.3s ease;
     overflow-y: scroll;
 }
 
-#main-content::-webkit-scrollbar {
+#main-content-container::-webkit-scrollbar {
     display: none;
 }
 
 .notification-icon {
-    position: absolute;
-    right: 15px;
-    top: 15px;
     cursor: pointer;
 }
