@@ -79,21 +79,33 @@ registerForm.addEventListener("submit", async (e) => {
         const data = await response.json();
 
         if (data.success) {
-            if (data.showEmailMessage) {
-                // Show success message and tell user to check email
+            if (data.redirect_to_login) {
+                // Show success message with countdown
                 showSuccess(
                     registerError,
                     data.message +
-                        '<br><small class="text-muted">Check your spam folder if you don\'t see the email within a few minutes.</small>'
+                        '<br><small class="text-muted">Redirecting to login in <span id="countdown">3</span> seconds...</small>'
                 );
                 registerForm.reset();
-                // Switch to login form after showing message
-                setTimeout(() => {
-                    logregBox.classList.remove("active");
-                    clearErrors();
-                }, 5000); // Give user more time to read the message
+
+                // Start countdown
+                let countdown = 3;
+                const countdownElement = document.getElementById("countdown");
+
+                const countdownInterval = setInterval(() => {
+                    countdown--;
+                    if (countdownElement) {
+                        countdownElement.textContent = countdown;
+                    }
+
+                    if (countdown <= 0) {
+                        clearInterval(countdownInterval);
+                        logregBox.classList.remove("active");
+                        clearErrors();
+                    }
+                }, 1000);
             } else if (data.redirect) {
-                // Fallback redirect (shouldn't happen now)
+                // Fallback redirect
                 window.location.href = data.redirect;
             } else {
                 showSuccess(registerError, data.message);

@@ -1,11 +1,5 @@
 <?php
 session_start();
-
-// echo "<pre>";
-// print_r($_SESSION);
-// echo "</pre>";
-// echo "</div>";
-
 ?>
 
 <link rel="stylesheet" href="../pages/settings/settings.css">
@@ -46,8 +40,39 @@ session_start();
         <div class="row">
             <div class="col-md-8">
                 <div class="mb-3 form-check form-switch">
-                    <label class="form-check-label" for="switchCheckDefault">Enable Two-Factor Authentication</label>
-                    <input type="checkbox" class="form-check-input" role="switch" id="switchCheckDefault" <?php echo (isset($_SESSION['isAuthActive']) && $_SESSION['isAuthActive'] == 1) ? 'checked' : ''; ?>>
+                    <label class="form-check-label" for="twoFactorSwitch">Enable Two-Factor Authentication</label>
+                    <input type="checkbox" class="form-check-input" role="switch" id="twoFactorSwitch" <?php echo (isset($_SESSION['isAuthActive']) && $_SESSION['isAuthActive'] == 1) ? 'checked' : ''; ?>>
+                    <div class="mt-2">
+                        <small class="text-muted" id="twoFactorStatus">
+                            <?php 
+                                if (isset($_SESSION['isAuthActive']) && $_SESSION['isAuthActive'] == 1) {
+                                    echo "Your account is protected with Two-Factor Authentication.";
+                                } else {
+                                    echo "Add an extra layer of security to your account.";
+                                }
+                            ?>
+                        </small>
+                    </div>
+                    <!-- 2FA Notification Area -->
+                    <div id="twoFactorNotification" class="mt-2" style="display: none;">
+                        <div class="alert mb-0" role="alert">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span id="twoFactorNotificationMessage"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 2FA Confirmation Area -->
+                    <div id="twoFactorConfirmation" class="mt-2" style="display: none;">
+                        <div class="alert alert-warning mb-0" role="alert">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span id="twoFactorConfirmationMessage"></span>
+                                <div>
+                                    <button type="button" class="btn btn-danger btn-sm me-2" id="confirmDisable2FA">Yes, Disable</button>
+                                    <button type="button" class="btn btn-secondary btn-sm" id="cancelDisable2FA">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

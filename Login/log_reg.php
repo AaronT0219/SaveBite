@@ -9,7 +9,7 @@ header('Content-Type: application/json');
 if (isset($_POST['register'])) {
     $name = $_POST['fullname'];
     $email = $_POST['email'];
-    $temp_password = $_POST['password']; // Store temporarily, will be set after verification
+    $password = $_POST['password'];
     $household_size = $_POST['household_size'];
 
     $checkEmail = $conn->query("SELECT email FROM user WHERE email = '$email'");
@@ -20,56 +20,23 @@ if (isset($_POST['register'])) {
         ]);
         exit();
     } else {
-        // Start transaction
-        $conn->begin_transaction();
+        // Hash the password
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
         
-        try {
-            // Insert user with temporary password and inactive status
-            $tempPassword = password_hash('temp_' . uniqid(), PASSWORD_DEFAULT);
-            $stmt = $conn->prepare("INSERT INTO user (user_name, email, password, household_number, isAuthActive) VALUES (?, ?, ?, ?, 0)");
-            $stmt->bind_param("sssi", $name, $email, $tempPassword, $household_size);
-            
-            if (!$stmt->execute()) {
-                throw new Exception('Failed to create user account');
-            }
-            
-            // Generate activation code
-            $activationCode = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
-            $expiresAt = date('Y-m-d H:i:s', time() + 60); // 1 minute from now
-            
-            // Store activation code
-            $stmt = $conn->prepare("INSERT INTO verification_codes (email, code, expires_at) VALUES (?, ?, ?)");
-            $stmt->bind_param("sss", $email, $activationCode, $expiresAt);
-            
-            if (!$stmt->execute()) {
-                throw new Exception('Failed to generate activation code');
-            }
-            
-            // Store temp password in session for later use
-            $_SESSION['temp_signup_data'] = [
-                'email' => $email,
-                'password' => $temp_password
-            ];
-            
-            // Send activation email
-            require_once '../phpmailer/signup_email_config.php';
-            if (!sendSignupEmail($email, $activationCode)) {
-                throw new Exception('Failed to send activation email');
-            }
-            
-            $conn->commit();
-            
+        // Insert user directly with active status
+        $stmt = $conn->prepare("INSERT INTO user (user_name, email, password, household_number, isAuthActive) VALUES (?, ?, ?, ?, 0)");
+        $stmt->bind_param("sssi", $name, $email, $hashedPassword, $household_size);
+        
+        if ($stmt->execute()) {
             echo json_encode([
                 'success' => true,
-                'message' => 'Registration initiated! Please check your email for an activation link to complete your account setup.',
-                'showEmailMessage' => true
+                'message' => 'Registration successful!',
+                'redirect_to_login' => true
             ]);
-            
-        } catch (Exception $e) {
-            $conn->rollback();
+        } else {
             echo json_encode([
                 'success' => false,
-                'error' => 'Registration failed: ' . $e->getMessage()
+                'error' => 'Registration failed. Please try again.'
             ]);
         }
         exit();
@@ -83,17 +50,6 @@ if (isset($_POST['login'])) {
     $result = $conn->query("SELECT * FROM user WHERE email = '$email'");
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
-        
-        // Check if account is activated
-        if ($user['isAuthActive'] == 0) {
-            echo json_encode([
-                'success' => false,
-                'error' => 'Account not activated. Please check your email for activation instructions.',
-                'needsVerification' => true,
-                'email' => $email
-            ]);
-            exit();
-        }
         
         if (password_verify($password, $user['password'])) {
             $_SESSION['id'] = $user['user_id'];
