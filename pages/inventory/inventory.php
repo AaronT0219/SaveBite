@@ -1,427 +1,159 @@
 <?php
-/* 示例数据（后续可换成数据库查询结果） */
+/* 示例数据（可换成数据库查询） */
 $items = [
   ['id'=>101,'name'=>'Apples','quantity'=>12,'category'=>'Fruit','expiry'=>'2025-11-02','status'=>'Fresh','desc'=>'Red apples','storage'=>'Fridge A-1'],
   ['id'=>102,'name'=>'Milk 1L','quantity'=>6 ,'category'=>'Dairy','expiry'=>'2025-10-25','status'=>'Refrigerated','desc'=>'Low-fat milk','storage'=>'Fridge B-2'],
   ['id'=>103,'name'=>'Rice 5kg','quantity'=>3 ,'category'=>'Grain','expiry'=>'2026-03-15','status'=>'Dry','desc'=>'Jasmine rice','storage'=>'Room Temp Shelf'],
 ];
 ?>
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Food Inventory</title>
+<style>
+  /* 仅本页样式；如有全局CSS，可移走 */
+  #main-content{ padding-left:32px; padding-right:32px; }
 
-  <style>
-    /* 关键：不要再去改 #sidebar 的宽度/定位。
-       只给 #main-content 留一点左右 padding，避免贴着侧栏 */
-    #main-content{ padding-left:32px; padding-right:32px; }
+  .inventory-root > header,
+  .inventory-root > main{ max-width: 900px; margin: 0 auto; }
 
-    /* 把本页真正内容限制最大宽度并居中 */
-    .inventory-root > header,
-    .inventory-root > main{
-      max-width: 900px;
-      margin: 0 auto;
-    }
+  .topbar{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:16px 0 8px; }
+  .title{ font-size:28px; font-weight:700; margin:0; }
+  .top_botton{ display:flex; align-items:center; gap:12px; }
+  .go_donation_btn{
+    padding:8px 12px; font-size:14px; border:1px solid #bbb; background:#ddd; border-radius:20px;
+    text-decoration:none; color:#222; cursor:pointer;
+  }
+  .plus{
+    width:40px; height:40px; display:flex; align-items:center; justify-content:center;
+    border:3px solid #222; border-radius:50%; font-size:24px; background:#ddd; color:#222; text-decoration:none;
+  }
 
-    /* 顶栏 */
-    .topbar{
-      display:flex; justify-content:space-between; align-items:center;
-      gap:12px; padding:16px 0 8px;
-    }
-    .title{ font-size:28px; font-weight:700; margin:0; }
-    .top_botton{ display:flex; align-items:center; gap:12px; }
-    .go_donation_btn{
-      padding:8px 12px; font-size:14px; border:1px solid #bbb; background:#ddd; border-radius:20px;
-      text-decoration:none; color:#222; cursor:pointer;
-    }
-    .plus{
-      width:40px; height:40px; display:flex; align-items:center; justify-content:center;
-      border:3px solid #222; border-radius:50%; font-size:24px; background:#ddd; color:#222; text-decoration:none;
-    }
+  .content{ width:100%; margin:0; padding:0 0 24px; box-sizing:border-box; }
+  .toolbar{ display:flex; align-items:center; gap:8px; }
+  .toolbar label{ font-weight:600; }
+  .toolbar select{ padding:6px 8px; border:1px solid #bbb; border-radius:8px; background:#eee; }
 
-    /* 工具区 & 主列 */
-    .content{ width:100%; margin:0; padding:0 0 24px; box-sizing:border-box; }
-    .toolbar{ display:flex; align-items:center; gap:8px; }
-    .toolbar label{ font-weight:600; }
-    .toolbar select{ padding:6px 8px; border:1px solid #bbb; border-radius:8px; background:#eee; }
+  .card{ border:3px solid #222; border-radius:20px; padding:18px; margin:16px 0; background:#fff; }
+  .card-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+  .mini{ margin-left:4px; }
 
-    /* 卡片 */
-    .card{ border:3px solid #222; border-radius:20px; padding:18px; margin:16px 0; background:#fff; }
-    .card-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
-    .mini{ margin-left:4px; }
+  .row{
+    display:grid; grid-template-columns:180px 1fr;
+    align-items:center; gap:8px; padding:8px 0; border-top:1px dashed #eee;
+  }
+  .row:first-of-type{ border-top:none; }
+  .row .label{ white-space:nowrap; }
+  .row .value{ color:#4d524f; word-break:break-word; }
 
-    /* 行布局：左标签固定宽度，右值自适应；不换行 */
-    .row{
-      display:grid; grid-template-columns:180px 1fr;
-      align-items:center; gap:8px; padding:8px 0; border-top:1px dashed #eee;
-    }
-    .row:first-of-type{ border-top:none; }
-    .row .label{ white-space:nowrap; }
-    .row .value{ color:#4d524f; word-break:break-word; }
+  .add-panel{
+    width:100%; border:3px solid #222; border-radius:20px; padding:18px; margin:16px 0; background:#fff;
+    box-sizing:border-box;
+  }
+  .add-panel h3{ text-align:center; margin:4px 0 10px; font-size:16px; }
+  .add-form .row{ display:grid; grid-template-columns:160px 1fr; align-items:center; gap:8px; padding:6px 0; }
+  .add-form .row input, .add-form .row textarea, .add-form .row select{
+    width:100%; padding:6px 8px; border:1px solid #bbb; border-radius:6px; background:#eee; box-sizing:border-box;
+  }
+  .add-form .actions{ display:flex; gap:8px; justify-content:center; margin-top:8px; }
+  .add-form .btn{ padding:8px 14px; border:1px solid #aaa; background:#ddd; border-radius:8px; cursor:pointer; }
 
-    /* 新增面板 */
-    .add-panel{
-      width:100%; border:3px solid #222; border-radius:20px; padding:18px; margin:16px 0; background:#fff;
-      box-sizing:border-box;
-    }
-    .add-panel h3{ text-align:center; margin:4px 0 10px; font-size:16px; }
-    .add-form .row{ display:grid; grid-template-columns:160px 1fr; align-items:center; gap:8px; padding:6px 0; }
-    .add-form .row input, .add-form .row textarea, .add-form .row select{
-      width:100%; padding:6px 8px; border:1px solid #bbb; border-radius:6px; background:#eee; box-sizing:border-box;
-    }
-    .add-form .actions{ display:flex; gap:8px; justify-content:center; margin-top:8px; }
-    .add-form .btn{ padding:8px 14px; border:1px solid #aaa; background:#ddd; border-radius:8px; cursor:pointer; }
+  .hidden{ display:none; }
 
-    .hidden{ display:none; }
+  @media (max-width:560px){
+    #main-content{ padding-left:16px; padding-right:16px; }
+    .row{ grid-template-columns:140px 1fr; }
+    .add-form .row{ grid-template-columns:130px 1fr; }
+  }
+</style>
 
-    @media (max-width:560px){
-      #main-content{ padding-left:16px; padding-right:16px; }
-      .row{ grid-template-columns:140px 1fr; }
-      .add-form .row{ grid-template-columns:130px 1fr; }
-    }
-  </style>
-</head>
+<div class="inventory-root">
 
-<body>
-  <!-- 注意：项目的 base.php 会在外层渲染 #main-content；此页不创建任何包裹侧栏的容器 -->
-  <div class="inventory-root">
+  <header class="topbar">
+    <h1 class="title">Food Inventory</h1>
 
-    <header class="topbar">
-      <h1 class="title">Food Inventory</h1>
+    <div class="toolbar" id="toolbar">
+      <label for="filterSel">Filter:</label>
+      <select id="filterSel">
+        <option value="all">All</option>
+        <option value="recent">Recent</option>
+        <option value="near">Near expiry (7 days)</option>
+      </select>
+    </div>
 
-      <!-- 顶栏筛选器 -->
-      <div class="toolbar" id="toolbar">
-        <label for="filterSel">Filter:</label>
-        <select id="filterSel">
-          <option value="all">All</option>
-          <option value="recent">Recent</option>
-          <option value="near">Near expiry (7 days)</option>
-        </select>
-      </div>
+    <div class="top_botton">
+      <a class="go_donation_btn" data-page="donationList">View Donation List</a>
+      <a class="plus" href="#" aria-label="Add new food item" title="Add new item">+</a>
+    </div>
+  </header>
 
-      <div class="top_botton">
-        <a class="go_donation_btn" data-page="donationList">View Donation List</a>
-        <a class="plus" href="#" aria-label="Add new food item" title="Add new item">+</a>
-      </div>
-    </header>
+  <main class="content" id="list">
+    <!-- 新增表单（默认隐藏） -->
+    <section id="addPanel" class="add-panel hidden">
+      <h3>Item Details</h3>
+      <form id="addForm" class="add-form" novalidate>
+        <div class="row">
+          <span class="label"><label for="f_name">Food name:</label></span>
+          <input id="f_name" name="name" type="text" required />
+        </div>
+        <div class="row">
+          <span class="label"><label for="f_qty">Quantity:</label></span>
+          <input id="f_qty" name="quantity" type="number" min="0" step="1" required />
+        </div>
+        <div class="row">
+          <span class="label"><label for="f_cat">Category:</label></span>
+          <input id="f_cat" name="category" type="text" required />
+        </div>
+        <div class="row">
+          <span class="label"><label for="f_exp">Expiry date:</label></span>
+          <input id="f_exp" name="expiry" type="date" required />
+        </div>
+        <div class="row">
+          <span class="label"><label for="f_status">Status:</label></span>
+          <select id="f_status" name="status" required>
+            <option value="used">used</option>
+            <option value="donated">donated</option>
+            <option value="reserved">reserved</option>
+          </select>
+        </div>
+        <div class="row">
+          <span class="label"><label for="f_storage">Storage location:</label></span>
+          <input id="f_storage" name="storage" type="text" />
+        </div>
+        <div class="row">
+          <span class="label"><label for="f_desc">Description:</label></span>
+          <textarea id="f_desc" name="desc" rows="2"></textarea>
+        </div>
+        <div class="actions">
+          <button type="submit" class="btn">Save</button>
+          <button type="button" class="btn" id="btnCancelAdd">Cancel</button>
+        </div>
+      </form>
+    </section>
 
-    <main class="content" id="list">
-      <!-- 新增表单（默认隐藏） -->
-      <section id="addPanel" class="add-panel hidden">
-        <h3>Item Details</h3>
-        <form id="addForm" class="add-form" novalidate>
-          <div class="row">
-            <span class="label"><label for="f_name">Food name:</label></span>
-            <input id="f_name" name="name" type="text" required />
-          </div>
-          <div class="row">
-            <span class="label"><label for="f_qty">Quantity:</label></span>
-            <input id="f_qty" name="quantity" type="number" min="0" step="1" required />
-          </div>
-          <div class="row">
-            <span class="label"><label for="f_cat">Category:</label></span>
-            <input id="f_cat" name="category" type="text" required />
-          </div>
-          <div class="row">
-            <span class="label"><label for="f_exp">Expiry date:</label></span>
-            <input id="f_exp" name="expiry" type="date" required />
-          </div>
-          <div class="row">
-            <span class="label"><label for="f_status">Status:</label></span>
-            <select id="f_status" name="status" required>
-              <option value="used">used</option>
-              <option value="donated">donated</option>
-              <option value="reserved">reserved</option>
-            </select>
-          </div>
-          <div class="row">
-            <span class="label"><label for="f_storage">Storage location:</label></span>
-            <input id="f_storage" name="storage" type="text" />
-          </div>
-          <div class="row">
-            <span class="label"><label for="f_desc">Description:</label></span>
-            <textarea id="f_desc" name="desc" rows="2"></textarea>
-          </div>
-          <div class="actions">
-            <button type="submit" class="btn">Save</button>
-            <button type="button" class="btn" id="btnCancelAdd">Cancel</button>
-          </div>
-        </form>
-      </section>
-
-      <!-- 现有条目渲染 -->
-      <?php if (!empty($items)) { foreach ($items as $it) {
-        $mid = 'M-' . htmlspecialchars($it['id']);
-      ?>
-        <article class="card"
-                 data-id="<?php echo $mid; ?>"
-                 data-expiry="<?php echo htmlspecialchars($it['expiry']); ?>"
-                 data-created="">
-          <div class="card-head">
-            <div class="card-title">FoodItem · <?php echo htmlspecialchars($it['name']); ?> (# <?php echo $mid; ?>)</div>
-            <div>
-              <button class="mini" type="button" data-action="edit">Edit</button>
-              <button class="mini" type="button" data-action="donate">Mark as donated</button>
-              <button class="mini" type="button" data-action="delete">Delete</button>
-            </div>
-          </div>
-
-          <div class="row"><span class="label">Quantity:</span><span class="value" data-field="quantity"><?php echo htmlspecialchars($it['quantity']); ?></span></div>
-          <div class="row"><span class="label">Category:</span><span class="value" data-field="category"><?php echo htmlspecialchars($it['category']); ?></span></div>
-          <div class="row"><span class="label">Expiry date:</span><span class="value" data-field="expiry"><?php echo htmlspecialchars($it['expiry']); ?></span></div>
-          <div class="row"><span class="label">Status:</span><span class="value" data-field="status"><?php echo htmlspecialchars($it['status']); ?></span></div>
-          <div class="row"><span class="label">Storage location:</span><span class="value" data-field="storage"><?php echo htmlspecialchars($it['storage'] ?? ''); ?></span></div>
-          <div class="row"><span class="label">Description:</span><span class="value" data-field="desc"><?php echo htmlspecialchars($it['desc']); ?></span></div>
-        </article>
-      <?php } } else { ?>
-        <p style="color:#666;margin:8px 0;">No items yet.</p>
-      <?php } ?>
-    </main>
-
-  </div><!-- /.inventory-root -->
-
-  <script>
-  document.addEventListener('DOMContentLoaded', function(){
-    /* ====== 日期范围：今天 ~ 今天+100年 ====== */
-    const TODAY = new Date(); TODAY.setHours(0,0,0,0);
-    const MAX100 = new Date(TODAY); MAX100.setFullYear(MAX100.getFullYear() + 100);
-    const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    const DATE_MIN_STR = fmt(TODAY);
-    const DATE_MAX_STR = fmt(MAX100);
-
-    /* ====== DOM 引用 ====== */
-    const plusBtn   = document.querySelector('.plus');
-    const addPanel  = document.getElementById('addPanel');
-    const addForm   = document.getElementById('addForm');
-    const cancelBtn = document.getElementById('btnCancelAdd');
-    const list      = document.getElementById('list');
-    const filterSel = document.getElementById('filterSel');
-
-    const NEAR_DAYS = 7;
-    const RECENT_DAYS = 3;
-
-    /* ====== 工具 ====== */
-    const esc = (s='') => String(s)
-      .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
-      .replaceAll('"','&quot;').replaceAll("'",'&#39;');
-    const getLS = (k,def)=>{try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(def));}catch(e){return def;}};
-    const setLS = (k,v)=>localStorage.setItem(k,JSON.stringify(v));
-    const now0 = ()=>{const d=new Date();d.setHours(0,0,0,0);return d.getTime();};
-    const LS_DONATION='donationItems', LS_REMOVED='removedFromManage';
-
-    /* ====== 初始设置 ====== */
-    const expInput = document.getElementById('f_exp');
-    expInput.min = DATE_MIN_STR;
-    expInput.max = DATE_MAX_STR;
-
-    // 初始卡片标记“旧”
-    document.querySelectorAll('.card[data-created=""]').forEach(c=>{
-      c.dataset.created=String(Date.now()-30*24*60*60*1000);
-    });
-
-    // 同步 donationList 删除
-    const removed = new Set(getLS(LS_REMOVED,[]));
-    if(removed.size){
-      document.querySelectorAll('.card').forEach(c=>{ if(removed.has(c.dataset.id)) c.remove(); });
-      setLS(LS_REMOVED,[]);
-    }
-
-    /* ====== 新增面板展开/收起 ====== */
-    plusBtn.addEventListener('click',function(e){
-      e.preventDefault();
-      addPanel.classList.toggle('hidden');
-      if (!addPanel.classList.contains('hidden')) {
-        document.getElementById('f_name').focus();
-        addPanel.scrollIntoView({behavior:'smooth', block:'center'});
-      }
-    });
-    cancelBtn.addEventListener('click',()=>{ addPanel.classList.add('hidden'); addForm.reset(); });
-
-    /* ====== 新增保存 ====== */
-    addForm.addEventListener('submit',function(e){
-      e.preventDefault();
-      if(!addForm.checkValidity()){ addForm.reportValidity(); return; }
-
-      const fd = new FormData(addForm);
-      // 额外校验：日期范围
-      const expStr = fd.get('expiry');
-      const expDate = new Date(expStr); expDate.setHours(0,0,0,0);
-      if (!expStr || isNaN(expDate.getTime()) || expDate < TODAY || expDate > MAX100) {
-        alert(`Expiry date must be between ${DATE_MIN_STR} and ${DATE_MAX_STR}.`);
-        return;
-      }
-
-      const id = 'M-'+Date.now();
-      const item = {
-        id,
-        name: fd.get('name'),
-        quantity: fd.get('quantity'),
-        category: fd.get('category'),
-        expiry: fd.get('expiry'),
-        status: fd.get('status'),
-        storage: fd.get('storage') || '',
-        desc: fd.get('desc') || ''
-      };
-
-      const art = document.createElement('article');
-      art.className='card';
-      art.dataset.id = item.id;
-      art.dataset.created = String(Date.now());
-      art.dataset.expiry = item.expiry || '';
-      art.innerHTML = `
+    <!-- 现有条目渲染 -->
+    <?php if (!empty($items)) { foreach ($items as $it) {
+      $mid = 'M-' . htmlspecialchars($it['id']);
+    ?>
+      <article class="card"
+               data-id="<?php echo $mid; ?>"
+               data-expiry="<?php echo htmlspecialchars($it['expiry']); ?>"
+               data-created="">
         <div class="card-head">
-          <div class="card-title">FoodItem · ${esc(item.name)} (# ${esc(item.id)})</div>
+          <div class="card-title">FoodItem · <?php echo htmlspecialchars($it['name']); ?> (# <?php echo $mid; ?>)</div>
           <div>
             <button class="mini" type="button" data-action="edit">Edit</button>
             <button class="mini" type="button" data-action="donate">Mark as donated</button>
             <button class="mini" type="button" data-action="delete">Delete</button>
           </div>
         </div>
-        <div class="row"><span class="label">Quantity:</span><span class="value" data-field="quantity">${esc(item.quantity)}</span></div>
-        <div class="row"><span class="label">Category:</span><span class="value" data-field="category">${esc(item.category)}</span></div>
-        <div class="row"><span class="label">Expiry date:</span><span class="value" data-field="expiry">${esc(item.expiry)}</span></div>
-        <div class="row"><span class="label">Status:</span><span class="value" data-field="status">${esc(item.status)}</span></div>
-        <div class="row"><span class="label">Storage location:</span><span class="value" data-field="storage">${esc(item.storage)}</span></div>
-        <div class="row"><span class="label">Description:</span><span class="value" data-field="desc">${esc(item.desc)}</span></div>
-      `;
-      const afterPanel = document.getElementById('addPanel').nextElementSibling;
-      list.insertBefore(art, afterPanel);
 
-      addPanel.classList.add('hidden');
-      addForm.reset();
-    });
+        <div class="row"><span class="label">Quantity:</span><span class="value" data-field="quantity"><?php echo htmlspecialchars($it['quantity']); ?></span></div>
+        <div class="row"><span class="label">Category:</span><span class="value" data-field="category"><?php echo htmlspecialchars($it['category']); ?></span></div>
+        <div class="row"><span class="label">Expiry date:</span><span class="value" data-field="expiry"><?php echo htmlspecialchars($it['expiry']); ?></span></div>
+        <div class="row"><span class="label">Status:</span><span class="value" data-field="status"><?php echo htmlspecialchars($it['status']); ?></span></div>
+        <div class="row"><span class="label">Storage location:</span><span class="value" data-field="storage"><?php echo htmlspecialchars($it['storage'] ?? ''); ?></span></div>
+        <div class="row"><span class="label">Description:</span><span class="value" data-field="desc"><?php echo htmlspecialchars($it['desc']); ?></span></div>
+      </article>
+    <?php } } else { ?>
+      <p style="color:#666;margin:8px 0;">No items yet.</p>
+    <?php } ?>
+  </main>
 
-    /* ====== 卡片按钮事件 ====== */
-    list.addEventListener('click',function(e){
-      const btn = e.target.closest('button'); if(!btn) return;
-      const card = btn.closest('article.card'); if(!card) return;
-      const act = btn.dataset.action;
-
-      if(act==='delete'){ card.remove(); return; }
-
-      if(act==='donate'){
-        if(confirm('Mark this item as donated?')){
-          const st = card.querySelector('[data-field="status"]'); if(st) st.textContent='donated';
-          // 存入 DonationList（localStorage）
-          const dId = 'D-'+String(card.dataset.id||'').replace(/^M-/,'');
-          const name=(card.querySelector('.card-title')?.textContent||'').replace(/^FoodItem ·\s*/,'').replace(/\(#.*\)\s*$/,'');
-          const grab=f=>(card.querySelector(`[data-field="${f}"]`)?.textContent||'').trim();
-          const donating={
-            id:dId, manageId:card.dataset.id, name,
-            quantity:grab('quantity'), category:grab('category'), expiry:grab('expiry'),
-            status:'donated', storage:grab('storage')||'', desc:grab('desc'),
-            pickup_location:'', availability:'', contact:''
-          };
-          const arr=getLS(LS_DONATION,[]); if(!arr.some(x=>x.manageId===donating.manageId)){arr.unshift(donating); setLS(LS_DONATION,arr);}
-          alert('Added to Donation List.');
-        }
-        return;
-      }
-
-      if(act==='edit'){ enterEdit(card); return; }
-      if(act==='save'){ saveEdit(card); return; }
-      if(act==='cancel-edit'){ cancelEdit(card); return; }
-    });
-
-    /* ====== 编辑：进入/保存/取消 ====== */
-    function enterEdit(card){
-      if(card.dataset.editing==='1') return; card.dataset.editing='1';
-      const get=f=>(card.querySelector(`[data-field="${f}"]`)?.textContent||'').trim();
-      const orig={ quantity:get('quantity'), category:get('category'), expiry:get('expiry'),
-                   status:get('status'), storage:get('storage'), desc:get('desc') };
-      card.dataset.original=JSON.stringify(orig);
-
-      card.querySelector('[data-field="quantity"]').innerHTML=`<input type="number" min="0" step="1" value="${esc(orig.quantity)}" style="width:100%;box-sizing:border-box;">`;
-      card.querySelector('[data-field="category"]').innerHTML=`<input type="text" value="${esc(orig.category)}" style="width:100%;box-sizing:border-box;">`;
-      card.querySelector('[data-field="expiry"]').innerHTML=
-        `<input type="date" value="${esc(orig.expiry)}" min="${DATE_MIN_STR}" max="${DATE_MAX_STR}" style="width:100%;box-sizing:border-box;">`;
-      card.querySelector('[data-field="status"]').innerHTML=`<select style="width:100%;box-sizing:border-box;">
-        <option value="used"${orig.status==='used'?' selected':''}>used</option>
-        <option value="donated"${orig.status==='donated'?' selected':''}>donated</option>
-        <option value="reserved"${orig.status==='reserved'?' selected':''}>reserved</option>
-      </select>`;
-      card.querySelector('[data-field="storage"]').innerHTML=`<input type="text" value="${esc(orig.storage)}" style="width:100%;box-sizing:border-box;">`;
-      card.querySelector('[data-field="desc"]').innerHTML=`<textarea rows="2" style="width:100%;box-sizing:border-box;">${esc(orig.desc)}</textarea>`;
-
-      card.querySelector('.card-head div:last-child').innerHTML=`
-        <button class="mini" type="button" data-action="save">Save</button>
-        <button class="mini" type="button" data-action="cancel-edit">Cancel</button>
-        <button class="mini" type="button" data-action="delete">Delete</button>`;
-    }
-
-    function saveEdit(card){
-      const q=card.querySelector('[data-field="quantity"] input')?.value.trim()||'';
-      const c=card.querySelector('[data-field="category"] input')?.value.trim()||'';
-      const e=card.querySelector('[data-field="expiry"] input')?.value.trim()||'';
-      const s=card.querySelector('[data-field="status"] select')?.value||'used';
-      const t=card.querySelector('[data-field="storage"] input')?.value.trim()||'';
-      const d=card.querySelector('[data-field="desc"] textarea')?.value||'';
-
-      const errs=[];
-      if(!/^\d+$/.test(q)) errs.push('Quantity is required and must be an integer ≥ 0.');
-      if(!c) errs.push('Category is required.');
-      if(!e){
-        errs.push('Expiry date is required.');
-      }else{
-        const ed=new Date(e); ed.setHours(0,0,0,0);
-        const today=new Date(); today.setHours(0,0,0,0);
-        const max=new Date(today); max.setFullYear(max.getFullYear()+100);
-        if(isNaN(ed.getTime()) || ed < today || ed > max){
-          errs.push(`Expiry date must be between ${DATE_MIN_STR} and ${DATE_MAX_STR}.`);
-        }
-      }
-      if(!['used','donated','reserved'].includes(s)) errs.push('Status must be used/donated/reserved.');
-      if(errs.length){ alert('Please fix:\n- '+errs.join('\n- ')); return; }
-
-      card.querySelector('[data-field="quantity"]').textContent=q;
-      card.querySelector('[data-field="category"]').textContent=c;
-      card.querySelector('[data-field="expiry"]').textContent=e;
-      card.querySelector('[data-field="status"]').textContent=s;
-      card.querySelector('[data-field="storage"]').textContent=t;
-      card.querySelector('[data-field="desc"]').textContent=d;
-
-      delete card.dataset.original; card.dataset.editing='0';
-      card.querySelector('.card-head div:last-child').innerHTML=`
-        <button class="mini" type="button" data-action="edit">Edit</button>
-        <button class="mini" type="button" data-action="donate">Mark as donated</button>
-        <button class="mini" type="button" data-action="delete">Delete</button>`;
-      card.dataset.expiry=e||'';
-    }
-
-    function cancelEdit(card){
-      let o={}; try{o=JSON.parse(card.dataset.original||'{}')}catch(e){}
-      card.querySelector('[data-field="quantity"]').textContent=(o.quantity??'').toString();
-      card.querySelector('[data-field="category"]').textContent=(o.category??'').toString();
-      card.querySelector('[data-field="expiry"]').textContent=(o.expiry??'').toString();
-      card.querySelector('[data-field="status"]').textContent=(o.status??'used').toString();
-      card.querySelector('[data-field="storage"]').textContent=(o.storage??'').toString();
-      card.querySelector('[data-field="desc"]').textContent=(o.desc??'').toString();
-      delete card.dataset.original; card.dataset.editing='0';
-      card.querySelector('.card-head div:last-child').innerHTML=`
-        <button class="mini" type="button" data-action="edit">Edit</button>
-        <button class="mini" type="button" data-action="donate">Mark as donated</button>
-        <button class="mini" type="button" data-action="delete">Delete</button>`;
-    }
-
-    /* ====== 筛选 ====== */
-    filterSel.addEventListener('change',applyFilter);
-    applyFilter();
-    function applyFilter(){
-      const mode=filterSel.value, today=now0(), nearCut=today+NEAR_DAYS*24*60*60*1000, recentCut=Date.now()-RECENT_DAYS*24*60*60*1000;
-      document.querySelectorAll('.card').forEach(card=>{
-        const created=Number(card.dataset.created||0);
-        const expStr=card.dataset.expiry||'';
-        const exp=expStr?new Date(expStr):null;
-        const expMs=exp?(exp.setHours(0,0,0,0),exp.getTime()):null;
-        let show=true;
-        if(mode==='recent') show=created>=recentCut;
-        else if(mode==='near') show=(expMs!==null&&expMs>=today&&expMs<=nearCut);
-        card.style.display=show?'':'none';
-      });
-    }
-  });
-  </script>
-</body>
-</html>
+</div>
