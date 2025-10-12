@@ -1,264 +1,165 @@
-function initInventoryPage() {
-  console.log("initInventoryPage() triggered.");
-  setTimeout(runInventoryInit, 50);
-}
+/* /SaveBite/assets/js/inventory.js
+ * 去掉 inventory 的 donated 选项；其他逻辑同前
+ */
+(function () {
+  'use strict';
 
-function runInventoryInit() {
-  // ===== DOM 引用 =====
-  const root      = document.querySelector('.inventory-root');
-  const plusBtn   = document.querySelector('.plus');
-  const addPanel  = document.getElementById('addPanel');
-  const addForm   = document.getElementById('addForm');
-  const cancelBtn = document.getElementById('btnCancelAdd');
-  const list      = document.getElementById('list');
-  const filterSel = document.getElementById('filterSel');
+  const API_STATUS = '/SaveBite/pages/browse/update_fooditem_status.php';
 
-  if (!root || !list) {
-    console.warn('⚠️ Inventory DOM not found. Abort init.');
-    return;
-  }
+  const FIELD_ALIASES = {
+    food_name:          ['food_name','name'],
+    quantity:           ['quantity'],
+    category:           ['category'],
+    expiry_date:        ['expiry_date','expiry','expire','exp'],
+    status:             ['status'],
+    storage_location:   ['storage_location','storage','location','place'],
+    description:        ['description','desc','detail']
+  };
+  const FIELD_KEYS = Object.keys(FIELD_ALIASES);
 
-  console.log('✅ Inventory DOM ready. Binding events...');
+  const toUILabel = (v='') => (String(v).toLowerCase()==='donation' ? 'donated' : (v||''));
 
-  /* ====== 日期范围：今天 ~ 今天+100年 ====== */
-  const TODAY = new Date(); TODAY.setHours(0,0,0,0);
-  const MAX100 = new Date(TODAY); MAX100.setFullYear(MAX100.getFullYear() + 100);
-  const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  const DATE_MIN_STR = fmt(TODAY);
-  const DATE_MAX_STR = fmt(MAX100);
-
-  const NEAR_DAYS = 7;
-  const RECENT_DAYS = 3;
-
-  /* ====== 工具 ====== */
-  const esc = (s='') => String(s)
-    .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
-    .replaceAll('"','&quot;').replaceAll("'",'&#39;');
-  const getLS = (k,def)=>{try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(def));}catch(e){return def;}};
-  const setLS = (k,v)=>localStorage.setItem(k,JSON.stringify(v));
-  const now0 = ()=>{const d=new Date();d.setHours(0,0,0,0);return d.getTime();};
-  const LS_DONATION='donationItems', LS_REMOVED='removedFromManage';
-
-  /* ====== 初始设置 ====== */
-  const expInput = document.getElementById('f_exp');
-  if (expInput) {
-    expInput.min = DATE_MIN_STR;
-    expInput.max = DATE_MAX_STR;
-  }
-
-  // 初始卡片标记“旧”
-  document.querySelectorAll('.card[data-created=""]').forEach(c=>{
-    c.dataset.created=String(Date.now()-30*24*60*60*1000);
-  });
-
-  // 同步 donationList 删除
-  const removed = new Set(getLS(LS_REMOVED,[]));
-  if(removed.size){
-    document.querySelectorAll('.card').forEach(c=>{ if(removed.has(c.dataset.id)) c.remove(); });
-    setLS(LS_REMOVED,[]);
-  }
-
-  /* ====== 新增面板展开/收起 ====== */
-  if (plusBtn) {
-    plusBtn.addEventListener('click',function(e){
-      e.preventDefault();
-      addPanel.classList.toggle('hidden');
-      if (!addPanel.classList.contains('hidden')) {
-        document.getElementById('f_name')?.focus();
-        addPanel.scrollIntoView({behavior:'smooth', block:'center'});
-      }
-    });
-  }
-  if (cancelBtn) {
-    cancelBtn.addEventListener('click',()=>{ addPanel.classList.add('hidden'); addForm.reset(); });
-  }
-
-  /* ====== 新增保存 ====== */
-  if (addForm) {
-    addForm.addEventListener('submit',function(e){
-      e.preventDefault();
-      if(!addForm.checkValidity()){ addForm.reportValidity(); return; }
-
-      const fd = new FormData(addForm);
-      // 额外校验：日期范围
-      const expStr = fd.get('expiry');
-      const expDate = new Date(expStr); expDate.setHours(0,0,0,0);
-      if (!expStr || isNaN(expDate.getTime()) || expDate < TODAY || expDate > MAX100) {
-        alert(`Expiry date must be between ${DATE_MIN_STR} and ${DATE_MAX_STR}.`);
-        return;
-      }
-
-      const id = 'M-'+Date.now();
-      const item = {
-        id,
-        name: fd.get('name'),
-        quantity: fd.get('quantity'),
-        category: fd.get('category'),
-        expiry: fd.get('expiry'),
-        status: fd.get('status'),
-        storage: fd.get('storage') || '',
-        desc: fd.get('desc') || ''
-      };
-
-      const art = document.createElement('article');
-      art.className='card';
-      art.dataset.id = item.id;
-      art.dataset.created = String(Date.now());
-      art.dataset.expiry = item.expiry || '';
-      art.innerHTML = `
-        <div class="card-head">
-          <div class="card-title">FoodItem · ${esc(item.name)} (# ${esc(item.id)})</div>
-          <div>
-            <button class="mini" type="button" data-action="edit">Edit</button>
-            <button class="mini" type="button" data-action="donate">Mark as donated</button>
-            <button class="mini" type="button" data-action="delete">Delete</button>
-          </div>
-        </div>
-        <div class="row"><span class="label">Quantity:</span><span class="value" data-field="quantity">${esc(item.quantity)}</span></div>
-        <div class="row"><span class="label">Category:</span><span class="value" data-field="category">${esc(item.category)}</span></div>
-        <div class="row"><span class="label">Expiry date:</span><span class="value" data-field="expiry">${esc(item.expiry)}</span></div>
-        <div class="row"><span class="label">Status:</span><span class="value" data-field="status">${esc(item.status)}</span></div>
-        <div class="row"><span class="label">Storage location:</span><span class="value" data-field="storage">${esc(item.storage)}</span></div>
-        <div class="row"><span class="label">Description:</span><span class="value" data-field="desc">${esc(item.desc)}</span></div>
-      `;
-      const afterPanel = document.getElementById('addPanel').nextElementSibling;
-      list.insertBefore(art, afterPanel);
-
-      addPanel.classList.add('hidden');
-      addForm.reset();
-    });
-  }
-
-  /* ====== 卡片按钮事件 ====== */
-  list.addEventListener('click',function(e){
-    const btn = e.target.closest('button'); if(!btn) return;
-    const card = btn.closest('article.card'); if(!card) return;
-    const act = btn.dataset.action;
-
-    if(act==='delete'){ card.remove(); return; }
-
-    if(act==='donate'){
-      if(confirm('Mark this item as donated?')){
-        const st = card.querySelector('[data-field="status"]'); if(st) st.textContent='donated';
-        // 存入 DonationList（localStorage）
-        const dId = 'D-'+String(card.dataset.id||'').replace(/^M-/,'');
-        const name=(card.querySelector('.card-title')?.textContent||'').replace(/^FoodItem ·\s*/,'').replace(/\(#.*\)\s*$/,'');
-        const grab=f=>(card.querySelector(`[data-field="${f}"]`)?.textContent||'').trim();
-        const donating={
-          id:dId, manageId:card.dataset.id, name,
-          quantity:grab('quantity'), category:grab('category'), expiry:grab('expiry'),
-          status:'donated', storage:grab('storage')||'', desc:grab('desc'),
-          pickup_location:'', availability:'', contact:''
-        };
-        const arr=getLS(LS_DONATION,[]); if(!arr.some(x=>x.manageId===donating.manageId)){arr.unshift(donating); setLS(LS_DONATION,arr);}
-        alert('Added to Donation List.');
-      }
-      return;
+  function pickCell(card, mainKey) {
+    const names = FIELD_ALIASES[mainKey] || [mainKey];
+    for (const n of names) {
+      const el = card.querySelector(`.value[data-field="${n}"]`);
+      if (el) return el;
     }
+    return null;
+  }
+  function setHTML(el, html) { if (!el) return false; el.innerHTML = html; return true; }
+  function escapeAttr(s = '') { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+  function escapeHTML(s = '') { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 
-    if(act==='edit'){ enterEdit(card); return; }
-    if(act==='save'){ saveEdit(card); return; }
-    if(act==='cancel-edit'){ cancelEdit(card); return; }
-  });
+  function getCellValueSafe(el){ if(!el) return ''; const c=el.querySelector('input,select,textarea'); return c ? (c.value??'').toString().trim() : (el.textContent||'').trim(); }
+  function collectDisplay(card){ const d={}; for(const k of FIELD_KEYS) d[k]=getCellValueSafe(pickCell(card,k)); return d; }
+  function collectInputs(card){ const d={}; card.querySelectorAll('.edit-input').forEach(inp=>{ const n=inp.dataset.name; if(n) d[n]=inp.value; }); return d; }
+  function renderDisplay(card, v){ for(const k of FIELD_KEYS){ const el=pickCell(card,k); if(!el) continue; el.textContent = (k==='status') ? toUILabel(v[k]) : (v[k]??''); } }
 
-  /* ====== 编辑：进入/保存/取消 ====== */
   function enterEdit(card){
-    if(card.dataset.editing==='1') return; card.dataset.editing='1';
-    const get=f=>(card.querySelector(`[data-field="${f}"]`)?.textContent||'').trim();
-    const orig={ quantity:get('quantity'), category:get('category'), expiry:get('expiry'),
-                 status:get('status'), storage:get('storage'), desc:get('desc') };
-    card.dataset.original=JSON.stringify(orig);
+    if(!card || card.dataset.editing==='1') return;
+    card.__orig = collectDisplay(card);
 
-    card.querySelector('[data-field="quantity"]').innerHTML=`<input type="number" min="0" step="1" value="${esc(orig.quantity)}" style="width:100%;box-sizing:border-box;">`;
-    card.querySelector('[data-field="category"]').innerHTML=`<input type="text" value="${esc(orig.category)}" style="width:100%;box-sizing:border-box;">`;
-    card.querySelector('[data-field="expiry"]').innerHTML=
-      `<input type="date" value="${esc(orig.expiry)}" min="${DATE_MIN_STR}" max="${DATE_MAX_STR}" style="width:100%;box-sizing:border-box;">`;
-    card.querySelector('[data-field="status"]').innerHTML=`<select style="width:100%;box-sizing:border-box;">
-      <option value="used"${orig.status==='used'?' selected':''}>used</option>
-      <option value="donated"${orig.status==='donated'?' selected':''}>donated</option>
-      <option value="reserved"${orig.status==='reserved'?' selected':''}>reserved</option>
-    </select>`;
-    card.querySelector('[data-field="storage"]').innerHTML=`<input type="text" value="${esc(orig.storage)}" style="width:100%;box-sizing:border-box;">`;
-    card.querySelector('[data-field="desc"]').innerHTML=`<textarea rows="2" style="width:100%;box-sizing:border-box;">${esc(orig.desc)}</textarea>`;
+    const nameCell = pickCell(card, 'food_name');
+    setHTML(nameCell, `<input class="edit-input title-name-input" data-name="food_name" type="text" value="${escapeAttr(card.__orig.food_name || '')}">`);
 
-    card.querySelector('.card-head div:last-child').innerHTML=`
-      <button class="mini" type="button" data-action="save">Save</button>
-      <button class="mini" type="button" data-action="cancel-edit">Cancel</button>
-      <button class="mini" type="button" data-action="delete">Delete</button>`;
+    const q = pickCell(card, 'quantity');
+    setHTML(q, `<input class="edit-input" data-name="quantity" type="number" min="0" step="1" value="${card.__orig.quantity || ''}">`);
+
+    const cat = pickCell(card, 'category');
+    setHTML(cat, `<input class="edit-input" data-name="category" type="text" value="${escapeAttr(card.__orig.category)}">`);
+
+    const exp = pickCell(card, 'expiry_date');
+    setHTML(exp, `<input class="edit-input" data-name="expiry_date" type="date" value="${card.__orig.expiry_date || ''}">`);
+
+    // ⚠️ 去掉 donated 选项（由按钮 Mark as donated 触发，不在这里选）
+    const st = pickCell(card, 'status');
+    setHTML(st, `
+      <select class="edit-input" data-name="status">
+        <option value="available"${card.__orig.status==='available'?' selected':''}>available</option>
+        <option value="used"${card.__orig.status==='used'?' selected':''}>used</option>
+        <option value="reserved"${card.__orig.status==='reserved'?' selected':''}>reserved</option>
+      </select>
+    `);
+
+    const loc = pickCell(card, 'storage_location');
+    setHTML(loc, `<input class="edit-input" data-name="storage_location" type="text" value="${escapeAttr(card.__orig.storage_location)}">`);
+
+    const desc = pickCell(card, 'description');
+    setHTML(desc, `<textarea class="edit-input" data-name="description" rows="2">${escapeHTML(card.__orig.description)}</textarea>`);
+
+    const btnWrap = card.querySelector('.card-head div:last-child');
+    if (btnWrap && !card.__btnHTML) card.__btnHTML = btnWrap.innerHTML;
+    if (btnWrap) btnWrap.innerHTML = `
+      <button class="mini" type="button" data-action="edit">Save</button>
+      <button class="mini" type="button" data-action="cancel">Cancel</button>
+    `;
+
+    card.dataset.editing='1';
+  }
+
+  function validateRequired(values){
+    const errors=[];
+    if(!values.food_name?.trim()) errors.push('Food Name cannot be empty.');
+    if(!/^\d+$/.test((values.quantity||'').trim())) errors.push('Quantity is required and must be an integer ≥ 0.');
+    if(!values.category?.trim()) errors.push('Category cannot be empty.');
+    if(!values.expiry_date?.trim()) errors.push('Expiry date cannot be empty.');
+    if(!values.status?.trim()) errors.push('Status cannot be empty.');
+    if(!values.storage_location?.trim()) errors.push('Storage location cannot be empty.');
+    if(errors.length){ alert('Please fix:\n- ' + errors.join('\n- ')); return false; }
+    return true;
   }
 
   function saveEdit(card){
-    const q=card.querySelector('[data-field="quantity"] input')?.value.trim()||'';
-    const c=card.querySelector('[data-field="category"] input')?.value.trim()||'';
-    const e=card.querySelector('[data-field="expiry"] input')?.value.trim()||'';
-    const s=card.querySelector('[data-field="status"] select')?.value||'used';
-    const t=card.querySelector('[data-field="storage"] input')?.value.trim()||'';
-    const d=card.querySelector('[data-field="desc"] textarea')?.value||'';
-
-    const errs=[];
-    if(!/^\d+$/.test(q)) errs.push('Quantity is required and must be an integer ≥ 0.');
-    if(!c) errs.push('Category is required.');
-    if(!e){
-      errs.push('Expiry date is required.');
-    }else{
-      const ed=new Date(e); ed.setHours(0,0,0,0);
-      const today=new Date(); today.setHours(0,0,0,0);
-      const max=new Date(today); max.setFullYear(max.getFullYear()+100);
-      if(isNaN(ed.getTime()) || ed < today || ed > max){
-        errs.push(`Expiry date must be between ${DATE_MIN_STR} and ${DATE_MAX_STR}.`);
-      }
-    }
-    if(!['used','donated','reserved'].includes(s)) errs.push('Status must be used/donated/reserved.');
-    if(errs.length){ alert('Please fix:\n- '+errs.join('\n- ')); return; }
-
-    card.querySelector('[data-field="quantity"]').textContent=q;
-    card.querySelector('[data-field="category"]').textContent=c;
-    card.querySelector('[data-field="expiry"]').textContent=e;
-    card.querySelector('[data-field="status"]').textContent=s;
-    card.querySelector('[data-field="storage"]').textContent=t;
-    card.querySelector('[data-field="desc"]').textContent=d;
-
-    delete card.dataset.original; card.dataset.editing='0';
-    card.querySelector('.card-head div:last-child').innerHTML=`
-      <button class="mini" type="button" data-action="edit">Edit</button>
-      <button class="mini" type="button" data-action="donate">Mark as donated</button>
-      <button class="mini" type="button" data-action="delete">Delete</button>`;
-    card.dataset.expiry=e||'';
+    if(!card || card.dataset.editing!=='1') return;
+    const values = collectInputs(card);
+    if(!validateRequired(values)) return;
+    renderDisplay(card, values);
+    cleanupEdit(card);
   }
 
   function cancelEdit(card){
-    let o={}; try{o=JSON.parse(card.dataset.original||'{}')}catch(e){}
-    card.querySelector('[data-field="quantity"]').textContent=(o.quantity??'').toString();
-    card.querySelector('[data-field="category"]').textContent=(o.category??'').toString();
-    card.querySelector('[data-field="expiry"]').textContent=(o.expiry??'').toString();
-    card.querySelector('[data-field="status"]').textContent=(o.status??'used').toString();
-    card.querySelector('[data-field="storage"]').textContent=(o.storage??'').toString();
-    card.querySelector('[data-field="desc"]').textContent=(o.desc??'').toString();
-    delete card.dataset.original; card.dataset.editing='0';
-    card.querySelector('.card-head div:last-child').innerHTML=`
+    const orig = card.__orig || collectDisplay(card);
+    renderDisplay(card, orig);
+    cleanupEdit(card);
+  }
+
+  function cleanupEdit(card){
+    const btnWrap = card.querySelector('.card-head div:last-child');
+    if (btnWrap) btnWrap.innerHTML = card.__btnHTML || `
       <button class="mini" type="button" data-action="edit">Edit</button>
       <button class="mini" type="button" data-action="donate">Mark as donated</button>
-      <button class="mini" type="button" data-action="delete">Delete</button>`;
+      <button class="mini" type="button" data-action="delete">Delete</button>
+    `;
+    card.__btnHTML = undefined;
+    card.dataset.editing='0';
+    card.__orig = undefined;
   }
 
-  /* ====== 筛选 ====== */
-  if (filterSel) {
-    filterSel.addEventListener('change',applyFilter);
-    applyFilter();
-  }
-  function applyFilter(){
-    const mode=filterSel.value, today=now0(), nearCut=today+NEAR_DAYS*24*60*60*1000, recentCut=Date.now()-RECENT_DAYS*24*60*60*1000;
-    document.querySelectorAll('.card').forEach(card=>{
-      const created=Number(card.dataset.created||0);
-      const expStr=card.dataset.expiry||'';
-      const exp=expStr?new Date(expStr):null;
-      const expMs=exp?(exp.setHours(0,0,0,0),exp.getTime()):null;
-      let show=true;
-      if(mode==='recent') show=created>=recentCut;
-      else if(mode==='near') show=(expMs!==null&&expMs>=today&&expMs<=nearCut);
-      card.style.display=show?'':'none';
-    });
+  async function markAsDonated(card){
+    const id = Number(card?.dataset.id); if(!id) return;
+    try{
+      const res = await fetch(API_STATUS, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({ fooditem_id:id, tagClassName:'.donation-tag-modal', status:true })
+      });
+      const data = await res.json();
+      if (!data.success) { alert(data.error || data.message || 'Update failed'); return; }
+      card.remove();
+      alert('Moved to Donation List.');
+    }catch(e){ console.error(e); alert('Network error'); }
   }
 
-  console.log('✅ Inventory events bound.');
-}
+  function bindEvents(){
+    document.addEventListener('click', (e)=>{
+      const card = e.target.closest('.card');
+      const btn = e.target.closest('button');
+      const plus = e.target.closest('.plus');
+
+      if (plus){ e.preventDefault(); /* 新卡创建逻辑保留或删除均可 */ return; }
+      if (!btn) return;
+
+      const action = btn.dataset.action;
+      if (action === 'edit'){
+        const label = btn.textContent.trim().toLowerCase();
+        if (label === 'edit') enterEdit(card);
+        else if (label === 'save') saveEdit(card);
+        return;
+      }
+      if (action === 'cancel'){ cancelEdit(card); return; }
+      if (action === 'donate'){ markAsDonated(card); return; }
+      if (action === 'delete'){ card.remove(); return; } // 仅前端移除
+    }, false);
+  }
+
+  function initInventoryPage(){
+    if (window.__inventoryInited) return;
+    bindEvents();
+    window.__inventoryInited = true;
+  }
+
+  window.initInventoryPage = initInventoryPage;
+  if (document.readyState === 'complete' || document.readyState === 'interactive') initInventoryPage();
+  else document.addEventListener('DOMContentLoaded', initInventoryPage, { once: true });
+})();
