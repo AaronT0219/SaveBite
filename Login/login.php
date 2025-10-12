@@ -18,10 +18,10 @@ function showError($error) {
 
 </head>
 <body>
-    <div class="logreg-box d-flex align-items-center vh-100 ms-auto" style="width: 500px;">
+    <div class="logreg-box d-flex align-items-center vh-100 ms-auto" style="width: 500px; max-width: 100%;">
 
         <!-- Login Form -->
-        <div class="form-box login rounded shadow" style="width: 500px;">
+        <div class="form-box login rounded shadow" style="width: 480px; max-width: 100%;">
             <form id="loginForm" action="log_reg.php" method="post" class="p-5 d-flex flex-column justify-content-center h-100">
                 <h1 class="mb-5 fw-bold text-center">Log In</h1>
                 <div id="loginError" class="mb-4"></div>
@@ -55,7 +55,7 @@ function showError($error) {
         </div>
 
         <!-- Register Form -->
-        <div class="form-box register rounded shadow" style="width: 500px; ">
+        <div class="form-box register rounded shadow" style="width: 480px; max-width: 100%;">
             <form id="registerForm" action="log_reg.php" method="post" class="p-5 d-flex flex-column justify-content-center h-100">
                 <h1 class="mb-5 fw-bold text-center">Sign Up</h1>
                 <div id="registerError" class="mb-4"></div>
