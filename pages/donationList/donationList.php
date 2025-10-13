@@ -1,6 +1,4 @@
-<?php /* /SaveBite/pages/donation/donationList.php
-  页面仅从 localStorage.donationItems 渲染
-*/ ?>
+<?php /* /SaveBite/pages/donationList/donationList.php */ ?>
 <!doctype html>
 <html lang="en">
 <head>
@@ -21,8 +19,6 @@
     .value{color:#4d524f;}
     .row input,.row textarea,.row select{width:100%;padding:6px 8px;border:1px solid #bbb;border-radius:6px;background:#eee;box-sizing:border-box;}
     .empty-hint{color:#666;margin:8px 0;}
-
-    /* 标题：Food Name 与 ID 同一行，名字可编辑时限制宽度 */
     .card-title{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
     .card-title .label{ font-weight:600; }
     .card-title .value{ display:inline-block; }
@@ -38,11 +34,9 @@
     </div>
   </header>
 
-  <main class="content" id="list"></main>
+  <main class="content" id="donation-list"></main>
 
   <script src="/SaveBite/assets/js/donationList.js"></script>
-  <script>
-    if (window.initDonationListPage) window.initDonationListPage();
-  </script>
+  <script> if (window.initDonationListPage) window.initDonationListPage(); </script>
 </body>
 </html>

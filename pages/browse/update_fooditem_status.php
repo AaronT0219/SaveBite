@@ -1,92 +1,76 @@
 <?php
-// /SaveBite/pages/browse/update_fooditem_status.php
-header('Content-Type: application/json');
+// /SaveBite/pages/inventory/update_fooditem.php
+header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../../config.php';
+if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 
-function respond($code, $msg) {
+function respond(int $code, array $msg): void {
   http_response_code($code);
-  echo json_encode($msg);
+  echo json_encode($msg, JSON_UNESCAPED_UNICODE);
   exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-  respond(405, ['success' => false, 'error' => 'Method not allowed']);
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+  respond(405, ['success'=>false,'error'=>'Method not allowed']);
 }
 
-$payload = json_decode(file_get_contents('php://input'), true);
-if (!$payload || !isset($payload['fooditem_id'], $payload['tagClassName'], $payload['status'])) {
-  respond(400, ['success' => false, 'error' => 'Missing parameters']);
-}
+$raw = file_get_contents('php://input') ?: '';
+$body = json_decode($raw, true);
+if (!is_array($body)) respond(400, ['success'=>false,'error'=>'Invalid JSON']);
 
-$foodItemId   = (int)$payload['fooditem_id'];
-$tagClassName = (string)$payload['tagClassName'];
-$flag         = (bool)$payload['status'];
+$fooditem_id     = isset($body['fooditem_id']) ? (int)$body['fooditem_id'] : 0;
+$food_name       = trim((string)($body['food_name'] ?? ''));
+$quantity        = isset($body['quantity']) ? (int)$body['quantity'] : null;
+$category        = trim((string)($body['category'] ?? ''));
+$expiry_date     = trim((string)($body['expiry_date'] ?? ''));
+$status          = array_key_exists('status',$body) ? trim((string)$body['status']) : null; // '', used, reserved
+$storage_location= trim((string)($body['storage_location'] ?? ''));
+$description     = trim((string)($body['description'] ?? ''));
 
-// 数据库存的值：donation / used / null
-$newStatus = ($tagClassName === '.used-tag-modal')
-  ? ($flag ? 'used' : null)
-  : ($flag ? 'donation' : null);
+if ($fooditem_id <= 0) respond(400, ['success'=>false,'error'=>'fooditem_id required']);
 
-try {
-  session_start();
-  $donorUserId = $_SESSION['user_id'] ?? 7;
+$errs=[];
+if ($food_name==='') $errs[]='food_name required';
+if (!is_int($quantity) || $quantity < 0) $errs[]='quantity invalid';
+if ($category==='') $errs[]='category required';
+if ($expiry_date==='') $errs[]='expiry_date required';
+if ($storage_location==='') $errs[]='storage_location required';
+if ($errs) respond(400, ['success'=>false,'error'=>implode('; ', $errs)]);
 
-  $pdo->beginTransaction();
+try{
+  $uid = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 7;
 
-  // 1) 更新 fooditem.status
-  $up = $pdo->prepare("UPDATE fooditem SET status = ? WHERE foodItem_id = ?");
-  $up->execute([$newStatus, $foodItemId]);
+  // 仅允许更新当前用户的记录
+  $own = $pdo->prepare("SELECT user_id FROM fooditem WHERE foodItem_id = ?");
+  $own->execute([$fooditem_id]);
+  $owner = $own->fetchColumn();
+  if ($owner === false) respond(404, ['success'=>false,'error'=>'fooditem not found']);
+  if ((int)$owner !== $uid) respond(403, ['success'=>false,'error'=>'permission denied']);
 
-  if ($newStatus === 'donation') {
-    // 若尚无 donation 关联，则创建 donation + 映射
-    $chk = $pdo->prepare("SELECT donation_id FROM donation_fooditem WHERE fooditem_id = ?");
-    $chk->execute([$foodItemId]);
-    $row = $chk->fetch(PDO::FETCH_ASSOC);
+  $sql = "
+    UPDATE fooditem SET
+      food_name = :n,
+      quantity = :q,
+      category = :c,
+      expiry_date = :e,
+      status = :s,
+      storage_location = :l,
+      description = :d
+    WHERE foodItem_id = :id
+  ";
+  $st = $pdo->prepare($sql);
+  $st->execute([
+    ':n'=>$food_name,
+    ':q'=>$quantity,
+    ':c'=>$category,
+    ':e'=>$expiry_date,
+    ':s'=>($status==='' ? null : $status), // 空串 → NULL（available）
+    ':l'=>$storage_location,
+    ':d'=>$description,
+    ':id'=>$fooditem_id
+  ]);
 
-    if (!$row) {
-      // 防止 NOT NULL：pickup_location 用空字符串
-      $pickupLocation = '';
-      $donationStatus = 'open';
-
-      $insDonation = $pdo->prepare("
-        INSERT INTO donation (status, pickup_location, description, donation_date, donor_user_id, claimant_user_id)
-        VALUES (:status, :pickup_location, :description, NOW(), :donor_user_id, NULL)
-      ");
-      $insDonation->execute([
-        ':status'          => $donationStatus,
-        ':pickup_location' => $pickupLocation,
-        ':description'     => null,
-        ':donor_user_id'   => $donorUserId,
-      ]);
-      $donationId = (int)$pdo->lastInsertId();
-
-      // 数量写在 donation_fooditem.quantity（取 fooditem 当前数量，至少 0）
-      $qStmt = $pdo->prepare("SELECT quantity FROM fooditem WHERE foodItem_id = ?");
-      $qStmt->execute([$foodItemId]);
-      $fiQty = (int)($qStmt->fetchColumn() ?? 0);
-
-      $insMap = $pdo->prepare("INSERT INTO donation_fooditem (donation_id, fooditem_id, quantity) VALUES (?, ?, ?)");
-      $insMap->execute([$donationId, $foodItemId, max(0,$fiQty)]);
-    }
-  } else {
-    // 取消 donation/used：清理映射，若 donation 不再有其它条目则删除 donation
-    $get = $pdo->prepare("SELECT donation_id FROM donation_fooditem WHERE fooditem_id = ?");
-    $get->execute([$foodItemId]);
-    if ($map = $get->fetch(PDO::FETCH_ASSOC)) {
-      $donationId = (int)$map['donation_id'];
-      $pdo->prepare("DELETE FROM donation_fooditem WHERE donation_id = ? AND fooditem_id = ?")
-          ->execute([$donationId, $foodItemId]);
-      $left = $pdo->prepare("SELECT COUNT(*) FROM donation_fooditem WHERE donation_id = ?");
-      $left->execute([$donationId]);
-      if ((int)$left->fetchColumn() === 0) {
-        $pdo->prepare("DELETE FROM donation WHERE donation_id = ?")->execute([$donationId]);
-      }
-    }
-  }
-
-  $pdo->commit();
-  respond(200, ['success'=>true, 'status'=>$newStatus, 'fooditem_id'=>$foodItemId]);
-} catch (Throwable $e) {
-  if ($pdo->inTransaction()) $pdo->rollBack();
-  respond(500, ['success'=>false, 'error'=>$e->getMessage()]);
+  respond(200, ['success'=>true, 'updated'=>true, 'fooditem_id'=>$fooditem_id]);
+}catch(Throwable $e){
+  respond(500, ['success'=>false,'error'=>$e->getMessage()]);
 }

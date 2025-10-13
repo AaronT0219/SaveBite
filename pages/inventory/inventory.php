@@ -1,14 +1,22 @@
 <?php
 // /SaveBite/pages/inventory/inventory.php
 require_once __DIR__ . '/../../config.php';
+if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 
-// 隐藏已 donation 的记录（UI 显示 donated 对应 DB 值 donation）
-$items = $pdo->query("
+// 登录体系存在时：只显示当前用户物品
+$uid = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 7;
+
+// 隐藏已 donation 的记录（DB 中 status='donation'）
+$sql = "
   SELECT foodItem_id, food_name, quantity, category, expiry_date, status, storage_location, description
   FROM fooditem
-  WHERE COALESCE(TRIM(LOWER(status)),'') NOT IN ('donation')
+  WHERE COALESCE(TRIM(LOWER(status)),'') <> 'donation'
+    AND user_id = :uid
   ORDER BY foodItem_id DESC
-")->fetchAll(PDO::FETCH_ASSOC);
+";
+$stmt = $pdo->prepare($sql);
+$stmt->execute([':uid' => $uid]);
+$items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!doctype html>
 <html lang="en">
@@ -74,14 +82,15 @@ $items = $pdo->query("
     <?php if (!empty($items)) : ?>
       <?php foreach ($items as $it): 
         $id = (int)$it['foodItem_id'];
-        $displayNo = 'M-' . $id;
       ?>
-        <article class="card" data-id="<?= $id ?>" data-expiry="<?= htmlspecialchars($it['expiry_date'] ?? '') ?>">
+        <article id="item-<?= (int)$it['foodItem_id'] ?>" class="card"
+                 data-id="<?= (int)$it['foodItem_id'] ?>"
+                 data-expiry="<?= htmlspecialchars($it['expiry_date'] ?? '') ?>">
           <div class="card-head">
             <div class="card-title">
               <span class="label">Food Name:</span>
               <span class="value" data-field="food_name"><?= htmlspecialchars($it['food_name'] ?? 'Unknown') ?></span>
-              <span class="mini-id">(# <?= $displayNo ?>)</span>
+              <span class="mini-id">(# <?= $id ?>)</span>
             </div>
             <div>
               <button class="mini" type="button" data-action="edit">Edit</button>

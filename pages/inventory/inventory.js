@@ -1,11 +1,14 @@
 /* /SaveBite/assets/js/inventory.js
- * Edit / Save / Cancel / Mark as donated / + 新建（仅前端）
- * Mark as donated：调用接口更新DB + 写入 localStorage.donationItems + 从页面移除
+ * 功能：编辑/保存（落库）、标记为捐赠（落库）、新建并保存（落库）、删除（落库）
  */
 (function () {
   'use strict';
 
-  const API_STATUS = '/SaveBite/pages/browse/update_fooditem_status.php';
+  // 后端接口
+  const API_CREATE_FOOD   = '/SaveBite/pages/inventory/create_fooditem.php';
+  const API_UPDATE_FOOD   = '/SaveBite/pages/inventory/update_fooditem.php';
+  const API_DELETE_FOOD   = '/SaveBite/pages/inventory/delete_fooditem.php';
+  const API_CREATE_DON    = '/SaveBite/pages/donationList/create_donation.php';
 
   const FIELD_ALIASES = {
     food_name:          ['food_name','name'],
@@ -28,14 +31,24 @@
     }
     return null;
   }
-  function setHTML(el, html) { if (!el) return false; el.innerHTML = html; return true; }
-  function escapeAttr(s = '') { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
-  function escapeHTML(s = '') { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+  const setHTML = (el, html) => { if (!el) return false; el.innerHTML = html; return true; };
+  const escapeAttr = (s = '') => String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+  const escapeHTML = (s = '') => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
 
-  function getCellValueSafe(el){ if(!el) return ''; const c=el.querySelector('input,select,textarea'); return c ? (c.value??'').toString().trim() : (el.textContent||'').trim(); }
+  function getCellValueSafe(el){
+    if(!el) return '';
+    const c=el.querySelector('input,select,textarea');
+    return c ? (c.value??'').toString().trim() : (el.textContent||'').trim();
+  }
   function collectDisplay(card){ const d={}; for(const k of FIELD_KEYS) d[k]=getCellValueSafe(pickCell(card,k)); return d; }
   function collectInputs(card){ const d={}; card.querySelectorAll('.edit-input').forEach(inp=>{ const n=inp.dataset.name; if(n) d[n]=inp.value; }); return d; }
-  function renderDisplay(card, v){ for(const k of FIELD_KEYS){ const el=pickCell(card,k); if(!el) continue; el.textContent = (k==='status') ? toUILabel(v[k]) : (v[k]??''); } }
+  function renderDisplay(card, v){
+    for(const k of FIELD_KEYS){
+      const el=pickCell(card,k);
+      if(!el) continue;
+      el.textContent = (k==='status') ? toUILabel(v[k]) : (v[k]??'');
+    }
+  }
 
   function enterEdit(card){
     if(!card || card.dataset.editing==='1') return;
@@ -51,18 +64,29 @@
     const cat = pickCell(card, 'category');
     setHTML(cat, `<input class="edit-input" data-name="category" type="text" value="${escapeAttr(card.__orig.category)}">`);
 
-    const exp = pickCell(card, 'expiry_date');
-    setHTML(exp, `<input class="edit-input" data-name="expiry_date" type="date" value="${card.__orig.expiry_date || ''}">`);
+    // 日期范围：今天 ~ +100年
+    const today = new Date();
+    const y = today.getFullYear(), m = String(today.getMonth()+1).padStart(2,'0'), d = String(today.getDate()).padStart(2,'0');
+    const min = `${y}-${m}-${d}`, max = `${y+100}-${m}-${d}`;
 
+    const exp = pickCell(card, 'expiry_date');
+    setHTML(exp, `<input class="edit-input" data-name="expiry_date" type="date" min="${min}" max="${max}" value="${card.__orig.expiry_date || ''}">`);
+
+    // 注意：这里只允许 '', used, reserved（donation 只能通过“Mark as donated”产生）
     const st = pickCell(card, 'status');
     setHTML(st, `
       <select class="edit-input" data-name="status">
-        <option value="donated">donated</option>
         <option value="used">used</option>
         <option value="reserved">reserved</option>
+        <option value="expired">expired</option>
       </select>
     `);
-    const stSel = st?.querySelector('select'); if(stSel) stSel.value = toUILabel(card.__orig.status || '');
+    const stSel = st?.querySelector('select'); 
+    if (stSel) {
+      const v = String(card.__orig.status || '');
+      stSel.value = ['used','reserved','expired'].includes(v) ? v : 'used';
+    }
+
 
     const loc = pickCell(card, 'storage_location');
     setHTML(loc, `<input class="edit-input" data-name="storage_location" type="text" value="${escapeAttr(card.__orig.storage_location)}">`);
@@ -86,18 +110,72 @@
     if(!/^\d+$/.test((values.quantity||'').trim())) errors.push('Quantity is required and must be an integer ≥ 0.');
     if(!values.category?.trim()) errors.push('Category cannot be empty.');
     if(!values.expiry_date?.trim()) errors.push('Expiry date cannot be empty.');
-    if(!values.status?.trim()) errors.push('Status cannot be empty.');
+    if(!['used','reserved','expired'].includes(String(values.status||''))) {
+      errors.push('Status must be one of: used / reserved / expired.');}
     if(!values.storage_location?.trim()) errors.push('Storage location cannot be empty.');
     if(errors.length){ alert('Please fix:\n- ' + errors.join('\n- ')); return false; }
     return true;
   }
 
-  function saveEdit(card){
+  // 保存（区分新建/更新，都会落库）
+  async function saveEdit(card){
     if(!card || card.dataset.editing!=='1') return;
     const values = collectInputs(card);
     if(!validateRequired(values)) return;
-    renderDisplay(card, values);
-    cleanupEdit(card);
+
+    const isNew = !card.dataset.id || card.dataset.id === 'new';
+    try{
+      if (isNew){
+        // —— 新建
+        const res = await fetch(API_CREATE_FOOD, {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify({
+            food_name: values.food_name,
+            quantity:  Number(values.quantity),
+            category:  values.category,
+            expiry_date: values.expiry_date,
+            status:    values.status,               // '' | used | reserved
+            storage_location: values.storage_location,
+            description: values.description || ''
+          })
+        });
+        const data = await res.json();
+        if(!data.success) throw new Error(data.error || 'Create failed');
+
+        // 用返回的 id 固定卡片
+        card.dataset.id = String(data.fooditem_id);
+        const idBadge = card.querySelector('.mini-id');
+        if (idBadge) idBadge.textContent = `(# ${data.fooditem_id})`;
+        renderDisplay(card, values);
+        cleanupEdit(card);
+      }else{
+        // —— 更新
+        const id = Number(card.dataset.id);
+        const res = await fetch(API_UPDATE_FOOD, {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify({
+            fooditem_id: id,
+            food_name: values.food_name,
+            quantity:  Number(values.quantity),
+            category:  values.category,
+            expiry_date: values.expiry_date,
+            status:    values.status,               // '' | used | reserved
+            storage_location: values.storage_location,
+            description: values.description || ''
+          })
+        });
+        const data = await res.json();
+        if(!data.success) throw new Error(data.error || 'Update failed');
+
+        renderDisplay(card, values);
+        cleanupEdit(card);
+      }
+    }catch(e){
+      console.error(e);
+      alert(e.message || 'Network error');
+    }
   }
 
   function cancelEdit(card){
@@ -118,50 +196,22 @@
     card.__orig = undefined;
   }
 
-  // Mark as donated：调接口 + 写 localStorage + 移除卡片
+  // Mark as donated：调创建 donation 接口 + 从页面移除
   async function markAsDonated(card){
     const id = Number(card?.dataset.id); if(!id) return;
-
-    // localStorage 工具
-    const readLS = (k, def) => { try { return JSON.parse(localStorage.getItem(k) || JSON.stringify(def)); } catch(e){ return def; } };
-    const writeLS = (k, v) => localStorage.setItem(k, JSON.stringify(v));
-
+    const getText = (k) => getCellValueSafe(pickCell(card, k));
     try{
-      const res = await fetch(API_STATUS, {
+      const res = await fetch(API_CREATE_DON, {
         method: 'POST',
         headers: { 'Content-Type':'application/json' },
         body: JSON.stringify({
           fooditem_id: id,
-          tagClassName: '.donation-tag-modal',
-          status: true
+          quantity: Number(getText('quantity') || 1),
+          donation_status: 'pending'
         })
       });
       const data = await res.json();
       if (!data.success) { alert(data.error || data.message || 'Update failed'); return; }
-
-      // 收集信息写入 donationItems（供 donationList 页面使用）
-      const getText = (k) => getCellValueSafe(pickCell(card, k));
-      const donationItem = {
-        id: 'D-' + id,
-        manageId: 'M-' + id,
-        name: getText('food_name'),
-        quantity: getText('quantity'),
-        category: getText('category'),
-        expiry: getText('expiry_date'),
-        status: 'donation',
-        desc: getText('description'),
-        pickup_location: '',
-        availability: '',
-        contact: ''
-      };
-      const LS_KEY = 'donationItems';
-      const arr = readLS(LS_KEY, []);
-      const pos = arr.findIndex(x => String(x.manageId) === donationItem.manageId || String(x.id) === donationItem.id);
-      if (pos >= 0) arr[pos] = { ...arr[pos], ...donationItem };
-      else arr.push(donationItem);
-      writeLS(LS_KEY, arr);
-
-      // 从页面移除
       card.remove();
       alert('Moved to Donation List.');
     }catch(e){
@@ -169,11 +219,14 @@
     }
   }
 
-  // + 新建（仅前端）
+  // + 新建（先插入一张可编辑卡片，保存时落库）
   function addNewCard(){
-    const container=document.getElementById('list');
     const article=document.createElement('article');
     article.className='card'; article.dataset.id='new';
+
+    const t = new Date(); const yy=t.getFullYear(), mm=String(t.getMonth()+1).padStart(2,'0'), dd=String(t.getDate()).padStart(2,'0');
+    const min=`${yy}-${mm}-${dd}`, max=`${yy+100}-${mm}-${dd}`;
+
     article.innerHTML = `
       <div class="card-head">
         <div class="card-title">
@@ -181,7 +234,7 @@
           <span class="value" data-field="food_name">
             <input class="edit-input title-name-input" data-name="food_name" type="text" value="">
           </span>
-          <span class="mini-id">(# M-new)</span>
+          <span class="mini-id">(# new)</span>
         </div>
         <div>
           <button class="mini" type="button" data-action="edit">Save</button>
@@ -195,14 +248,14 @@
         <span class="value" data-field="category"><input class="edit-input" data-name="category" type="text" value=""></span>
       </div>
       <div class="row"><span class="label">Expiry date:</span>
-        <span class="value" data-field="expiry_date"><input class="edit-input" data-name="expiry_date" type="date"></span>
+        <span class="value" data-field="expiry_date"><input class="edit-input" data-name="expiry_date" type="date" min="${min}" max="${max}"></span>
       </div>
       <div class="row"><span class="label">Status:</span>
         <span class="value" data-field="status">
           <select class="edit-input" data-name="status">
-            <option value="donated">donated</option>
             <option value="used">used</option>
             <option value="reserved">reserved</option>
+            <option value="expired">expired</option>
           </select>
         </span>
       </div>
@@ -217,6 +270,24 @@
     const containerEl = document.getElementById('list');
     if(containerEl.firstChild) containerEl.insertBefore(article, containerEl.firstChild);
     else containerEl.appendChild(article);
+  }
+
+  async function deleteCard(card){
+    const id = Number(card?.dataset.id);
+    if (!id || isNaN(id)) { card.remove(); return; } // 新卡或无 id：仅前端移除
+    if (!confirm('Delete this item?')) return;
+    try{
+      const res = await fetch(API_DELETE_FOOD, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({ fooditem_id: id })
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Delete failed');
+      card.remove();
+    }catch(e){
+      console.error(e); alert(e.message || 'Network error');
+    }
   }
 
   function bindEvents(){
@@ -234,19 +305,7 @@
       if (action === 'edit'){
         const label = btn.textContent.trim().toLowerCase();
         if (label === 'edit') enterEdit(card);
-        else if (label === 'save'){
-          // 新卡片仅前端：校验后直接切回展示
-          const values = collectInputs(card);
-          if(!validateRequired(values)) return;
-          renderDisplay(card, values);
-          card.dataset.editing='0';
-          const btnWrap = card.querySelector('.card-head div:last-child');
-          if (btnWrap) btnWrap.innerHTML = `
-            <button class="mini" type="button" data-action="edit">Edit</button>
-            <button class="mini" type="button" data-action="donate">Mark as donated</button>
-            <button class="mini" type="button" data-action="delete">Delete</button>
-          `;
-        }
+        else if (label === 'save'){ saveEdit(card); }
         return;
       }
       if (action === 'cancel'){
@@ -255,7 +314,7 @@
         return;
       }
       if (action === 'donate'){ markAsDonated(card); return; }
-      if (action === 'delete'){ card.remove(); return; } // 仅前端删除
+      if (action === 'delete'){ deleteCard(card); return; }
     }, false);
 
     const sel = document.getElementById('filterSel');
