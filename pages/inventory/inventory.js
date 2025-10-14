@@ -318,7 +318,8 @@
     }, false);
 
     const sel = document.getElementById('filterSel');
-    if (sel){ sel.addEventListener('change', ()=>applyFilter(sel.value)); applyFilter(sel.value || 'all'); }
+    if (sel){ sel.addEventListener('change', ()=>applyFilter(sel.value)); applyFilter(sel.value || 'all'); }else {
+ console.warn('[inventory] #filterSel not found');}
   }
 
   function applyFilter(value){
@@ -352,6 +353,8 @@
   }
 
   window.initInventoryPage = initInventoryPage;
+  window.applyFilter = applyFilter;
+
   if (document.readyState === 'complete' || document.readyState === 'interactive') initInventoryPage();
   else document.addEventListener('DOMContentLoaded', initInventoryPage, { once: true });
 })();
