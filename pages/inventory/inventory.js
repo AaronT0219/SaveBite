@@ -10,14 +10,18 @@
   const API_DELETE_FOOD   = '/SaveBite/pages/inventory/delete_fooditem.php';
   const API_CREATE_DON    = '/SaveBite/pages/donationList/create_donation.php';
 
+  // 允许选择项（供校验与下拉设置）
+  const CATEGORIES = ['Produce','Protein','Dairy & Bakery','Grains & Pantry','Snacks & Beverages'];
+  const LOCATIONS  = ['Fridge','Freezer','Pantry','Countertop'];
+
   const FIELD_ALIASES = {
-    food_name:          ['food_name','name'],
-    quantity:           ['quantity'],
-    category:           ['Produce','Protein','Dairy & Bakery','Grains & Pantry','Snacks & Beverages'],
-    expiry_date:        ['expiry_date','expiry','expire','exp'],
-    status:             ['status'],
-    storage_location:   ['Fridge','Freezer','Pantry','Countertop'],
-    description:        ['description','desc','detail']
+    food_name:        ['food_name','name'],
+    quantity:         ['quantity'],
+    category:         ['category'],                // <== 这里必须是 DOM 中的 data-field 名
+    expiry_date:      ['expiry_date','expiry','expire','exp'],
+    status:           ['status'],
+    storage_location: ['storage_location','storage','location','place'],
+    description:      ['description','desc','detail']
   };
   const FIELD_KEYS = Object.keys(FIELD_ALIASES);
 
@@ -34,6 +38,20 @@
   const setHTML = (el, html) => { if (!el) return false; el.innerHTML = html; return true; };
   const escapeAttr = (s = '') => String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
   const escapeHTML = (s = '') => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
+  // —— 当页面上有卡片时隐藏“空列表提示”；没有卡片时显示 —— //
+  function updateEmptyHint(){
+    const hint = document.getElementById('empty-hint');
+    if (!hint) return; // 页面没有提示节点就跳过
+    const visibleCards = Array.from(document.querySelectorAll('.card'))
+      .filter(c => c.style.display !== 'none');
+    if (visibleCards.length > 0) {
+      // 有卡片：移除提示
+      hint.remove();
+    } else {
+      // 无卡片：保持提示（由服务端渲染提供）
+    }
+  }
 
   function getCellValueSafe(el){
     if(!el) return '';
@@ -64,10 +82,15 @@
     const cat = pickCell(card, 'category');
     setHTML(cat, `
       <select class="edit-input" data-name="category">
-         ${CATEGORIES.map(v => `<option value="${v}">${v}</option>`).join('')}
+         <option value="Produce">Produce</option>
+         <option value="Protein">Protein</option>
+         <option value="Dairy & Bakery">Dairy & Bakery</option>
+         <option value="Grains & Pantry">Grains & Pantry</option>
+         <option value="Snacks & Beverages">Snacks & Beverages</option>
       </select>
     `);
-    const catSel = cat?.querySelector('select'); if (catSel) catSel.value = card.__orig.category || CATEGORIES[0];
+    const catSel = cat?.querySelector('select'); 
+    if (catSel) catSel.value = card.__orig.category || 'Produce';
 
     // 日期范围：今天 ~ +100年
     const today = new Date();
@@ -96,12 +119,19 @@
     const loc = pickCell(card, 'storage_location');
     setHTML(loc, `
       <select class="edit-input" data-name="storage_location">
-        ${LOCATIONS.map(v => `<option value="${v}">${v}</option>`).join('')}
+        <option value="Fridge">Fridge</option>
+        <option value="Freezer">Freezer</option>
+        <option value="Pantry">Pantry</option>
+        <option value="Countertop">Countertop</option>
       </select>
       `);
 
+    const locSel = loc?.querySelector('select');
+    if (locSel) locSel.value = card.__orig.storage_location || 'Fridge';
+
     const desc = pickCell(card, 'description');
-    setHTML(desc, `<textarea class="edit-input" data-name="description" rows="2">${escapeHTML(card.__orig.description)}</textarea>`);
+    setHTML(desc, `<textarea class="edit-input" data-name="description" rows="2">${escapeHTML(card.__orig.description || '')}</textarea>`);
+
 
     const btnWrap = card.querySelector('.card-head div:last-child');
     if (btnWrap && !card.__btnHTML) card.__btnHTML = btnWrap.innerHTML;
@@ -207,24 +237,62 @@
 
   // Mark as donated：调创建 donation 接口 + 从页面移除
   async function markAsDonated(card){
-    const id = Number(card?.dataset.id); if(!id) return;
-    const getText = (k) => getCellValueSafe(pickCell(card, k));
+    if (!card) return;
+
+    // 1) 若已在 Donation List（由服务器渲染 data-donated），直接提示并退出
+    if (card.dataset.donated === '1') {
+      alert('This item is already in your Donation List.');
+      return;
+    }
+
+    // 2) 若状态是 used，禁止捐赠
+    const stEl = card.querySelector('.value[data-field="status"]');
+    const status = (stEl ? (stEl.textContent||'') : '').trim().toLowerCase();
+    if (status === 'used') {
+      alert('This item is already used and cannot be donated.');
+      return;
+    }
+
+    const id = Number(card.dataset.id);
+    if (!id || isNaN(id)) { alert('Invalid fooditem id'); return; }
+
+    // 取数量（默认 1）
+    const qEl = card.querySelector('.value[data-field="quantity"]');
+    const qty = qEl ? Number((qEl.textContent||'').trim()) || 1 : 1;
+
+    // 3) 发起创建
     try{
-      const res = await fetch(API_CREATE_DON, {
+      const res = await fetch('/SaveBite/pages/donationList/create_donation.php', {
         method: 'POST',
         headers: { 'Content-Type':'application/json' },
         body: JSON.stringify({
           fooditem_id: id,
-          quantity: Number(getText('quantity') || 1),
+          quantity: qty,
           donation_status: 'pending'
         })
       });
       const data = await res.json();
-      if (!data.success) { alert(data.error || data.message || 'Update failed'); return; }
-      card.remove();
-      alert('Moved to Donation List.');
+
+      // 4) 后端可能返回 409（重复或 used），给出提示
+      if (!res.ok || !data.success) {
+        alert(data.error || 'create donation failed');
+        return;
+      }
+
+      // 5) 成功：标记并禁用按钮（即使刷新也会被服务器禁用）
+      card.dataset.donated = '1';
+      const donateBtn = card.querySelector('button[data-action="donate"]');
+      if (donateBtn) {
+        donateBtn.textContent = 'Added to Donation List';
+        donateBtn.disabled = true;
+        donateBtn.style.opacity = '0.65';
+        donateBtn.style.cursor = 'not-allowed';
+      }
+
+      alert('Added to Donation List.');
     }catch(e){
-      console.error(e); alert('Network error');
+      console.error(e);
+      alert(e.message || 'Network error');
     }
   }
 
@@ -294,11 +362,12 @@
     const containerEl = document.getElementById('list');
     if(containerEl.firstChild) containerEl.insertBefore(article, containerEl.firstChild);
     else containerEl.appendChild(article);
+    updateEmptyHint();
   }
 
   async function deleteCard(card){
     const id = Number(card?.dataset.id);
-    if (!id || isNaN(id)) { card.remove(); return; } // 新卡或无 id：仅前端移除
+    if (!id || isNaN(id)) { card.remove(); updateEmptyHint(); return; } // 新卡或无 id：仅前端移除
     if (!confirm('Delete this item?')) return;
     try{
       const res = await fetch(API_DELETE_FOOD, {
@@ -309,6 +378,7 @@
       const data = await res.json();
       if (!data.success) throw new Error(data.error || 'Delete failed');
       card.remove();
+      updateEmptyHint();
     }catch(e){
       console.error(e); alert(e.message || 'Network error');
     }
@@ -335,6 +405,7 @@
       if (action === 'cancel'){
         if (!card.dataset.id || card.dataset.id === 'new') card.remove();
         else cancelEdit(card);
+        updateEmptyHint();
         return;
       }
       if (action === 'donate'){ markAsDonated(card); return; }
@@ -348,10 +419,11 @@
   function applyFilter(value){
     const cards = Array.from(document.querySelectorAll('.card'));
     const now = new Date();
-    if (value === 'all'){ cards.forEach(c=>c.style.display=''); return; }
+    if (value === 'all'){ cards.forEach(c=>c.style.display=''); updateEmptyHint(); return; }
     if (value === 'recent'){
       const ids = cards.map(x=>Number(x.dataset.id)||0).sort((a,b)=>b-a).slice(0,10);
       cards.forEach(c=>{ c.style.display = ids.includes(Number(c.dataset.id)||0) ? '' : 'none'; });
+      updateEmptyHint();
       return;
     }
     if (value === 'near'){
@@ -365,6 +437,7 @@
         }
         c.style.display = show? '' : 'none';
       });
+      updateEmptyHint();
     }
   }
 
@@ -372,6 +445,7 @@
     if (window.__inventoryInited) return;
     bindEvents();
     window.__inventoryInited = true;
+    updateEmptyHint();  // 初始化时同步一次提示
     console.log('[inventory] ready');
   }
 
