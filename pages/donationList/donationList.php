@@ -36,7 +36,7 @@
 
   <main class="content" id="donation-list"></main>
 
-  <script src="/SaveBite/assets/js/donationList.js"></script>
+  <script src="/SaveBite/pages/donationList/donationList.js"></script>
   <script> if (window.initDonationListPage) window.initDonationListPage(); </script>
 </body>
 </html>

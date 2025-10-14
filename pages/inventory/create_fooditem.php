@@ -47,7 +47,10 @@ if ($errs) respond(400, ['success'=>false, 'error'=>implode('; ', $errs)]);
 
 // 执行插入
 try {
-  $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 7;
+  $userId = (int)($_SESSION['user_id'] ?? $_SESSION['id'] ?? 0);
+  if ($userId <= 0) {
+    respond(401, ['success'=>false,'error'=>'not logged in']);
+  }
 
   $stmt = $pdo->prepare("
     INSERT INTO fooditem

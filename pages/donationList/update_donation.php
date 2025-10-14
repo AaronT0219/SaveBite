@@ -25,7 +25,8 @@ try {
   }
 
   if (session_status() !== PHP_SESSION_ACTIVE) session_start();
-  $uid = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 7;
+  $uid = (int)($_SESSION['user_id'] ?? $_SESSION['id'] ?? 0);
+  if ($uid <= 0) respond(401, ['success'=>false, 'error'=>'not logged in']);
 
   $b = read_input();
 

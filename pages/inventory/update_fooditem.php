@@ -47,7 +47,8 @@ if (!in_array($storage_location, $ALLOWED_LOCATIONS, true)) $errs[]='storage_loc
 if ($errs) respond(400, ['success'=>false,'error'=>implode('; ', $errs)]);
 
 try{
-  $uid = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 7;
+  $uid = (int)($_SESSION['user_id'] ?? $_SESSION['id'] ?? 0);
+  if ($uid <= 0) respond(401, ['success'=>false,'error'=>'not logged in']);
 
   // 权限：确保该记录属于当前用户
   $own = $pdo->prepare("SELECT user_id FROM fooditem WHERE foodItem_id = ?");

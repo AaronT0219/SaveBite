@@ -12,6 +12,15 @@
   const esc = (s) => String(s)
     .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
     .replaceAll('"','&quot;').replaceAll("'",'&#39;');
+  
+  const CATEGORIES = [
+  'Produce',
+  'Protein',
+  'Dairy & Bakery',
+  'Grains & Pantry',
+  'Snacks & Beverages'
+  ];
+
 
   function initDonationListPage() {
     if (window.__donationInited) return;
@@ -138,10 +147,14 @@
       };
       card.dataset.original = JSON.stringify(o);
 
-      card.querySelector('[data-field="food_name"]').innerHTML = `<input class="edit-input" type="text" value="${esc(o.food_name)}">`;
+      card.querySelector('[data-field="food_name"]').textContent = o.food_name;
       card.querySelector('[data-field="quantity"]').innerHTML   = `<input type="number" min="0" step="1" value="${esc(o.quantity)}">`;
-      card.querySelector('[data-field="category"]').innerHTML   = `<input type="text" value="${esc(o.category)}">`;
-      card.querySelector('[data-field="expiry"]').innerHTML     = `<input type="date" value="${esc(o.expiry)}">`;
+      card.querySelector('[data-field="category"]').innerHTML = `
+        <select>
+          ${CATEGORIES.map(c => `<option value="${esc(c)}"${o.category===c?' selected':''}>${esc(c)}</option>`).join('')}
+        </select>
+      `;
+      card.querySelector('[data-field="expiry"]').textContent = o.expiry;
 
       card.querySelector('[data-field="donation_status"]').innerHTML = `
         <select>
@@ -178,14 +191,14 @@
         // donation_fooditem
         quantity: v('[data-field="quantity"] input'),
 
-        // fooditem
-        food_name: v('[data-field="food_name"] input'),
-        category:  v('[data-field="category"] input'),
-        expiry:    v('[data-field="expiry"] input'),
+        // fooditem 
+        category:  (card.querySelector('[data-field="category"] select')?.value ||
+                    card.querySelector('[data-field="category"] input')?.value || '').trim(),
         desc:      (card.querySelector('[data-field="desc"] textarea')?.value || '').trim()
       };
 
       const errs=[];
+      if (!CATEGORIES.includes(payload.category)) errs.push('Category must be one of: ' + CATEGORIES.join(', ') + '.');
       if (!payload.donation_id) errs.push('donation_id missing.');
       if (!['pending','picked_up'].includes(payload.donation_status)) errs.push('Donation status must be pending or picked_up.');
       if (!payload.pickup_location) errs.push('Pickup location is required.');
@@ -209,12 +222,11 @@
         card.querySelector('[data-field="availability"]').textContent    = payload.availability;
         card.querySelector('[data-field="contact"]').textContent         = payload.contact;
 
-        card.querySelector('[data-field="food_name"]').textContent = payload.food_name;
+        
         card.querySelector('[data-field="quantity"]').textContent  = payload.quantity;
         card.querySelector('[data-field="category"]').textContent  = payload.category;
 
-        const ex = card.querySelector('[data-field="expiry"]');
-        if (ex) ex.textContent = payload.expiry;
+
 
         card.querySelector('[data-field="desc"]').textContent      = payload.desc;
 
