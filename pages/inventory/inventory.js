@@ -187,6 +187,7 @@
         const idBadge = card.querySelector('.mini-id');
         if (idBadge) idBadge.textContent = `(# ${data.fooditem_id})`;
         renderDisplay(card, values);
+        card.dataset.expiry = values.expiry_date || ''; 
         cleanupEdit(card);
       }else{
         // —— 更新
@@ -209,6 +210,7 @@
         if(!data.success) throw new Error(data.error || 'Update failed');
 
         renderDisplay(card, values);
+        card.dataset.expiry = values.expiry_date || ''; 
         cleanupEdit(card);
       }
     }catch(e){
@@ -220,6 +222,7 @@
   function cancelEdit(card){
     const orig = card.__orig || collectDisplay(card);
     renderDisplay(card, orig);
+    card.dataset.expiry = orig.expiry_date || ''; 
     cleanupEdit(card);
   }
 
@@ -428,20 +431,25 @@
       return;
     }
     if (value === 'near'){
+      const msPerDay = 24*60*60*1000;
+      const now = new Date(); 
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // 本地零点
+
       cards.forEach(c=>{
-        const expStr=(c.dataset.expiry||'').trim();
-        const exp = expStr? new Date(expStr) : null;
-        let show=false;
-        if(exp && !isNaN(exp.getTime())){
-          const diff=Math.floor((exp - now)/(1000*60*60*24));
+        const expStr = (c.dataset.expiry || '').trim();
+        let show = false;
+        if (expStr && /^\d{4}-\d{2}-\d{2}$/.test(expStr)) {
+          const [yy, mm, dd] = expStr.split('-').map(n=>parseInt(n,10));
+          const exp = new Date(yy, mm-1, dd);        // 本地零点，避免 UTC 偏移
+          const diff = Math.floor((exp - today) / msPerDay);
           show = diff >= 0 && diff <= 7;
         }
-        c.style.display = show? '' : 'none';
+        c.style.display = show ? '' : 'none';
       });
       updateEmptyHint();
+      return;
     }
   }
-
   function initInventoryPage(){
     if (window.__inventoryInited) return;
     bindEvents();
