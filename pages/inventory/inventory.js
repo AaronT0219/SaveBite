@@ -13,10 +13,10 @@
   const FIELD_ALIASES = {
     food_name:          ['food_name','name'],
     quantity:           ['quantity'],
-    category:           ['category'],
+    category:           ['Produce','Protein','Dairy & Bakery','Grains & Pantry','Snacks & Beverages'],
     expiry_date:        ['expiry_date','expiry','expire','exp'],
     status:             ['status'],
-    storage_location:   ['storage_location','storage','location','place'],
+    storage_location:   ['Fridge','Freezer','Pantry','Countertop'],
     description:        ['description','desc','detail']
   };
   const FIELD_KEYS = Object.keys(FIELD_ALIASES);
@@ -62,7 +62,12 @@
     setHTML(q, `<input class="edit-input" data-name="quantity" type="number" min="0" step="1" value="${card.__orig.quantity || ''}">`);
 
     const cat = pickCell(card, 'category');
-    setHTML(cat, `<input class="edit-input" data-name="category" type="text" value="${escapeAttr(card.__orig.category)}">`);
+    setHTML(cat, `
+      <select class="edit-input" data-name="category">
+         ${CATEGORIES.map(v => `<option value="${v}">${v}</option>`).join('')}
+      </select>
+    `);
+    const catSel = cat?.querySelector('select'); if (catSel) catSel.value = card.__orig.category || CATEGORIES[0];
 
     // 日期范围：今天 ~ +100年
     const today = new Date();
@@ -89,7 +94,11 @@
 
 
     const loc = pickCell(card, 'storage_location');
-    setHTML(loc, `<input class="edit-input" data-name="storage_location" type="text" value="${escapeAttr(card.__orig.storage_location)}">`);
+    setHTML(loc, `
+      <select class="edit-input" data-name="storage_location">
+        ${LOCATIONS.map(v => `<option value="${v}">${v}</option>`).join('')}
+      </select>
+      `);
 
     const desc = pickCell(card, 'description');
     setHTML(desc, `<textarea class="edit-input" data-name="description" rows="2">${escapeHTML(card.__orig.description)}</textarea>`);
@@ -108,11 +117,11 @@
     const errors=[];
     if(!values.food_name?.trim()) errors.push('Food Name cannot be empty.');
     if(!/^\d+$/.test((values.quantity||'').trim())) errors.push('Quantity is required and must be an integer ≥ 0.');
-    if(!values.category?.trim()) errors.push('Category cannot be empty.');
+    if(!CATEGORIES.includes(String(values.category||''))) errors.push('Category must be one of: ' + CATEGORIES.join(', ') + '.');
     if(!values.expiry_date?.trim()) errors.push('Expiry date cannot be empty.');
     if(!['used','reserved','expired'].includes(String(values.status||''))) {
       errors.push('Status must be one of: used / reserved / expired.');}
-    if(!values.storage_location?.trim()) errors.push('Storage location cannot be empty.');
+    if(!LOCATIONS.includes(String(values.storage_location||''))) errors.push('Storage location must be one of: ' + LOCATIONS.join(', ') + '.');
     if(errors.length){ alert('Please fix:\n- ' + errors.join('\n- ')); return false; }
     return true;
   }
@@ -245,7 +254,15 @@
         <span class="value" data-field="quantity"><input class="edit-input" data-name="quantity" type="number" min="0" step="1" value=""></span>
       </div>
       <div class="row"><span class="label">Category:</span>
-        <span class="value" data-field="category"><input class="edit-input" data-name="category" type="text" value=""></span>
+        <span class="value" data-field="category">
+          <select class="edit-input" data-name="category">
+            <option value="Produce">Produce</option>
+            <option value="Protein">Protein</option>
+            <option value="Dairy & Bakery">Dairy & Bakery</option>
+            <option value="Grains & Pantry">Grains & Pantry</option>
+            <option value="Snacks & Beverages">Snacks & Beverages</option>
+          </select>
+        </span>
       </div>
       <div class="row"><span class="label">Expiry date:</span>
         <span class="value" data-field="expiry_date"><input class="edit-input" data-name="expiry_date" type="date" min="${min}" max="${max}"></span>
@@ -260,7 +277,14 @@
         </span>
       </div>
       <div class="row"><span class="label">Storage location:</span>
-        <span class="value" data-field="storage_location"><input class="edit-input" data-name="storage_location" type="text" value=""></span>
+        <span class="value" data-field="storage_location">
+          <select class="edit-input" data-name="storage_location">
+          <option value="Fridge">Fridge</option>
+          <option value="Freezer">Freezer</option>
+          <option value="Pantry">Pantry</option>
+          <option value="Countertop">Countertop</option>
+        </select>
+      </span>
       </div>
       <div class="row"><span class="label">Description:</span>
         <span class="value" data-field="description"><textarea class="edit-input" data-name="description" rows="2"></textarea></span>
