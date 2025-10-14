@@ -33,7 +33,7 @@ $description      = trim((string)($body['description'] ?? ''));
 // 允许值（枚举）
 $ALLOWED_CATEGORIES = ['Produce','Protein','Dairy & Bakery','Grains & Pantry','Snacks & Beverages'];
 $ALLOWED_LOCATIONS  = ['Fridge','Freezer','Pantry','Countertop'];
-$ALLOWED_STATUS     = ['used','reserved','expired'];
+$ALLOWED_STATUS     = ['used','available','expired'];
 
 // 校验
 $errs = [];

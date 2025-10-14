@@ -82,9 +82,8 @@
             <div class="card-title">
               <span class="label">Food Name:</span>
               <span class="value" data-field="food_name">${esc(it.name || 'Unknown')}</span>
-              <span class="mini-id">
-                (# <a href="/SaveBite/templates/base.php?page=inventory#item-${esc(it.manageId || '')}" title="Open in Inventory">${esc(it.manageId || '')}</a>)
-              </span>
+              <span class="mini-id">(# ${esc(it.donation_id || '')})</span>
+
             </div>
             <div>
               <button class="mini" type="button" data-action="edit">Edit</button>

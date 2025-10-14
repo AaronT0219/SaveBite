@@ -105,14 +105,14 @@
     setHTML(st, `
       <select class="edit-input" data-name="status">
         <option value="used">used</option>
-        <option value="reserved">reserved</option>
+        <option value="available">available</option>
         <option value="expired">expired</option>
       </select>
     `);
     const stSel = st?.querySelector('select'); 
     if (stSel) {
-      const v = String(card.__orig.status || '');
-      stSel.value = ['used','reserved','expired'].includes(v) ? v : 'used';
+      const v = String(card.__orig.status || 'available').toLowerCase();
+      stSel.value = ['used','available','expired'].includes(v) ? v : 'available';
     }
 
 
@@ -149,8 +149,8 @@
     if(!/^\d+$/.test((values.quantity||'').trim())) errors.push('Quantity is required and must be an integer ≥ 0.');
     if(!CATEGORIES.includes(String(values.category||''))) errors.push('Category must be one of: ' + CATEGORIES.join(', ') + '.');
     if(!values.expiry_date?.trim()) errors.push('Expiry date cannot be empty.');
-    if(!['used','reserved','expired'].includes(String(values.status||''))) {
-      errors.push('Status must be one of: used / reserved / expired.');}
+    if(!['used','available','expired'].includes(String(values.status||''))) {
+      errors.push('Status must be one of: used / available / expired.');}
     if(!LOCATIONS.includes(String(values.storage_location||''))) errors.push('Storage location must be one of: ' + LOCATIONS.join(', ') + '.');
     if(errors.length){ alert('Please fix:\n- ' + errors.join('\n- ')); return false; }
     return true;
@@ -342,7 +342,7 @@
         <span class="value" data-field="status">
           <select class="edit-input" data-name="status">
             <option value="used">used</option>
-            <option value="reserved">reserved</option>
+            <option value="v">reserved</option>
             <option value="expired">expired</option>
           </select>
         </span>

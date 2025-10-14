@@ -7,6 +7,8 @@ require_once __DIR__ . '/../../config.php';
 
 function respond(int $code, array $payload): void {
   http_response_code($code);
+  // 确保没有意外输出
+  if (ob_get_length()) { ob_clean(); }
   echo json_encode($payload, JSON_UNESCAPED_UNICODE);
   exit;
 }
@@ -25,7 +27,7 @@ try {
   }
 
   if (session_status() !== PHP_SESSION_ACTIVE) session_start();
-  $uid = (int)($_SESSION['user_id'] ?? $_SESSION['id'] ?? 0);
+  $uid = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : (int)($_SESSION['id'] ?? 0);
   if ($uid <= 0) respond(401, ['success'=>false, 'error'=>'not logged in']);
 
   $b = read_input();
@@ -41,7 +43,8 @@ try {
   if ((int)$ownerId !== $uid) respond(403, ['success'=>false, 'error'=>'Permission denied']);
 
   // ---- 构造 donation 更新 ----
-  $donSet = []; $donParam = [':id' => $donationId];
+  $donSet = [];
+  $donParam = [':id' => $donationId];
 
   if (array_key_exists('pickup_location', $b)) { $donSet[] = "pickup_location = :p"; $donParam[':p'] = trim((string)$b['pickup_location']); }
   if (array_key_exists('availability',    $b)) { $donSet[] = "availability = :a";    $donParam[':a'] = trim((string)$b['availability']); }
@@ -51,6 +54,11 @@ try {
     $allowed = ['pending','picked_up'];
     if (!in_array($val, $allowed, true)) respond(400, ['success'=>false, 'error'=>'Invalid donation_status']);
     $donSet[] = "status = :s"; $donParam[':s'] = $val;
+  }
+  // ★ 关键：把描述写到 donation.description
+  if (array_key_exists('desc', $b)) {
+    $donSet[] = "description = :desc";
+    $donParam[':desc'] = trim((string)$b['desc']);
   }
 
   // ---- donation_fooditem.quantity 可选更新 ----
@@ -64,13 +72,16 @@ try {
     respond(400, ['success'=>false, 'error'=>'quantity update requires valid fooditem_id']);
   }
 
-  // ---- fooditem 可选更新 ----
+  // ---- fooditem 可选更新（不再更新 description）----
   $fiSet = []; $fiParam = [];
   if ($fid && $fid > 0) {
-    if (array_key_exists('food_name', $b))   { $fiSet[]="food_name = :fn";       $fiParam[':fn'] = trim((string)$b['food_name']); }
-    if (array_key_exists('category',  $b))   { $fiSet[]="category = :fc";        $fiParam[':fc'] = trim((string)$b['category']); }
-    if (array_key_exists('expiry',    $b))   { $exp = trim((string)$b['expiry']); if ($exp!=='') { $fiSet[]="expiry_date = :fe"; $fiParam[':fe']=$exp; } }
-    if (array_key_exists('desc',      $b))   { $fiSet[]="description = :fd";     $fiParam[':fd'] = trim((string)$b['desc']); }
+    if (array_key_exists('food_name', $b)) { $fiSet[]="food_name = :fn"; $fiParam[':fn'] = trim((string)$b['food_name']); }
+    if (array_key_exists('category',  $b)) { $fiSet[]="category = :fc";  $fiParam[':fc'] = trim((string)$b['category']); }
+    if (array_key_exists('expiry',    $b)) {
+      $exp = trim((string)$b['expiry']);
+      if ($exp !== '') { $fiSet[]="expiry_date = :fe"; $fiParam[':fe'] = $exp; }
+    }
+    // 不再：if (array_key_exists('desc', $b)) { ... }  —— 描述只写 donation
   }
 
   if (empty($donSet) && !$doQtyUpdate && empty($fiSet)) {
@@ -81,7 +92,8 @@ try {
 
   if (!empty($donSet)) {
     $sql = "UPDATE donation SET ".implode(', ', $donSet)." WHERE donation_id = :id";
-    $u = $pdo->prepare($sql); $u->execute($donParam);
+    $u = $pdo->prepare($sql);
+    $u->execute($donParam);
   }
 
   if ($doQtyUpdate) {
@@ -99,7 +111,8 @@ try {
 
     $fiSql = "UPDATE fooditem SET ".implode(', ', $fiSet)." WHERE foodItem_id = :id";
     $fiParam[':id'] = $fid;
-    $uu = $pdo->prepare($fiSql); $uu->execute($fiParam);
+    $uu = $pdo->prepare($fiSql);
+    $uu->execute($fiParam);
   }
 
   $pdo->commit();
@@ -107,5 +120,6 @@ try {
 }
 catch (Throwable $e) {
   if ($pdo->inTransaction()) $pdo->rollBack();
+  // 不把 HTML 错误页返回到前端
   respond(500, ['success'=>false, 'error'=>$e->getMessage()]);
 }

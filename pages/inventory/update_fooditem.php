@@ -34,7 +34,7 @@ if ($fooditem_id <= 0) respond(400, ['success'=>false,'error'=>'fooditem_id requ
 // 允许值（枚举）
 $ALLOWED_CATEGORIES = ['Produce','Protein','Dairy & Bakery','Grains & Pantry','Snacks & Beverages'];
 $ALLOWED_LOCATIONS  = ['Fridge','Freezer','Pantry','Countertop'];
-$ALLOWED_STATUS     = ['used','reserved','expired'];
+$ALLOWED_STATUS     = ['used','available','expired'];
 
 // 校验
 $errs=[];
