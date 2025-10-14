@@ -245,11 +245,11 @@
       return;
     }
 
-    // 2) 若状态是 used，禁止捐赠
+    // 2) 若状态是 used，expired，禁止捐赠
     const stEl = card.querySelector('.value[data-field="status"]');
     const status = (stEl ? (stEl.textContent||'') : '').trim().toLowerCase();
-    if (status === 'used') {
-      alert('This item is already used and cannot be donated.');
+    if (status === 'used' || status === 'expired') {
+      alert('This item is already used or expired and cannot be donated.');
       return;
     }
 
