@@ -14,40 +14,54 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
   respond(405, ['success' => false, 'error' => 'Method not allowed']);
 }
 
-$raw = file_get_contents('php://input') ?: '';
-$data = json_decode($raw, true);
-if (!is_array($data)) respond(400, ['success'=>false,'error'=>'Invalid JSON']);
+// 读取 JSON
+$raw  = file_get_contents('php://input') ?: '';
+$body = json_decode($raw, true);
+if (!is_array($body)) {
+  respond(400, ['success' => false, 'error' => 'Invalid JSON']);
+}
 
-$food_name        = trim((string)($data['food_name'] ?? ''));
-$quantity         = isset($data['quantity']) ? (int)$data['quantity'] : null;
-$category         = trim((string)($data['category'] ?? ''));
-$expiry_date      = trim((string)($data['expiry_date'] ?? '')); // YYYY-MM-DD
-$status           = trim((string)($data['status'] ?? ''));      // '', 'used', 'reserved'
-$storage_location = trim((string)($data['storage_location'] ?? ''));
-$description      = trim((string)($data['description'] ?? ''));
+// 入参
+$food_name        = trim((string)($body['food_name'] ?? ''));
+$quantity         = isset($body['quantity']) ? (int)$body['quantity'] : null;
+$category         = trim((string)($body['category'] ?? ''));
+$expiry_date      = trim((string)($body['expiry_date'] ?? '')); // YYYY-MM-DD
+$status           = trim((string)($body['status'] ?? ''));      // used | reserved | expired
+$storage_location = trim((string)($body['storage_location'] ?? ''));
+$description      = trim((string)($body['description'] ?? ''));
 
+// 允许值（枚举）
+$ALLOWED_CATEGORIES = ['Produce','Protein','Dairy & Bakery','Grains & Pantry','Snacks & Beverages'];
+$ALLOWED_LOCATIONS  = ['Fridge','Freezer','Pantry','Countertop'];
+$ALLOWED_STATUS     = ['used','reserved','expired'];
+
+// 校验
 $errs = [];
-if ($food_name === '') $errs[] = 'food_name required';
-if (!is_int($quantity) || $quantity < 0) $errs[] = 'quantity invalid';
-if ($category === '') $errs[] = 'category required';
-if ($expiry_date === '') $errs[] = 'expiry_date required';
-if ($storage_location === '') $errs[] = 'storage_location required';
-if ($errs) respond(400, ['success'=>false,'error'=>implode('; ', $errs)]);
+if ($food_name === '')                              $errs[] = 'food_name required';
+if (!is_int($quantity) || $quantity < 0)            $errs[] = 'quantity invalid';
+if (!in_array($category, $ALLOWED_CATEGORIES, true))$errs[] = 'category invalid';
+if ($expiry_date === '')                            $errs[] = 'expiry_date required';
+if (!in_array($status, $ALLOWED_STATUS, true))      $errs[] = 'status invalid (used/reserved/expired)';
+if (!in_array($storage_location, $ALLOWED_LOCATIONS, true)) $errs[] = 'storage_location invalid';
+if ($errs) respond(400, ['success'=>false, 'error'=>implode('; ', $errs)]);
 
+// 执行插入
 try {
   $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : 7;
 
   $stmt = $pdo->prepare("
-    INSERT INTO fooditem (food_name, quantity, category, expiry_date, status, storage_location, description, user_id)
-    VALUES (:food_name, :quantity, :category, :expiry_date, :status, :storage_location, :description, :user_id)
+    INSERT INTO fooditem
+      (food_name, quantity, category, expiry_date, status, storage_location, description, user_id)
+    VALUES
+      (:food_name, :quantity, :category, :expiry_date, :status, :storage_location, :description, :user_id)
   ");
+
   $stmt->execute([
     ':food_name'        => $food_name,
     ':quantity'         => $quantity,
     ':category'         => $category,
     ':expiry_date'      => $expiry_date,
-    // 这里不把 donation 作为可选值插入；donation 通过创建 donation 时再设置
-    ':status'           => ($status === '' ? null : $status),
+    ':status'           => $status, // 只有 used/reserved/expired
     ':storage_location' => $storage_location,
     ':description'      => $description,
     ':user_id'          => $userId,
