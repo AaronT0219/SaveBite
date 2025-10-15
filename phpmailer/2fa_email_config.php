@@ -119,7 +119,7 @@ function send2FASetupEmailBasic($toEmail, $activationCode) {
 }
 
 function get2FASetupEmailTemplate($activationCode, $email) {
-    $activationLink = "http://localhost/Projects/SaveBite/pages/settings/2fa_verification.php?email=" . urlencode($email) . "&code=" . $activationCode;
+    $activationLink = "http://localhost/SaveBite/pages/settings/2fa_verification.php?email=" . urlencode($email) . "&code=" . $activationCode;
     
     return "
     <html>
