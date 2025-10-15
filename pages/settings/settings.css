@@ -35,7 +35,7 @@ input[type="number"] {
     padding: 4px 8px;
 }
 
-.btn {
+.btn-password {
     --bs-btn-bg: #ccd5ae;
     --bs-btn-border-color: #ccd5ae;
     --bs-btn-hover-bg: rgb(182, 187, 143);

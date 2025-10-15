@@ -29,7 +29,7 @@ session_start();
                     <div class="error-message">Please enter a valid number (minimum 0)</div>
                 </div>
                 <div class="mb-4 input-box">
-                    <button class="btn">Change Password</button>
+                    <button class="btn btn-password">Change Password</button>
                 </div>
             </div>
 
