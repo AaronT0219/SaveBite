@@ -342,7 +342,7 @@
         <span class="value" data-field="status">
           <select class="edit-input" data-name="status">
             <option value="used">used</option>
-            <option value="v">reserved</option>
+            <option value="available">available</option>
             <option value="expired">expired</option>
           </select>
         </span>

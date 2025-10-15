@@ -41,7 +41,7 @@ if ($food_name === '')                              $errs[] = 'food_name require
 if (!is_int($quantity) || $quantity < 0)            $errs[] = 'quantity invalid';
 if (!in_array($category, $ALLOWED_CATEGORIES, true))$errs[] = 'category invalid';
 if ($expiry_date === '')                            $errs[] = 'expiry_date required';
-if (!in_array($status, $ALLOWED_STATUS, true))      $errs[] = 'status invalid (used/reserved/expired)';
+if (!in_array($status, $ALLOWED_STATUS, true))      $errs[] = 'status invalid (used/available/expired)';
 if (!in_array($storage_location, $ALLOWED_LOCATIONS, true)) $errs[] = 'storage_location invalid';
 if ($errs) respond(400, ['success'=>false, 'error'=>implode('; ', $errs)]);
 
@@ -64,7 +64,7 @@ try {
     ':quantity'         => $quantity,
     ':category'         => $category,
     ':expiry_date'      => $expiry_date,
-    ':status'           => $status, // 只有 used/reserved/expired
+    ':status'           => $status, // 只有 used/available/expired
     ':storage_location' => $storage_location,
     ':description'      => $description,
     ':user_id'          => $userId,
