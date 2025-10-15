@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 15, 2025 at 05:40 AM
+-- Generation Time: Oct 10, 2025 at 11:51 AM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.0.30
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -29,24 +29,22 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `donation` (
   `donation_id` int(20) NOT NULL,
-  `status` enum('pending','picked_up') NOT NULL DEFAULT 'pending',
-  `category` enum('Produce','Protein','Dairy & Bakery','Grains & Pantry','Snacks & Beverages') DEFAULT NULL,
-  `pickup_location` varchar(60) DEFAULT NULL,
+  `status` enum('pending','picked_up') NOT NULL,
+  `pickup_location` varchar(60) NOT NULL,
   `description` varchar(80) DEFAULT NULL,
   `donation_date` date NOT NULL,
   `donor_user_id` int(20) UNSIGNED NOT NULL,
-  `claimant_user_id` int(20) UNSIGNED DEFAULT NULL,
-  `availability` varchar(255) DEFAULT NULL,
-  `contact` varchar(255) DEFAULT NULL
+  `claimant_user_id` int(20) UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `donation`
 --
 
-INSERT INTO `donation` (`donation_id`, `status`, `category`, `pickup_location`, `description`, `donation_date`, `donor_user_id`, `claimant_user_id`, `availability`, `contact`) VALUES
-(42, 'pending', 'Produce', '111', '111', '2025-10-15', 8, NULL, '111', '111'),
-(45, 'pending', 'Produce', '', NULL, '2025-10-15', 8, NULL, '', '');
+INSERT INTO `donation` (`donation_id`, `status`, `pickup_location`, `description`, `donation_date`, `donor_user_id`, `claimant_user_id`) VALUES
+(1, 'pending', 'midvalley', NULL, '2025-10-17', 15, NULL),
+(2, 'pending', '1 utama', NULL, '2025-10-14', 15, NULL),
+(3, 'pending', 'times square', NULL, '2025-10-10', 15, NULL);
 
 -- --------------------------------------------------------
 
@@ -65,8 +63,9 @@ CREATE TABLE `donation_fooditem` (
 --
 
 INSERT INTO `donation_fooditem` (`donation_id`, `fooditem_id`, `quantity`) VALUES
-(42, 38, 1),
-(45, 40, 1);
+(0, 9, 5),
+(2, 16, 6),
+(3, 18, 10);
 
 -- --------------------------------------------------------
 
@@ -76,42 +75,41 @@ INSERT INTO `donation_fooditem` (`donation_id`, `fooditem_id`, `quantity`) VALUE
 
 CREATE TABLE `fooditem` (
   `foodItem_id` int(20) NOT NULL,
-  `category` enum('Produce','Protein','Dairy & Bakery','Grains & Pantry','Snacks & Beverages') NOT NULL,
+  `user_id` int(20) UNSIGNED NOT NULL,
+  `category` varchar(40) NOT NULL,
   `food_name` varchar(20) NOT NULL,
   `quantity` int(10) NOT NULL,
-  `expiry_date` date NOT NULL DEFAULT current_timestamp(),
-  `storage_location` enum('Fridge','Freezer','Pantry','Countertop') NOT NULL,
+  `expiry_date` date NOT NULL,
+  `storage_location` varchar(80) NOT NULL,
   `description` varchar(80) DEFAULT NULL,
-  `status` enum('available','used','expired') NOT NULL,
-  `user_id` int(20) UNSIGNED NOT NULL
+  `status` enum('used','donation','reserved','') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `fooditem`
 --
 
-INSERT INTO `fooditem` (`foodItem_id`, `category`, `food_name`, `quantity`, `expiry_date`, `storage_location`, `description`, `status`, `user_id`) VALUES
-(38, 'Protein', 'apple', 0, '2025-12-12', 'Pantry', '111', 'used', 8),
-(40, 'Produce', '1', 1, '1111-11-11', 'Fridge', '1', 'available', 8);
-
--- --------------------------------------------------------
-
---
--- Stand-in structure for view `food_items`
--- (See below for the actual view)
---
-CREATE TABLE `food_items` (
-`fooditem_id` int(20)
-,`name` varchar(20)
-,`quantity` int(10)
-,`category` enum('Produce','Protein','Dairy & Bakery','Grains & Pantry','Snacks & Beverages')
-,`expiry_date` date
-,`status` enum('available','used','expired')
-,`description` varchar(80)
-,`created_by` int(20) unsigned
-,`storage_location` enum('Fridge','Freezer','Pantry','Countertop')
-,`created_at` datetime
-);
+INSERT INTO `fooditem` (`foodItem_id`, `user_id`, `category`, `food_name`, `quantity`, `expiry_date`, `storage_location`, `description`, `status`) VALUES
+(1, 15, 'Produce', 'Broccoli', 3, '2025-10-16', 'Fridge', 'Fresh green broccoli', 'reserved'),
+(2, 15, 'Produce', 'Banana', 6, '2025-10-12', 'Countertop', 'Ripe bananas', 'used'),
+(3, 15, 'Protein', 'Salmon Fillet', 2, '2025-10-09', 'Freezer', 'Frozen Norwegian salmon', ''),
+(4, 15, 'Protein', 'Tofu Block', 4, '2025-10-18', 'Fridge', 'Organic firm tofu', ''),
+(5, 15, 'Dairy & Bakery', 'Butter', 1, '2026-02-01', 'Fridge', 'Salted butter block', 'reserved'),
+(6, 15, 'Dairy & Bakery', 'Cheese Slice', 10, '2025-10-25', 'Fridge', 'Cheddar cheese slices', ''),
+(7, 15, 'Grains & Pantry', 'Spaghetti', 2, '2026-06-30', 'Pantry', 'Dry spaghetti pack', 'reserved'),
+(8, 15, 'Grains & Pantry', 'Canned Beans', 4, '2027-01-15', 'Pantry', 'Baked beans in tomato sauce', ''),
+(9, 15, 'Snacks & Beverages', 'Chocolate Bar', 5, '2026-03-10', 'Pantry', 'Dark chocolate 70%', 'donation'),
+(10, 15, 'Snacks & Beverages', 'Green Tea', 1, '2027-04-20', 'Pantry', 'Green tea bags (20pcs)', 'reserved'),
+(11, 15, 'Produce', 'Spinach', 2, '2025-10-18', 'Fridge', 'Fresh baby spinach leaves', 'reserved'),
+(12, 15, 'Produce', 'Tomato', 8, '2025-10-13', 'Fridge', 'Ripe red tomatoes', 'used'),
+(13, 15, 'Protein', 'Minced Beef', 3, '2025-10-09', 'Freezer', 'Frozen minced beef pack', ''),
+(14, 15, 'Protein', 'Fish Fillet', 4, '2025-10-11', 'Freezer', 'White fish fillets', 'used'),
+(15, 15, 'Dairy & Bakery', 'Yogurt', 5, '2025-10-20', 'Fridge', 'Plain low-fat yogurt cups', 'reserved'),
+(16, 15, 'Dairy & Bakery', 'Croissant', 6, '2025-10-10', 'Countertop', 'Buttery croissants', 'donation'),
+(17, 15, 'Grains & Pantry', 'Cooking Oil', 1, '2027-05-15', 'Pantry', 'Sunflower cooking oil bottle', 'reserved'),
+(18, 15, 'Grains & Pantry', 'Instant Noodles', 10, '2026-11-30', 'Pantry', 'Spicy chicken flavor instant noodles', 'donation'),
+(19, 15, 'Snacks & Beverages', 'Cookies', 3, '2026-02-25', 'Pantry', 'Chocolate chip cookies', 'used'),
+(20, 15, 'Snacks & Beverages', 'Coffee Powder', 1, '2027-07-01', 'Pantry', 'Instant coffee powder jar', 'reserved');
 
 -- --------------------------------------------------------
 
@@ -173,7 +171,15 @@ CREATE TABLE `user` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
+-- Dumping data for table `user`
+--
 
+INSERT INTO `user` (`user_id`, `user_name`, `email`, `password`, `household_number`, `isAuthActive`) VALUES
+(15, 'Aaron', 'kianpoh0219@gmail.com', '$2y$10$EzKq7lw/fhdlTzg0FEDfneh4v/c6hODZaniQgFN55YNRy0CRWtRgG', 69, 1);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `verification_codes`
 --
 
@@ -188,21 +194,12 @@ CREATE TABLE `verification_codes` (
 
 --
 -- Dumping data for table `verification_codes`
--- Dumping data for table `user`
 --
 
-INSERT INTO `user` (`user_id`, `user_name`, `email`, `password`, `household_number`) VALUES
-(7, 'Aaron', 'brabrab@gmail.com', '$2y$10$ONo/hJPFgUFKsiIbGvSEg.QFuOagb0J7nwppCxN2FGiepRtzLLjEK', 3),
-(8, 'QuJiaWei', 'b2400595@helplive.edu.my', '$2y$10$oXBwXpnGZXsGyVOcTaS35uZn1H.51V31s17NwJ9ahs9bt.b49lIhq', 0);
-
--- --------------------------------------------------------
-
---
--- Structure for view `food_items`
---
-DROP TABLE IF EXISTS `food_items`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `food_items`  AS SELECT `fooditem`.`foodItem_id` AS `fooditem_id`, `fooditem`.`food_name` AS `name`, `fooditem`.`quantity` AS `quantity`, `fooditem`.`category` AS `category`, `fooditem`.`expiry_date` AS `expiry_date`, `fooditem`.`status` AS `status`, `fooditem`.`description` AS `description`, `fooditem`.`user_id` AS `created_by`, `fooditem`.`storage_location` AS `storage_location`, current_timestamp() AS `created_at` FROM `fooditem` ;
+INSERT INTO `verification_codes` (`id`, `email`, `code`, `expires_at`, `used`, `created_at`) VALUES
+(17, 'aaron@gmail.com', '694929', '2025-10-10 11:16:09', 0, '2025-10-10 09:15:09'),
+(18, 'kianpoh0219@gmaill.com', '475127', '2025-10-10 11:17:00', 0, '2025-10-10 09:16:00'),
+(19, 'kianpoh0219@gmail.com', '955104', '2025-10-10 11:26:31', 1, '2025-10-10 09:25:31');
 
 --
 -- Indexes for dumped tables
@@ -258,12 +255,15 @@ ALTER TABLE `user`
   ADD PRIMARY KEY (`user_id`),
   ADD UNIQUE KEY `email_unique` (`email`);
 
-
+--
+-- Indexes for table `verification_codes`
+--
 ALTER TABLE `verification_codes`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_email` (`email`),
   ADD KEY `idx_code` (`code`),
   ADD KEY `idx_expires` (`expires_at`);
+
 --
 -- AUTO_INCREMENT for dumped tables
 --
@@ -272,13 +272,13 @@ ALTER TABLE `verification_codes`
 -- AUTO_INCREMENT for table `donation`
 --
 ALTER TABLE `donation`
-  MODIFY `donation_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+  MODIFY `donation_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `fooditem`
 --
 ALTER TABLE `fooditem`
-  MODIFY `foodItem_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `foodItem_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `mealplan`
@@ -296,12 +296,15 @@ ALTER TABLE `notification`
 -- AUTO_INCREMENT for table `user`
 --
 ALTER TABLE `user`
-  MODIFY `user_id` int(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `user_id` int(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
-
+--
+-- AUTO_INCREMENT for table `verification_codes`
+--
 ALTER TABLE `verification_codes`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
+--
 -- Constraints for dumped tables
 --
 
@@ -335,8 +338,8 @@ ALTER TABLE `mealplan`
 -- Constraints for table `mealplan_fooditem`
 --
 ALTER TABLE `mealplan_fooditem`
-  ADD CONSTRAINT `fooditem_mealplan_fk` FOREIGN KEY (`fooditem_id`) REFERENCES `fooditem` (`foodItem_id`),
-  ADD CONSTRAINT `mealplan_fooditem_fk` FOREIGN KEY (`mealplan_id`) REFERENCES `mealplan` (`mealplan_id`);
+  ADD CONSTRAINT `fooditem_mealplan_fk` FOREIGN KEY (`fooditem_id`) REFERENCES `fooditem` (`foodItem_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `mealplan_fooditem_id_fk` FOREIGN KEY (`mealplan_id`) REFERENCES `mealplan` (`mealplan_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `notification`
