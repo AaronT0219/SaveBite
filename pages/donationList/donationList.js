@@ -183,6 +183,7 @@
 
         // donation
         donation_status: v('[data-field="donation_status"] select'),
+        donation_date:   v('[data-field="donation_date"] input'),
         pickup_location: v('[data-field="pickup_location"] input'),
         availability:    v('[data-field="availability"] input'),
         contact:         v('[data-field="contact"] input'),
@@ -204,6 +205,7 @@
       if (!payload.availability)    errs.push('Availability is required.');
       if (!payload.contact)         errs.push('Contact is required.');
       if (!/^\d+$/.test(payload.quantity || '')) errs.push('Quantity must be an integer ≥ 0.');
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(payload.donation_date || '')) errs.push('Donation date must be YYYY-MM-DD.');
       if (errs.length){ alert('Please fix:\n- ' + errs.join('\n- ')); return; }
 
       fetch(API_UPDATE, {
@@ -217,6 +219,7 @@
 
         // 同步 UI（donation_date 不会变）
         card.querySelector('[data-field="donation_status"]').textContent = payload.donation_status;
+        card.querySelector('[data-field="donation_date"]').textContent   = payload.donation_date;
         card.querySelector('[data-field="pickup_location"]').textContent = payload.pickup_location;
         card.querySelector('[data-field="availability"]').textContent    = payload.availability;
         card.querySelector('[data-field="contact"]').textContent         = payload.contact;
@@ -247,7 +250,12 @@
       card.querySelector('[data-field="expiry"]').textContent    = o.expiry    || '';
 
       card.querySelector('[data-field="donation_status"]').textContent = o.donation_status || 'pending';
-      card.querySelector('[data-field="donation_date"]').textContent   = o.donation_date   || '';
+      const today = new Date();
+      const pad = n => String(n).padStart(2,'0');
+      const todayStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+      card.querySelector('[data-field="donation_date"]').innerHTML = `
+      <input type="date" value="${esc(o.donation_date || todayStr)}">
+      `;
 
       card.querySelector('[data-field="desc"]').textContent      = o.desc || '';
       card.querySelector('[data-field="pickup_location"]').textContent = o.pickup_location || '';
