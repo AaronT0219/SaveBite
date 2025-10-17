@@ -263,7 +263,16 @@
 
       
       card.querySelector('[data-field="donation_status"]').textContent = o.donation_status || 'pending';
+<<<<<<< Updated upstream
       card.querySelector('[data-field="donation_date"]').textContent = o.donation_date || '';
+=======
+      const today = new Date();
+      const pad = n => String(n).padStart(2,'0');
+      const todayStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+      card.querySelector('[data-field="donation_date"]').innerHTML = `
+      <input type="date" value="${esc(o.donation_date || todayStr)}">
+      `;
+>>>>>>> Stashed changes
 
       card.querySelector('[data-field="desc"]').textContent      = o.desc || '';
       card.querySelector('[data-field="pickup_location"]').textContent = o.pickup_location || '';

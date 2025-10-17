@@ -55,6 +55,7 @@ try {
     if (!in_array($val, $allowed, true)) respond(400, ['success'=>false, 'error'=>'Invalid donation_status']);
     $donSet[] = "status = :s"; $donParam[':s'] = $val;
   }
+<<<<<<< Updated upstream
   if (array_key_exists('desc', $b)) {
     $donSet[] = "description = :desc";
     $donParam[':desc'] = trim((string)$b['desc']);
@@ -71,6 +72,18 @@ try {
      }
    }
 
+=======
+  if (array_key_exists('donation_date', $b)) {
++    $dd = trim((string)$b['donation_date']);
++    if ($dd !== '') {
++      if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dd)) {
++        respond(400, ['success'=>false, 'error'=>'Invalid donation_date format (YYYY-MM-DD)']);
++      }
++      $donSet[] = "donation_date = :dd";
++      $donParam[':dd'] = $dd;
++    }
++  }
+>>>>>>> Stashed changes
 
   // ---- donation_fooditem.quantity 可选更新 ----
   $doQtyUpdate = false;
