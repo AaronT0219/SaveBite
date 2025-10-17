@@ -41,10 +41,20 @@ try{
   $pdo->beginTransaction();
 
   // 1) 删除映射
-  $pdo->prepare("DELETE FROM donation_fooditem WHERE donation_id = ?")->execute([$donationId]);
+  $delMap = $pdo->prepare("DELETE FROM donation_fooditem WHERE donation_id = ?");
+  $delMap->execute([$donationId]);
+  $mapRows = $delMap->rowCount(); // 可能为 0（比如之前就没有映射）——允许
 
-  // 2) 删除 donation
-  $pdo->prepare("DELETE FROM donation WHERE donation_id = ?")->execute([$donationId]);
+  // 2) 删除 donation（这里必须删到 1 行）
+  $delDon = $pdo->prepare("DELETE FROM donation WHERE donation_id = ?");
+  $delDon->execute([$donationId]);
+  $donRows = $delDon->rowCount();
+  if ($donRows !== 1) {
+    // 没删除成功就回滚并报错（大概率是 donation_id 不存在或不属于当前用户）
+    $pdo->rollBack();
+    respond(404, ['success'=>false, 'error'=>'Delete failed: donation not found or already deleted', 'donation_id'=>$donationId]);
+  }
+
 
   $pdo->commit();
 
@@ -52,6 +62,8 @@ try{
     'success' => true,
     'deleted' => true,
     'donation_id' => $donationId,
+    'map_rows'     => $mapRows,
+    'donation_rows'=> $donRows,
     'fooditem_ids' => $ids  // 仅告知哪些被解除关联的库存项
   ]);
 }

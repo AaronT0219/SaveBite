@@ -157,11 +157,23 @@
 
       card.querySelector('[data-field="donation_status"]').innerHTML = `
         <select>
-          <option value="pending"${o.donation_status==='pending' ? ' selected' : ''}>pending</option>
-          <option value="picked_up"${o.donation_status==='picked_up' ? ' selected' : ''}>picked_up</option>
-        </select>`;
+            <option value="pending"${o.donation_status==='pending' ? ' selected' : ''}>pending</option>
+            <option value="picked_up"${o.donation_status==='picked_up' ? ' selected' : ''}>picked_up</option>
+          </select>`;
 
-      // donation_date 保持只读，不生成 input
+      // ← 在这行下面插入/替换为【可编辑日期输入框】
+      {
+        const today = new Date();
+        const pad = n => String(n).padStart(2,'0');
+        const y = today.getFullYear(), m = pad(today.getMonth()+1), d = pad(today.getDate());
+        const min = `${y}-${m}-${d}`;
+        const max = `${y+100}-${m}-${d}`;
+        const cur = (card.querySelector('[data-field="donation_date"]')?.textContent || '').trim();
+        const val = /^\d{4}-\d{2}-\d{2}$/.test(cur) ? cur : min;
+        card.querySelector('[data-field="donation_date"]').innerHTML =
+          `<input type="date" min="${min}" max="${max}" value="${val}">`;
+      }
+
       card.querySelector('[data-field="desc"]').innerHTML       = `<textarea rows="2">${esc(o.desc)}</textarea>`;
       card.querySelector('[data-field="pickup_location"]').innerHTML = `<input type="text" value="${esc(o.pickup_location)}">`;
       card.querySelector('[data-field="availability"]').innerHTML    = `<input type="text" value="${esc(o.availability)}">`;
@@ -249,13 +261,9 @@
       card.querySelector('[data-field="category"]').textContent  = o.category  || '';
       card.querySelector('[data-field="expiry"]').textContent    = o.expiry    || '';
 
+      
       card.querySelector('[data-field="donation_status"]').textContent = o.donation_status || 'pending';
-      const today = new Date();
-      const pad = n => String(n).padStart(2,'0');
-      const todayStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
-      card.querySelector('[data-field="donation_date"]').innerHTML = `
-      <input type="date" value="${esc(o.donation_date || todayStr)}">
-      `;
+      card.querySelector('[data-field="donation_date"]').textContent = o.donation_date || '';
 
       card.querySelector('[data-field="desc"]').textContent      = o.desc || '';
       card.querySelector('[data-field="pickup_location"]').textContent = o.pickup_location || '';
@@ -276,15 +284,29 @@
       if(!confirm('Delete this donation? This will return the food item back to inventory.')) return;
 
       fetch(API_DELETE, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ donation_id: donationId, fooditem_id: foodItemId })
-      })
-      .then(r=>r.json())
-      .then(json=>{
-        if(!json.success) throw new Error(json.error||'Delete failed');
-        card.remove();
-      })
-      .catch(err=>{ console.error(err); alert(err.message||'Delete failed'); });
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ donation_id: donationId, fooditem_id: foodItemId })
+    })
+    .then(async r => {
+      const text = await r.text();
+      let json;
+      try { json = JSON.parse(text); } catch(e){ throw new Error('Bad JSON: ' + text); }
+      console.log('[DELETE req]', {donation_id: donationId, fooditem_id: foodItemId});
+      console.log('[DELETE res]', json);
+
+      if(!json.success) throw new Error(json.error || 'Delete failed');
+      // 安全起见再二次确认后端确实删了 1 行 donation
+      if (typeof json.donation_rows !== 'undefined' && Number(json.donation_rows) !== 1) {
+        throw new Error('Server did not delete donation row.');
+      }
+
+      card.remove();
+    })
+    .catch(err=>{
+      console.error(err);
+      alert(err.message || 'Delete failed');
+    });
+
     }
   }
 

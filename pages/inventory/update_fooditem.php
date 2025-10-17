@@ -25,7 +25,7 @@ $food_name        = trim((string)($body['food_name'] ?? ''));
 $quantity         = isset($body['quantity']) ? (int)$body['quantity'] : null;
 $category         = trim((string)($body['category'] ?? ''));
 $expiry_date      = trim((string)($body['expiry_date'] ?? ''));
-$status           = trim((string)($body['status'] ?? ''));      // used | reserved | expired
+$status           = trim((string)($body['status'] ?? ''));      // used | available | expired
 $storage_location = trim((string)($body['storage_location'] ?? ''));
 $description      = trim((string)($body['description'] ?? ''));
 
