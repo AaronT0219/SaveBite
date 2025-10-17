@@ -7,7 +7,6 @@ require_once __DIR__ . '/../../config.php';
 
 function respond(int $code, array $payload): void {
   http_response_code($code);
-  // 确保没有意外输出
   if (ob_get_length()) { ob_clean(); }
   echo json_encode($payload, JSON_UNESCAPED_UNICODE);
   exit;
@@ -35,7 +34,7 @@ try {
   $donationId = isset($b['donation_id']) ? (int)$b['donation_id'] : 0;
   if ($donationId <= 0) respond(400, ['success'=>false, 'error'=>'Missing or invalid donation_id']);
 
-  // donation 归属校验
+  // 归属校验
   $stmt = $pdo->prepare("SELECT donor_user_id FROM donation WHERE donation_id = ?");
   $stmt->execute([$donationId]);
   $ownerId = $stmt->fetchColumn();
@@ -55,35 +54,20 @@ try {
     if (!in_array($val, $allowed, true)) respond(400, ['success'=>false, 'error'=>'Invalid donation_status']);
     $donSet[] = "status = :s"; $donParam[':s'] = $val;
   }
-<<<<<<< Updated upstream
   if (array_key_exists('desc', $b)) {
     $donSet[] = "description = :desc";
     $donParam[':desc'] = trim((string)$b['desc']);
   }
-
   if (array_key_exists('donation_date', $b)) {
-     $dd = trim((string)$b['donation_date']);
-     if ($dd !== '') {
-       if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dd)) {
-         respond(400, ['success'=>false, 'error'=>'Invalid donation_date format (YYYY-MM-DD)']);
-       }
-       $donSet[] = "donation_date = :dd";
-       $donParam[':dd'] = $dd;
-     }
-   }
-
-=======
-  if (array_key_exists('donation_date', $b)) {
-+    $dd = trim((string)$b['donation_date']);
-+    if ($dd !== '') {
-+      if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dd)) {
-+        respond(400, ['success'=>false, 'error'=>'Invalid donation_date format (YYYY-MM-DD)']);
-+      }
-+      $donSet[] = "donation_date = :dd";
-+      $donParam[':dd'] = $dd;
-+    }
-+  }
->>>>>>> Stashed changes
+    $dd = trim((string)$b['donation_date']);
+    if ($dd !== '') {
+      if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dd)) {
+        respond(400, ['success'=>false, 'error'=>'Invalid donation_date format (YYYY-MM-DD)']);
+      }
+      $donSet[] = "donation_date = :dd";
+      $donParam[':dd'] = $dd;
+    }
+  }
 
   // ---- donation_fooditem.quantity 可选更新 ----
   $doQtyUpdate = false;
@@ -105,7 +89,6 @@ try {
       $exp = trim((string)$b['expiry']);
       if ($exp !== '') { $fiSet[]="expiry_date = :fe"; $fiParam[':fe'] = $exp; }
     }
-    // 不再：if (array_key_exists('desc', $b)) { ... }  —— 描述只写 donation
   }
 
   if (empty($donSet) && !$doQtyUpdate && empty($fiSet)) {
@@ -144,6 +127,5 @@ try {
 }
 catch (Throwable $e) {
   if ($pdo->inTransaction()) $pdo->rollBack();
-  // 不把 HTML 错误页返回到前端
   respond(500, ['success'=>false, 'error'=>$e->getMessage()]);
 }

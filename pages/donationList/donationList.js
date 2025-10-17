@@ -1,7 +1,4 @@
-/* /SaveBite/assets/js/donationList.js
- * 读取我的捐赠列表（后端），编辑后落库，删除后落库
- * 只在有 #donation-list 的页面运行
- */
+
 (function () {
   'use strict';
 
@@ -12,22 +9,20 @@
   const esc = (s) => String(s)
     .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
     .replaceAll('"','&quot;').replaceAll("'",'&#39;');
-  
-  const CATEGORIES = [
-  'Produce',
-  'Protein',
-  'Dairy & Bakery',
-  'Grains & Pantry',
-  'Snacks & Beverages'
-  ];
 
+  const CATEGORIES = [
+    'Produce',
+    'Protein',
+    'Dairy & Bakery',
+    'Grains & Pantry',
+    'Snacks & Beverages'
+  ];
 
   function initDonationListPage() {
     if (window.__donationInited) return;
 
     const list = document.getElementById('donation-list');
     if (!list) return;  // 不是捐赠页，直接退出
-
     window.__donationInited = true;
 
     // ------- 读取并渲染 -------
@@ -83,7 +78,6 @@
               <span class="label">Food Name:</span>
               <span class="value" data-field="food_name">${esc(it.name || 'Unknown')}</span>
               <span class="mini-id">(# ${esc(it.donation_id || '')})</span>
-
             </div>
             <div>
               <button class="mini" type="button" data-action="edit">Edit</button>
@@ -138,7 +132,7 @@
         category:  get('category'),
         expiry:    get('expiry'),
         donation_status: get('donation_status'),
-        donation_date:   get('donation_date'), // 只读显示
+        donation_date:   get('donation_date'),
         desc:       get('desc'),
         pickup_location: get('pickup_location'),
         availability:    get('availability'),
@@ -157,11 +151,11 @@
 
       card.querySelector('[data-field="donation_status"]').innerHTML = `
         <select>
-            <option value="pending"${o.donation_status==='pending' ? ' selected' : ''}>pending</option>
-            <option value="picked_up"${o.donation_status==='picked_up' ? ' selected' : ''}>picked_up</option>
-          </select>`;
+          <option value="pending"${o.donation_status==='pending' ? ' selected' : ''}>pending</option>
+          <option value="picked_up"${o.donation_status==='picked_up' ? ' selected' : ''}>picked_up</option>
+        </select>`;
 
-      // ← 在这行下面插入/替换为【可编辑日期输入框】
+      // 捐赠日期：可编辑 input（今天 ~ +100 年）
       {
         const today = new Date();
         const pad = n => String(n).padStart(2,'0');
@@ -229,19 +223,15 @@
       .then(json=>{
         if (!json.success) throw new Error(json.error || 'Update failed');
 
-        // 同步 UI（donation_date 不会变）
+        // 同步 UI
         card.querySelector('[data-field="donation_status"]').textContent = payload.donation_status;
         card.querySelector('[data-field="donation_date"]').textContent   = payload.donation_date;
         card.querySelector('[data-field="pickup_location"]').textContent = payload.pickup_location;
         card.querySelector('[data-field="availability"]').textContent    = payload.availability;
         card.querySelector('[data-field="contact"]').textContent         = payload.contact;
 
-        
         card.querySelector('[data-field="quantity"]').textContent  = payload.quantity;
         card.querySelector('[data-field="category"]').textContent  = payload.category;
-
-
-
         card.querySelector('[data-field="desc"]').textContent      = payload.desc;
 
         delete card.dataset.original; card.dataset.editing='0';
@@ -261,18 +251,9 @@
       card.querySelector('[data-field="category"]').textContent  = o.category  || '';
       card.querySelector('[data-field="expiry"]').textContent    = o.expiry    || '';
 
-      
       card.querySelector('[data-field="donation_status"]').textContent = o.donation_status || 'pending';
-<<<<<<< Updated upstream
+      // 还原 donation_date 为纯文本
       card.querySelector('[data-field="donation_date"]').textContent = o.donation_date || '';
-=======
-      const today = new Date();
-      const pad = n => String(n).padStart(2,'0');
-      const todayStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
-      card.querySelector('[data-field="donation_date"]').innerHTML = `
-      <input type="date" value="${esc(o.donation_date || todayStr)}">
-      `;
->>>>>>> Stashed changes
 
       card.querySelector('[data-field="desc"]').textContent      = o.desc || '';
       card.querySelector('[data-field="pickup_location"]').textContent = o.pickup_location || '';
@@ -290,32 +271,29 @@
       const donationId = Number(card.dataset.donationId||0);
       const foodItemId = Number(card.dataset.fooditemId||0);
       if(!donationId){ alert('Missing donation_id'); return; }
-      if(!confirm('Delete this donation? This will return the food item back to inventory.')) return;
+      if(!confirm('Delete this donation? This will remove it from your donation list (the food item remains in your inventory).')) return;
 
       fetch(API_DELETE, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ donation_id: donationId, fooditem_id: foodItemId })
-    })
-    .then(async r => {
-      const text = await r.text();
-      let json;
-      try { json = JSON.parse(text); } catch(e){ throw new Error('Bad JSON: ' + text); }
-      console.log('[DELETE req]', {donation_id: donationId, fooditem_id: foodItemId});
-      console.log('[DELETE res]', json);
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ donation_id: donationId, fooditem_id: foodItemId })
+      })
+      .then(async r => {
+        const text = await r.text();
+        let json;
+        try { json = JSON.parse(text); } catch(e){ throw new Error('Bad JSON: ' + text); }
+        console.log('[DELETE req]', {donation_id: donationId, fooditem_id: foodItemId});
+        console.log('[DELETE res]', json);
 
-      if(!json.success) throw new Error(json.error || 'Delete failed');
-      // 安全起见再二次确认后端确实删了 1 行 donation
-      if (typeof json.donation_rows !== 'undefined' && Number(json.donation_rows) !== 1) {
-        throw new Error('Server did not delete donation row.');
-      }
-
-      card.remove();
-    })
-    .catch(err=>{
-      console.error(err);
-      alert(err.message || 'Delete failed');
-    });
-
+        if(!json.success) throw new Error(json.error || 'Delete failed');
+        if (typeof json.donation_rows !== 'undefined' && Number(json.donation_rows) !== 1) {
+          throw new Error('Server did not delete donation row.');
+        }
+        card.remove();
+      })
+      .catch(err=>{
+        console.error(err);
+        alert(err.message || 'Delete failed');
+      });
     }
   }
 
