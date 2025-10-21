@@ -22,8 +22,8 @@ $foodItem_id = intval($data['fooditem_id']);
 $tagClassName = $data['tagClassName'];
 $status = $data['status'];
 $status = ($tagClassName === '.used-tag-modal')
-? ($status ? 'used' : null)
-: ($status ? 'donation' : null);
+? ($status ? 'used' : 'available')
+: ($status ? 'donation' : 'available');
 
 try {
     $pdo->beginTransaction();
@@ -32,7 +32,7 @@ try {
     $update_fooditem->execute([$status, $foodItem_id]);
 
     // run if it's delete operation
-    if ($status === null) {
+    if ($status === 'available') {
         $get_donation = $pdo->prepare("SELECT donation_id FROM donation_fooditem WHERE fooditem_id=?");
         $get_donation->execute([$foodItem_id]);
         $donation = $get_donation->fetch(PDO::FETCH_ASSOC);
