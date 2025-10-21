@@ -1,0 +1,90 @@
+.date-container {
+    max-width: 250px;
+}
+
+.date-picker::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  -webkit-appearance: none;
+}
+
+.icon.date-icon {
+    height: 1.7rem;
+    width: 1.7rem;
+    top: 50%;
+    left: 85%;
+    pointer-events: none;
+}
+
+.addMeal-btn {
+    --bs-btn-bg: #CCD5AE !important;
+    --bs-btn-border-color: #CCD5AE;
+    --bs-btn-hover-bg: rgb(182, 187, 143);
+    --bs-btn-active-bg: rgb(182, 187, 143);
+    --bs-btn-active-border-color: rgb(135, 139, 102);
+    transition: all 0.1s ease-in-out !important;
+}
+
+.addMeal-btn:active {
+    transform: scale(0.9);
+}
+
+.fc-col-header-cell-cushion, .fc-daygrid-day-number {
+    color: black;
+    text-decoration: none;
+}
+
+.fc-daygrid-day-number {
+    font-weight: 500;
+}
+
+.fc-event-main {
+    font-weight: 500;
+    font-size: 1.1em;
+    padding: 5px 10px;
+}
+
+/* Allow event titles to wrap to multiple lines */
+.fc-daygrid-event {
+  white-space: normal !important;
+  height: auto !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  line-height: 1.2em;
+  padding: 2px 4px;
+}
+
+/* Make sure the event title itself can wrap */
+.fc-event-title,
+.fc-event-title-container {
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+}
+
+.fc-button {
+    color: black !important;
+    background: none !important;
+    transition: all 0.1s ease-in-out;
+}
+
+.fc-button:hover {
+    background: #b3bb99 !important;
+}
+
+.fc-button:active {
+    transform: scale(.9);
+    border: none;
+} 
+
+.fc-today-button {
+    margin-left: 24px !important;
+}
+
+.fc-header-toolbar {
+    padding: 0 24px !important;
+}
+
+.fc-toolbar-title {
+    font-weight: bold !important;
+    font-size: 2em !important;
+}

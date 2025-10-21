@@ -2,7 +2,7 @@
     <link rel="stylesheet" href="../pages/browse/browse.css">
 </head>
 <body>
-    <div id="BFI" class="container-fluid p-4" style="min-height:30vh;">
+    <div id="BFI" class="container-fluid p-4">
         <!-- Top Nav -->
         <div class="d-flex justify-content-between align-items-center mb-2 py-3 px-4 bg-light rounded shadow">
             <h1 class="fw-bold">Browse Food Items</h1>
