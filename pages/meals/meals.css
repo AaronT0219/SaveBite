@@ -73,8 +73,12 @@
 
 .fc-button:active {
     transform: scale(.9);
-    border: none;
 } 
+
+.fc-button[disabled], .fc-button[disabled]:hover, .fc-button[disabled]:active {
+    background: none !important;
+    transform: scale(1);
+}
 
 .fc-today-button {
     margin-left: 24px !important;
@@ -87,4 +91,17 @@
 .fc-toolbar-title {
     font-weight: bold !important;
     font-size: 2em !important;
+}
+
+/* Optional: glowing effect */
+.fc-timegrid-now-indicator-line::after {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: red;
+  box-shadow: 0 0 8px red;
 }
