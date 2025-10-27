@@ -17,15 +17,15 @@
                 <i data-lucide="search" class="me-3 icon"></i>
                 <span class="nav-text">Browse Food Items</span>
             </a>
-            <a class="nav-link" data-page="meals" data-tooltip="Plan Weekly Meals">
+            <a class="nav-link" data-page="meal" data-tooltip="Plan Weekly Meals">
                 <i data-lucide="calendar" class="me-3 icon"></i>
                 <span class="nav-text">Plan Weekly Meals</span>
             </a>
-            <a class="nav-link" data-page="reports" data-tooltip="Track and Report">
+            <a class="nav-link" data-page="report" data-tooltip="Track and Report">
                 <i data-lucide="chart-no-axes-column" class="me-3 icon"></i>
                 <span class="nav-text">Track and Report</span>
             </a>
-            <a class="nav-link" data-page="notifications" data-tooltip="Notifications">
+            <a class="nav-link" data-page="notification" data-tooltip="Notifications">
                 <i data-lucide="bell" class="me-3 icon"></i>
                 <span class="nav-text">Notifications</span>
             </a>
