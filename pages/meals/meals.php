@@ -3,63 +3,110 @@
 </head>
 
 <body>
-    <div class="container-fluid p-4">
+    <div class="container-fluid p-4" id="PWM">
         <!-- Top Nav -->
         <div class="d-flex justify-content-between align-items-center mb-2 py-3 px-4 bg-light rounded shadow">
             <h1 class="fw-bold">Plan Weekly Meals</h1>
 
-            <button class="btn btn-lg fw-medium fs addMeal-btn" data-bs-target="#addMealModal"  data-bs-toggle="modal">Add Meal</button>
+            <button class="btn btn-lg fw-medium addMeal-btn" data-bs-target="#addMealModal"  data-bs-toggle="modal">Add Meal</button>
         </div>
 
-        <!-- Date Picker -->
-        <!-- <div class="w-100 my-5">
-            <div class="date-container d-flex position-relative mx-auto">
-                <input type="date" class="date-picker form-control form-control-lg px-4">
-                <i data-lucide="calendar-days" class="icon date-icon position-absolute translate-middle"></i>
-            </div>
-        </div> -->
-
         <!-- Calendar -->
-        <div class="w-100 px-3 mt-5" id="calendar"></div>
+        <div class="w-100 h-100 px-3 mt-5" id="calendar"></div>
 
         <!-- Add Meal Modal -->
         <div class="modal fade" id="addMealModal" tabindex="-1" aria-labelledby="addMealModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-dialog modal-fullscreen">
                 <div class="modal-content">
                     <div class="modal-body">
-                        <form id="mealForm">
-                            <div class="container-fluid d-flex gap-3">
-                                <div class="foodItems-container">
-                                    foods here.
-                                </div>
-    
-                                <div class="input-fields flex-fill">
-                                    <div class="mb-3">
-                                        <label for="mealTitle" class="form-label">Meal Name</label>
-                                        <input type="text" class="form-control" id="mealTitle" placeholder="e.g. Chicken Salad" required>
-                                    </div>
-        
-                                    <div class="mb-3">
-                                        <label for="mealDescription" class="form-label">Description</label>
-                                        <textarea class="form-control" id="mealDescription" rows="3" placeholder="Optional"></textarea>
+                        <form class="d-flex flex-column h-100 fs-4 fw-medium">
+                            <div class="flex-fill row row-cols-2 gy-2 gx-4 mx-2 mb-3">
+                                <!-- Current Inventory -->
+                                <div class="col">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="fw-medium fs-3 fw-bolder">Current Inventory</div>
+
+                                        <div class="dropdown">
+                                            <button class="btn btn-lg dropdown-toggle px-3 filter-btn" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">Filter</button>
+                                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterDropdown" id="filterMenu">
+                                                <li class="dropdown-submenu">
+                                                    <span id="categoryDropdown" class="dropdown-item disabled">Categories</span>
+                                                    <ul class="dropdown-menu">
+                                                        <li><a class="dropdown-item filter-option" data-filter="category" data-value="Produce" href="#">Produce</a></li>
+                                                        <li><a class="dropdown-item filter-option" data-filter="category" data-value="Protein" href="#">Protein</a></li>
+                                                        <li><a class="dropdown-item filter-option" data-filter="category" data-value="Dairy & Bakery" href="#">Dairy & Bakery</a></li>
+                                                        <li><a class="dropdown-item filter-option" data-filter="category" data-value="Grains & Pantry" href="#">Grains & Pantry</a></li>
+                                                        <li><a class="dropdown-item filter-option" data-filter="category" data-value="Snacks & Beverages" href="#">Snacks & Beverages</a></li>
+                                                    </ul>
+                                                </li>
+                                                <li><a class="dropdown-item filter-option" data-filter="expiry" href="#">Expiry Date (Soonest to Latest)</a></li>
+                                                <li class="dropdown-submenu">
+                                                    <span id="storageDropdown" class="dropdown-item disabled">Storage Type</span>
+                                                    <ul class="dropdown-menu">
+                                                        <li><a class="dropdown-item filter-option" data-filter="storage" data-value="Fridge" href="#">Fridge</a></li>
+                                                        <li><a class="dropdown-item filter-option" data-filter="storage" data-value="Freezer" href="#">Freezer</a></li>
+                                                        <li><a class="dropdown-item filter-option" data-filter="storage" data-value="Pantry" href="#">Pantry</a></li>
+                                                        <li><a class="dropdown-item filter-option" data-filter="storage" data-value="Countertop" href="#">Countertop</a></li>
+                                                    </ul>
+                                                </li>
+                                            </ul>
+                                        </div>
                                     </div>
 
-                                    <div class="d-flex mb-3 gap-3">
-                                        <select class="form-select w-25" aria-label="Meal slot select">
-                                                <option selected>Breakfast</option>
-                                                <option value="1">Lunch</option>
-                                                <option value="2">Dinner</option>
-                                                <option value="3">TeaLunch</option>
-                                        </select>
-                                        <div class="d-flex gap-2 align-items-center flex-grow-1">
-                                            <label for="mealDate">Date</label>
-                                            <input type="date" class="form-control" id="mealDate" required>
+                                    <!-- Active Filter Container -->
+                                    <div class="w-75 d-flex flex-wrap gap-4 px-4 my-2" id="filterTagContainer"></div>
+
+                                    <!-- Food Item Container -->
+                                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 overflow-y-auto" id="foodCardContainer" style="max-height: 330px"></div>
+                                </div>
+    
+                                <!-- Meal Form -->
+                                <div class="col input-fields">
+                                    <div class="h-100 d-flex flex-column gap-4 overflow-y-auto px-1" style="max-height: 400px">
+                                        <div class="flex-fill">
+                                            <label for="mealTitle" class="form-label">Meal Name</label>
+                                            <input type="text" class="form-control fs-5" id="mealTitle" placeholder="e.g. Chicken Salad" required>
+                                        </div>
+            
+                                        <div class="flex-fill">
+                                            <label for="mealDescription" class="form-label">Description</label>
+                                            <textarea class="form-control fs-5" id="mealDescription" rows="3" placeholder="Optional" style="height: 150px"></textarea>
+                                        </div>
+    
+                                        <div class="flex-fill d-flex align-items-center gap-3">
+                                            <div class="flex-fill">
+                                                <select class="form-select fw-medium fs-5" aria-label="Meal slot select">
+                                                    <option selected class="fw-medium">Breakfast</option>
+                                                    <option value="1" class="fw-medium">Lunch</option>
+                                                    <option value="2" class="fw-medium">Dinner</option>
+                                                    <option value="3" class="fw-medium">Snacks</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="d-flex gap-2 align-items-center flex-fill">
+                                                <label for="mealDate" class="fs-5">Date</label>
+                                                <input type="date" class="form-control fs-5" id="mealDate" required>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Suggested Recipe -->
+                                <div class="col">
+                                    <div class="fw-medium fs-3 fw-bolder mb-3">Suggested Recipe</div>
+
+                                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3" id="recipeCardContainer"></div>
+                                </div>
+
+                                <!-- Selected Food Item -->
+                                <div class="col">
+                                    <div class="fw-medium fs-3 fw-bolder mb-3">Selected Ingredients</div>
+
+                                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3" id="selectedCardContainer"></div>
+                                </div>
                             </div>
 
-                            <button type="button" class="btn btn-primary w-100" id="mealConfirm-btn">Confirm</button>
+                            <button type="button" class="btn btn-primary w-100 fs-5 fw-medium text-dark mt-auto" id="mealConfirm-btn">Confirm</button>
                         </form>
                     </div>
                 </div>
