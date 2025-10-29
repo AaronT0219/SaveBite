@@ -208,10 +208,63 @@
         });
 
         // You can replace this click event with your own modal or logic
-        document.querySelectorAll('.food-card').forEach(card => {
+        document.querySelectorAll('.food-card').forEach((card, idx) => {
             card.addEventListener('click', function () {
-                const idx = this.getAttribute('data-idx');
-                console.log('Card clicked:', items[idx]);
+                recipeCard_onClick(card, idx);
+            });
+        });
+    }
+
+    let selectedCards = []; // store added recipe IDs
+
+    // ---------- RECIPE CARD CLICK HANDLER ----------
+    function recipeCard_onClick(items, idx) {
+        const item = items[idx];
+
+        // prevent duplicates
+        if (selectedCards.includes(item.id)) {
+            alert(`${item.name} has already been added.`);
+            return;
+        }
+
+        // ask for quantity
+        const quantity = prompt(`Enter quantity for "${item.name}":`, 1);
+        if (!quantity || isNaN(quantity) || quantity <= 0) return;
+
+        selectedCards.push(item);
+
+        const container = document.getElementById("selectedCardContainer");
+
+        // build ingredient cards
+        selectedCards.forEach((card, idx) => {
+            const cardHtml = `
+                <div class="col">
+                    <div class="food-card card h-100" data-idx="${idx}">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">${card.name}</h5>
+                            <button type="button" class="btn-close selectedCardBtn-close" aria-label="Remove"></button>
+                        </div>
+                        <div class="card-body fw-medium">
+                            <p class="card-text fs-6 mb-1"><strong>Quantity:</strong> ${quantity}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.innerHTML += cardHtml;
+        });
+
+        // add remove button behavior
+        container.querySelectorAll('.selectedCardBtn-close').forEach(closeBtn => {
+            closeBtn.addEventListener('click', function () {
+                //tobe modify
+                const card = this.closest('.food-card');
+                const cardId = card.getAttribute('data-idx'); // each card should have its own unique data-id
+
+                // remove only this card
+                card.remove();
+
+                // update the selectedCards array to remove the corresponding ID
+                selectedCards = selectedCards.filter(id => id != cardId);
             });
         });
     }
@@ -239,7 +292,6 @@
     },
     {
         name: "Vegetable Fried Rice",
-        image: "images/veg_fried_rice.jpg",
         calories: 380,
         ingredients: [
         { name: "Cooked Rice", quantity: 1, unit: "cup" },
@@ -282,9 +334,8 @@
         });
 
         // Add click handler to “Select Recipe” buttons
-        document.querySelectorAll('.recipe-card').forEach( (card) => {
+        document.querySelectorAll('.recipe-card').forEach((card, idx) => {
             card.addEventListener('click', function () {
-                const idx = this.getAttribute('data-idx');
                 const recipe = recipes[idx];
                 console.log('Selected recipe:', recipe);
             });

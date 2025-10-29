@@ -19,8 +19,8 @@
             <div class="modal-dialog modal-fullscreen">
                 <div class="modal-content">
                     <div class="modal-body">
-                        <form class="d-flex flex-column h-100 fs-4 fw-medium">
-                            <div class="flex-fill row row-cols-2 gy-2 gx-4 mx-2 mb-3">
+                        <form class="fs-4 fw-medium">
+                            <div class="row row-cols-2 gy-2 gx-4 mx-2 mb-5">
                                 <!-- Current Inventory -->
                                 <div class="col">
                                     <div class="d-flex justify-content-between align-items-center">
@@ -61,8 +61,8 @@
                                 </div>
     
                                 <!-- Meal Form -->
-                                <div class="col input-fields">
-                                    <div class="h-100 d-flex flex-column gap-4 overflow-y-auto px-1" style="max-height: 400px">
+                                <div class="col">
+                                    <div class="input-fields h-100 d-flex flex-column gap-4 overflow-y-auto px-1 pb-1" style="max-height: 400px">
                                         <div class="flex-fill">
                                             <label for="mealTitle" class="form-label">Meal Name</label>
                                             <input type="text" class="form-control fs-5" id="mealTitle" placeholder="e.g. Chicken Salad" required>
@@ -106,7 +106,7 @@
                                 </div>
                             </div>
 
-                            <button type="button" class="btn btn-primary w-100 fs-5 fw-medium text-dark mt-auto" id="mealConfirm-btn">Confirm</button>
+                            <button type="button" class="btn btn-primary w-100 fs-5 fw-medium text-dark" id="mealConfirm-btn">Confirm</button>
                         </form>
                     </div>
                 </div>
