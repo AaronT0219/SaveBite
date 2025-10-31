@@ -3,18 +3,27 @@
     display: none;
 }
 
+.food-card {
+    transition: all 0.1s ease-in-out;
+}
+
+.food-card:active {
+    transform: scale(0.97);
+}
+
 /* suggested recipe CSS */
 .calories-badge {
     background: #d4a373;
 }
 
 /* add meal-btn CSS */
-.addMeal-btn, .filter-btn, #mealConfirm-btn {
+.addMeal-btn, .filter-btn, #mealConfirm-btn, #quantityConfirm {
     --bs-btn-bg: #CCD5AE !important;
     --bs-btn-border-color: #CCD5AE;
     --bs-btn-hover-bg: rgb(182, 187, 143);
     --bs-btn-active-bg: rgb(182, 187, 143);
     --bs-btn-active-border-color: rgb(135, 139, 102);
+    --bs-btn-hover-border-color: rgb(135, 139, 102);
     transition: all 0.1s ease-in-out !important;
 }
 
@@ -22,7 +31,7 @@
     transform: scale(0.9);
 }
 
-#mealConfirm-btn:active {
+#mealConfirm-btn:active, #quantityConfirm:active {
     transform: scale(.97);
 }
 

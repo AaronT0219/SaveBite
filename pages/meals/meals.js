@@ -33,7 +33,8 @@
                 minute: "2-digit",
             },
             eventClick: function (info) {
-                alert('Event: ' + info.event.title);
+                console.log(info.event.extendedProps.mealSlot);
+                console.log(info.event.extendedProps.selectedCards);
             }
         });
 
@@ -60,24 +61,53 @@
 
         // Handle form submission
         mealConfirmBtn.addEventListener('click', function (e) {
-            console.log('confirm button clicked!!!');
-            e.preventDefault();
+            const form = document.getElementById('mealForm');
+            
+            if (form.checkValidity()) {
+                e.preventDefault();
+                
+                if (!selectedCards.length) {
+                    const container = document.getElementById('selectedCardContainer');
+                    const alertHtml = `
+                        <div class="selectedCards-alert d-flex justify-content-between align-items-center alert alert-danger fs-5 py-2" role="alert">
+                            Please select at least one ingredient.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                        </div>
+                    `
+                    container.insertAdjacentHTML('beforebegin', alertHtml);
+                    return;
+                }
 
-            const title = document.getElementById('mealTitle').value.trim();
-            const date = document.getElementById('mealDate').value;
-            const desc = document.getElementById('mealDescription').value.trim();
+                const title = document.getElementById('mealTitle').value.trim();
+                const date = document.getElementById('mealDate').value;
+                const desc = document.getElementById('mealDescription').value.trim();
+                const mealSlot = document.getElementById('mealSlot').value;
+    
+    
+                // Add event to FullCalendar
+                calendar.addEvent({
+                    title: title,
+                    start: date,
+                    description: desc,
+                    mealSlot: mealSlot,
+                    selectedCards: selectedCards
+                });
 
-            if (!title || !date) return;
+                // Reset Add Meal Modal
+                form.reset();
+                form.classList.remove('was-validated');
+                selectedCards = [];
+                renderSelectedCard();
 
-            // Add event to FullCalendar
-            calendar.addEvent({
-                title: title,
-                start: date,
-                description: desc
-            });
+                const alertMsg = document.querySelector('.selectedCards-alert');
+                if (alertMsg) alertMsg.remove();
 
-            // Close modal
-            addMealModal.hide();
+    
+                // Close modal
+                addMealModal.hide();
+            } else {
+                form.classList.add('was-validated');
+            }
         });
     }
 
@@ -158,6 +188,8 @@
         });
     }
 
+    let selectedCards = []; // store selected cards
+
     // ---------- CARD RENDERING ----------
     function renderCards(items) {
         const container = document.getElementById('foodCardContainer');
@@ -205,47 +237,79 @@
                 </div>
             `;
             container.innerHTML += cardHtml;
-        });
 
-        // You can replace this click event with your own modal or logic
-        document.querySelectorAll('.food-card').forEach((card, idx) => {
+        });
+        
+        document.querySelectorAll('.food-card').forEach(card => {
             card.addEventListener('click', function () {
-                recipeCard_onClick(card, idx);
+                const idx = this.getAttribute('data-idx');
+                const item = items[idx];
+
+                // prevent duplicates
+                if (selectedCards.some(card => card.item.foodItem_id === item.foodItem_id)) {
+                    alert(`${item.name} has already been added.`);
+                    return;
+                }
+
+                showQuantityModal(item);
             });
         });
     }
 
-    let selectedCards = []; // store added recipe IDs
+    function showQuantityModal(item) {
+        const quantityModal = new bootstrap.Modal(document.getElementById('quantityModal'));
+        const quantityInput = document.getElementById('quantityInput');
 
-    // ---------- RECIPE CARD CLICK HANDLER ----------
-    function recipeCard_onClick(items, idx) {
-        const item = items[idx];
+        // open quantity modal
+        quantityInput.value = 1; // default value
+        quantityModal.show();
 
-        // prevent duplicates
-        if (selectedCards.includes(item.id)) {
-            alert(`${item.name} has already been added.`);
-            return;
-        }
+        // confirm button behavior
+        document.getElementById('quantityConfirm').onclick = function () {
+            const quantity = Number(quantityInput.value);
+            const quantityForm = document.getElementById('quantityForm');
 
-        // ask for quantity
-        const quantity = prompt(`Enter quantity for "${item.name}":`, 1);
-        if (!quantity || isNaN(quantity) || quantity <= 0) return;
+            if (!quantity || isNaN(quantity) || quantity <= 0 || quantity>item.quantity) {
+                quantityInput.setCustomValidity("Invalid");
+            } else {
+                quantityInput.setCustomValidity("");
+            }
 
-        selectedCards.push(item);
+            if (!quantityForm.checkValidity()) {
+                quantityForm.classList.add('was-validated');
+                return;
+            }
+            
+            selectedCards.push({
+                item,
+                quantity:Number(quantity)
+            });
 
+            quantityForm.classList.remove('was-validated');
+            quantityForm.reset();
+            renderSelectedCard();
+
+            quantityModal.hide();
+        };
+    }
+
+    // ---------- SELECTED CARD RENDERING ----------
+    function renderSelectedCard() {
         const container = document.getElementById("selectedCardContainer");
+        container.innerHTML = '';
 
         // build ingredient cards
         selectedCards.forEach((card, idx) => {
+            const item = card.item;
             const cardHtml = `
                 <div class="col">
-                    <div class="food-card card h-100" data-idx="${idx}">
+                    <div class="selected-food-card card h-100" data-idx="${idx}">
                         <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">${card.name}</h5>
-                            <button type="button" class="btn-close selectedCardBtn-close" aria-label="Remove"></button>
+                            <h5 class="mb-0">${item.name}</h5>
+                            <button type="button" class="btn-close selectedCardBtn-close fs-6" aria-label="Remove"></button>
                         </div>
                         <div class="card-body fw-medium">
-                            <p class="card-text fs-6 mb-1"><strong>Quantity:</strong> ${quantity}</p>
+                            <p class="card-text fs-6 mb-1"><strong>Quantity:</strong> ${card.quantity}</p>
                         </div>
                     </div>
                 </div>
@@ -253,57 +317,59 @@
             container.innerHTML += cardHtml;
         });
 
-        // add remove button behavior
         container.querySelectorAll('.selectedCardBtn-close').forEach(closeBtn => {
             closeBtn.addEventListener('click', function () {
-                //tobe modify
-                const card = this.closest('.food-card');
-                const cardId = card.getAttribute('data-idx'); // each card should have its own unique data-id
+                const cardEl = this.closest('.selected-food-card');
+                const idx = cardEl.getAttribute('data-idx');
+                const tobe_removed = selectedCards[idx];
 
-                // remove only this card
-                card.remove();
+                // remove from array
+                selectedCards = selectedCards.filter(
+                    card => card.item.foodItem_id != tobe_removed.item.foodItem_id
+                );
 
-                // update the selectedCards array to remove the corresponding ID
-                selectedCards = selectedCards.filter(id => id != cardId);
+                // re-render
+                renderSelectedCard();
             });
         });
     }
 
     // ---------- RENDER SUGGESTED RECIPE ----------
     const recipes = [
-    {
-        name: "Chicken Sandwich",
-        calories: 420,
-        ingredients: [
-        { name: "Bread", quantity: 2, unit: "slices" },
-        { name: "Chicken Breast", quantity: 100, unit: "g" },
-        { name: "Lettuce", quantity: 1, unit: "leaf" },
-        { name: "Mayonnaise", quantity: 1, unit: "tbsp" }
-        ]
-    },
-    {
-        name: "Fruit Salad",
-        calories: 210,
-        ingredients: [
-        { name: "Apple", quantity: 1, unit: "pcs" },
-        { name: "Banana", quantity: 1, unit: "pcs" },
-        { name: "Grapes", quantity: 10, unit: "pcs" }
-        ]
-    },
-    {
-        name: "Vegetable Fried Rice",
-        calories: 380,
-        ingredients: [
-        { name: "Cooked Rice", quantity: 1, unit: "cup" },
-        { name: "Carrot", quantity: 0.5, unit: "cup (diced)" },
-        { name: "Peas", quantity: 0.25, unit: "cup" },
-        { name: "Egg", quantity: 1, unit: "pcs" },
-        { name: "Soy Sauce", quantity: 1, unit: "tbsp" },
-        { name: "Garlic", quantity: 1, unit: "clove (minced)" },
-        { name: "Oil", quantity: 1, unit: "tbsp" }
-        ]
-    }
+        {
+            name: "Chicken Sandwich",
+            calories: 420,
+            ingredients: [
+            { name: "Bread", quantity: 2 },          
+            { name: "Chicken Breast", quantity: 2 },
+            { name: "Lettuce", quantity: 1 },     
+            { name: "Mayonnaise", quantity: 1 }
+            ]
+        },
+        {
+            name: "Fruit Salad",
+            calories: 210,
+            ingredients: [
+            { name: "Apple", quantity: 1 },
+            { name: "Banana", quantity: 1 },
+            { name: "Grapes", quantity: 10 }
+            ]
+        },
+        {
+            name: "Vegetable Fried Rice",
+            calories: 380,
+            ingredients: [
+            { name: "Cooked Rice", quantity: 1 }, 
+            { name: "Carrot", quantity: 1 },     
+            { name: "Peas", quantity: 1 },      
+            { name: "Egg", quantity: 1 },
+            { name: "Soy Sauce", quantity: 1 },    
+            { name: "Garlic", quantity: 1 },      
+            { name: "Oil", quantity: 1 }       
+            ]
+        }
     ];
+
 
     function renderSuggestedRecipe(recipes) {
         const container = document.getElementById('recipeCardContainer');
@@ -312,7 +378,7 @@
         recipes.forEach((recipe, idx) => {
             // Build full ingredient list in HTML format
             const ingredientsList = recipe.ingredients
-                .map(i => `<tr><th>${i.name}</th> <td>${i.quantity}</td> <td>${i.unit}</td></tr>`)
+                .map(i => `<tr><th>${i.name}</th> <td class="text-end">${i.quantity}</td></tr>`)
                 .join('');
 
             const cardHtml = `

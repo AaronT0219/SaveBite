@@ -379,6 +379,8 @@
 
             if (form.checkValidity()) {
                 e.preventDefault();
+                form.reset();
+                form.classList.remove('was-validated');
 
                 const pickup_location = document.getElementById('pickup_location').value;
                 const availability = document.getElementById('availability').value;
