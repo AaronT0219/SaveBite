@@ -1,51 +1,172 @@
 <?php
-session_start();
 require_once '../../config.php';
 
+header('Content-Type: application/json');
+
 // Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
+session_start();
+if (!isset($_SESSION['id'])) {
     http_response_code(401);
     echo json_encode([
         "success" => false,
-        "message" => "User not logged in"
+        "message" => "Unauthorized access"
     ]);
     exit;
 }
 
 $user_id = $_SESSION['id'];
-$filter = $_GET['filter'] ?? 'monthly';
-$start_date = $_GET['start_date'] ?? null;
-$end_date = $_GET['end_date'] ?? null;
 
 try {
+    // Get filter parameters from GET request
+    $filter = $_GET['filter'] ?? 'monthly';
+    $startDate = $_GET['start_date'] ?? null;
+    $endDate = $_GET['end_date'] ?? null;
+
+    // Initialize response array
     $response = [
         "success" => true,
         "data" => []
     ];
 
-    // Get total metrics
-    $response['data']['metrics'] = getTotalMetrics($pdo, $user_id);
+    // Get total food items saved (total quantity of all food items)
+    $stmt = $pdo->prepare("SELECT COALESCE(SUM(quantity), 0) as total_food_save FROM food_items WHERE created_by = ?");
+    $stmt->execute([$user_id]);
+    $totalFoodSave = $stmt->fetch()['total_food_save'];
+
+    // Get total donations made by user
+    $stmt = $pdo->prepare("SELECT COUNT(*) as total_donations FROM donation WHERE donor_user_id = ?");
+    $stmt->execute([$user_id]);
+    $totalDonations = $stmt->fetch()['total_donations'];
+
+    // Calculate progress (example: percentage of food items that were used vs total)
+    $stmt = $pdo->prepare("
+        SELECT 
+            COALESCE(SUM(CASE WHEN status = 'used' THEN quantity ELSE 0 END), 0) as used_quantity,
+            COALESCE(SUM(quantity), 0) as total_quantity 
+        FROM food_items 
+        WHERE created_by = ?
+    ");
+    $stmt->execute([$user_id]);
+    $progressData = $stmt->fetch();
+    $progress = $progressData['total_quantity'] > 0 ? 
+        round(($progressData['used_quantity'] / $progressData['total_quantity']) * 100) : 0;
+
+    // Get category distribution
+    $stmt = $pdo->prepare("
+        SELECT 
+            category, 
+            COALESCE(SUM(quantity), 0) as total_quantity 
+        FROM food_items 
+        WHERE created_by = ? 
+        GROUP BY category 
+        ORDER BY total_quantity DESC
+    ");
+    $stmt->execute([$user_id]);
+    $categoryData = $stmt->fetchAll();
+
+    $categories = [
+        'labels' => [],
+        'data' => []
+    ];
     
-    // Get chart data based on filter
+    foreach ($categoryData as $row) {
+        $categories['labels'][] = $row['category'];
+        $categories['data'][] = (int)$row['total_quantity'];
+    }
+
+    // Get time-based data based on filter
+    $timeData = [];
+    
     switch ($filter) {
         case 'yearly':
-            $response['data']['chart'] = getYearlyData($pdo, $user_id);
+            $stmt = $pdo->prepare("
+                SELECT 
+                    YEAR(created_at) as period,
+                    COUNT(*) as donations,
+                    COALESCE(SUM(quantity), 0) as quantity
+                FROM food_items 
+                WHERE created_by = ? 
+                GROUP BY YEAR(created_at) 
+                ORDER BY period DESC 
+                LIMIT 6
+            ");
+            $stmt->execute([$user_id]);
             break;
-        case 'monthly':
-            $response['data']['chart'] = getMonthlyData($pdo, $user_id);
-            break;
+            
         case 'weekly':
-            $response['data']['chart'] = getWeeklyData($pdo, $user_id);
+            $stmt = $pdo->prepare("
+                SELECT 
+                    CONCAT('Week ', WEEK(created_at, 1) - WEEK(DATE_SUB(created_at, INTERVAL DAYOFMONTH(created_at) - 1 DAY), 1) + 1) as period,
+                    COUNT(*) as donations,
+                    COALESCE(SUM(quantity), 0) as quantity
+                FROM food_items 
+                WHERE created_by = ? AND MONTH(created_at) = MONTH(CURDATE()) AND YEAR(created_at) = YEAR(CURDATE())
+                GROUP BY WEEK(created_at, 1) 
+                ORDER BY WEEK(created_at, 1) DESC 
+                LIMIT 4
+            ");
+            $stmt->execute([$user_id]);
             break;
-        case 'category':
-            $response['data']['chart'] = getCategoryData($pdo, $user_id);
-            break;
+            
         case 'dateRange':
-            $response['data']['chart'] = getDateRangeData($pdo, $user_id, $start_date, $end_date);
+            if ($startDate && $endDate) {
+                $stmt = $pdo->prepare("
+                    SELECT 
+                        DATE(created_at) as period,
+                        COUNT(*) as donations,
+                        COALESCE(SUM(quantity), 0) as quantity
+                    FROM food_items 
+                    WHERE created_by = ? AND DATE(created_at) BETWEEN ? AND ?
+                    GROUP BY DATE(created_at) 
+                    ORDER BY period DESC
+                ");
+                $stmt->execute([$user_id, $startDate, $endDate]);
+            } else {
+                $timeData = ['labels' => [], 'donations' => [], 'quantity' => []];
+                break;
+            }
             break;
-        default:
-            $response['data']['chart'] = getMonthlyData($pdo, $user_id);
+            
+        default: // monthly
+            $stmt = $pdo->prepare("
+                SELECT 
+                    MONTHNAME(created_at) as period,
+                    COUNT(*) as donations,
+                    COALESCE(SUM(quantity), 0) as quantity
+                FROM food_items 
+                WHERE created_by = ? AND YEAR(created_at) = YEAR(CURDATE())
+                GROUP BY MONTH(created_at), MONTHNAME(created_at)
+                ORDER BY MONTH(created_at) DESC 
+                LIMIT 6
+            ");
+            $stmt->execute([$user_id]);
+            break;
     }
+    
+    if ($filter !== 'dateRange' || ($startDate && $endDate)) {
+        $timeResults = $stmt->fetchAll();
+        
+        $timeData = [
+            'labels' => [],
+            'donations' => [],
+            'quantity' => []
+        ];
+        
+        foreach (array_reverse($timeResults) as $row) {
+            $timeData['labels'][] = $row['period'];
+            $timeData['donations'][] = (int)$row['donations'];
+            $timeData['quantity'][] = (int)$row['quantity'];
+        }
+    }
+
+    // Build response
+    $response['data'] = [
+        'totalFoodSave' => (float)$totalFoodSave,
+        'totalDonations' => (int)$totalDonations,
+        'progress' => (int)$progress,
+        'categories' => $categories,
+        'timeData' => $timeData
+    ];
 
     echo json_encode($response);
 
@@ -53,280 +174,7 @@ try {
     http_response_code(500);
     echo json_encode([
         "success" => false,
-        "message" => "Error fetching data: " . $e->getMessage()
+        "message" => "Error fetching report data: " . $e->getMessage()
     ]);
-}
-
-function getTotalMetrics($pdo, $user_id) {
-    // Debug: Log the user_id being used
-    error_log("Getting metrics for user_id: " . $user_id);
-    
-    // Get total food items saved
-    $stmt = $pdo->prepare("SELECT COUNT(*) as total_food_save FROM fooditem WHERE user_id = ?");
-    $stmt->execute([$user_id]);
-    $foodSave = $stmt->fetch()['total_food_save'];
-    error_log("Food items found: " . $foodSave);
-
-    // Get total donations made by this user
-    $stmt = $pdo->prepare("SELECT COUNT(*) as total_donations FROM donation WHERE donor_user_id = ?");
-    $stmt->execute([$user_id]);
-    $donations = $stmt->fetch()['total_donations'];
-    error_log("Donations found: " . $donations);
-
-    // Get total quantity of food saved
-    $stmt = $pdo->prepare("SELECT SUM(quantity) as total_quantity FROM fooditem WHERE user_id = ?");
-    $stmt->execute([$user_id]);
-    $totalQuantity = $stmt->fetch()['total_quantity'] ?: 0;
-    error_log("Total quantity: " . $totalQuantity);
-
-    // Calculate progress (example: based on donation ratio)
-    $progress = $donations > 0 ? min(($donations / max($foodSave, 1)) * 100, 100) : 0;
-
-    return [
-        'totalFoodSave' => (int)$foodSave,
-        'totalDonations' => (int)$donations,
-        'totalQuantity' => (int)$totalQuantity,
-        'progress' => round($progress, 1)
-    ];
-}
-
-function getYearlyData($pdo, $user_id) {
-    // Note: Since created_at doesn't exist yet, we'll use donation_date for donations
-    // and expiry_date for food items as a placeholder
-    
-    $current_year = date('Y');
-    $years = [];
-    for ($i = 5; $i >= 0; $i--) {
-        $years[] = $current_year - $i;
-    }
-
-    $labels = array_map('strval', $years);
-    $donations = [];
-    $quantities = [];
-
-    foreach ($years as $year) {
-        // Get donations for this year
-        $stmt = $pdo->prepare("
-            SELECT COUNT(*) as count 
-            FROM donation 
-            WHERE donor_user_id = ? AND YEAR(donation_date) = ?
-        ");
-        $stmt->execute([$user_id, $year]);
-        $donations[] = (int)$stmt->fetch()['count'];
-
-        // Get sum of food quantities for this year (using expiry_date as placeholder)
-        $stmt = $pdo->prepare("
-            SELECT SUM(quantity) as total_quantity 
-            FROM fooditem 
-            WHERE user_id = ? AND YEAR(expiry_date) = ?
-        ");
-        $stmt->execute([$user_id, $year]);
-        $quantities[] = (int)($stmt->fetch()['total_quantity'] ?: 0);
-    }
-
-    return [
-        'labels' => $labels,
-        'donations' => $donations,
-        'quantity' => $quantities
-    ];
-}
-
-function getMonthlyData($pdo, $user_id) {
-    $current_year = date('Y');
-    $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    $donations = [];
-    $quantities = [];
-
-    for ($month = 1; $month <= 12; $month++) {
-        // Get donations for this month
-        $stmt = $pdo->prepare("
-            SELECT COUNT(*) as count 
-            FROM donation 
-            WHERE donor_user_id = ? AND YEAR(donation_date) = ? AND MONTH(donation_date) = ?
-        ");
-        $stmt->execute([$user_id, $current_year, $month]);
-        $donations[] = (int)$stmt->fetch()['count'];
-
-        // Get sum of food quantities for this month (using expiry_date as placeholder)
-        $stmt = $pdo->prepare("
-            SELECT SUM(quantity) as total_quantity 
-            FROM fooditem 
-            WHERE user_id = ? AND YEAR(expiry_date) = ? AND MONTH(expiry_date) = ?
-        ");
-        $stmt->execute([$user_id, $current_year, $month]);
-        $quantities[] = (int)($stmt->fetch()['total_quantity'] ?: 0);
-    }
-
-    return [
-        'labels' => $months,
-        'donations' => $donations,
-        'quantity' => $quantities
-    ];
-}
-
-function getWeeklyData($pdo, $user_id) {
-    $labels = [];
-    $donations = [];
-    $quantities = [];
-
-    // Get data for last 4 weeks
-    for ($week = 3; $week >= 0; $week--) {
-        $week_start = date('Y-m-d', strtotime("-$week weeks monday"));
-        $week_end = date('Y-m-d', strtotime("-$week weeks sunday"));
-        
-        $labels[] = "Week " . (4 - $week);
-
-        // Get donations for this week
-        $stmt = $pdo->prepare("
-            SELECT COUNT(*) as count 
-            FROM donation 
-            WHERE donor_user_id = ? AND donation_date BETWEEN ? AND ?
-        ");
-        $stmt->execute([$user_id, $week_start, $week_end]);
-        $donations[] = (int)$stmt->fetch()['count'];
-
-        // Get sum of food quantities for this week (using expiry_date as placeholder)
-        $stmt = $pdo->prepare("
-            SELECT SUM(quantity) as total_quantity 
-            FROM fooditem 
-            WHERE user_id = ? AND expiry_date BETWEEN ? AND ?
-        ");
-        $stmt->execute([$user_id, $week_start, $week_end]);
-        $quantities[] = (int)($stmt->fetch()['total_quantity'] ?: 0);
-    }
-
-    return [
-        'labels' => $labels,
-        'donations' => $donations,
-        'quantity' => $quantities
-    ];
-}
-
-function getCategoryData($pdo, $user_id) {
-    // Get food items by category
-    $stmt = $pdo->prepare("
-        SELECT category, COUNT(*) as count 
-        FROM fooditem 
-        WHERE user_id = ? 
-        GROUP BY category 
-        ORDER BY count DESC
-    ");
-    $stmt->execute([$user_id]);
-    $results = $stmt->fetchAll();
-
-    $labels = [];
-    $data = [];
-
-    foreach ($results as $row) {
-        $labels[] = $row['category'] ?: 'Other';
-        $data[] = (int)$row['count'];
-    }
-
-    // If no data, provide default categories
-    if (empty($labels)) {
-        $labels = ['No Data'];
-        $data = [0];
-    }
-
-    return [
-        'labels' => $labels,
-        'data' => $data
-    ];
-}
-
-function getDateRangeData($pdo, $user_id, $start_date, $end_date) {
-    if (!$start_date || !$end_date) {
-        return [
-            'labels' => ['No Date Range'],
-            'donations' => [0],
-            'quantity' => [0]
-        ];
-    }
-
-    $start = new DateTime($start_date);
-    $end = new DateTime($end_date);
-    $interval = $start->diff($end);
-    $days = $interval->days;
-
-    $labels = [];
-    $donations = [];
-    $quantities = [];
-
-    if ($days > 90) {
-        // Monthly breakdown for longer ranges
-        $current = clone $start;
-        $current->modify('first day of this month');
-        
-        while ($current <= $end) {
-            $month_start = $current->format('Y-m-01');
-            $month_end = $current->format('Y-m-t');
-            
-            // Don't go beyond end date
-            if ($month_end > $end_date) {
-                $month_end = $end_date;
-            }
-            
-            $labels[] = $current->format('M Y');
-
-            // Get donations for this month
-            $stmt = $pdo->prepare("
-                SELECT COUNT(*) as count 
-                FROM donation 
-                WHERE donor_user_id = ? AND donation_date BETWEEN ? AND ?
-            ");
-            $stmt->execute([$user_id, $month_start, $month_end]);
-            $donations[] = (int)$stmt->fetch()['count'];
-
-            // Get sum of food quantities for this month
-            $stmt = $pdo->prepare("
-                SELECT SUM(quantity) as total_quantity 
-                FROM fooditem 
-                WHERE user_id = ? AND expiry_date BETWEEN ? AND ?
-            ");
-            $stmt->execute([$user_id, $month_start, $month_end]);
-            $quantities[] = (int)($stmt->fetch()['total_quantity'] ?: 0);
-
-            $current->modify('+1 month');
-        }
-    } else {
-        // Weekly breakdown for shorter ranges
-        $weeks = min(ceil($days / 7), 8);
-        
-        for ($week = 0; $week < $weeks; $week++) {
-            $week_start = date('Y-m-d', strtotime($start_date . " +$week weeks"));
-            $week_end = date('Y-m-d', strtotime($week_start . " +6 days"));
-            
-            // Don't go beyond end date
-            if ($week_end > $end_date) {
-                $week_end = $end_date;
-            }
-            
-            $labels[] = "Week " . ($week + 1);
-
-            // Get donations for this week
-            $stmt = $pdo->prepare("
-                SELECT COUNT(*) as count 
-                FROM donation 
-                WHERE donor_user_id = ? AND donation_date BETWEEN ? AND ?
-            ");
-            $stmt->execute([$user_id, $week_start, $week_end]);
-            $donations[] = (int)$stmt->fetch()['count'];
-
-            // Get sum of food quantities for this week
-            $stmt = $pdo->prepare("
-                SELECT SUM(quantity) as total_quantity 
-                FROM fooditem 
-                WHERE user_id = ? AND expiry_date BETWEEN ? AND ?
-            ");
-            $stmt->execute([$user_id, $week_start, $week_end]);
-            $quantities[] = (int)($stmt->fetch()['total_quantity'] ?: 0);
-        }
-    }
-
-    return [
-        'labels' => $labels,
-        'donations' => $donations,
-        'quantity' => $quantities
-    ];
 }
 ?>
