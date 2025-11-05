@@ -3,11 +3,11 @@
     display: none;
 }
 
-.food-card {
+.food-card, .recipe-card, #missingCancel {
     transition: all 0.1s ease-in-out;
 }
 
-.food-card:active {
+.food-card:active, .recipe-card:active {
     transform: scale(0.97);
 }
 
@@ -17,7 +17,7 @@
 }
 
 /* add meal-btn CSS */
-.addMeal-btn, .filter-btn, #mealConfirm-btn, #quantityConfirm {
+.addMeal-btn, .filter-btn, #mealConfirm-btn, #quantityConfirm, #missingConfirm {
     --bs-btn-bg: #CCD5AE !important;
     --bs-btn-border-color: #CCD5AE;
     --bs-btn-hover-bg: rgb(182, 187, 143);
@@ -27,7 +27,7 @@
     transition: all 0.1s ease-in-out !important;
 }
 
-.addMeal-btn:active, .filter-btn:active {
+.addMeal-btn:active, .filter-btn:active, #missingCancel:active, #missingConfirm:active {
     transform: scale(0.9);
 }
 

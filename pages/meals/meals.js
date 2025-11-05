@@ -337,6 +337,7 @@
     // ---------- RENDER SUGGESTED RECIPE ----------
     const recipes = [
         {
+            id: "R01",
             name: "Chicken Sandwich",
             calories: 420,
             ingredients: [
@@ -347,6 +348,7 @@
             ]
         },
         {
+            id: "R02",
             name: "Fruit Salad",
             calories: 210,
             ingredients: [
@@ -356,6 +358,7 @@
             ]
         },
         {
+            id: "R03",
             name: "Vegetable Fried Rice",
             calories: 380,
             ingredients: [
@@ -403,9 +406,74 @@
         document.querySelectorAll('.recipe-card').forEach((card, idx) => {
             card.addEventListener('click', function () {
                 const recipe = recipes[idx];
-                console.log('Selected recipe:', recipe);
+                
+                fetch("../pages/meals/checkIngredients.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        ingredients: recipe.ingredients
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    const matchedItems = data.matchedItems;
+                    const missingItems = data.missingItems;          
+
+                    if (data.success) {
+                        addRecipeIngredients(matchedItems, recipe);
+                        return;
+                    }
+
+                    if (!matchedItems.length) {
+                        alert("None of the ingredients are available in your inventory");
+                        return;
+                    }
+
+                    // Show modal if there's misssing ingredients
+                    show_MissingIngredients_Modal(matchedItems, missingItems, recipe);
+                })
+                .catch(() => {
+                    alert('Error: Failed to check ingredients.');
+                });
             });
         });
+    }
+
+    function show_MissingIngredients_Modal(matchedItems, missingItems, recipe) {
+        const missingModal = new bootstrap.Modal(document.getElementById('missingIngredientsModal'));
+        const missingMsg = document.getElementById('missingIngredientsMsg');
+        const btnMissingConfirm = document.getElementById('missingConfirm');
+
+        // 🟥 Missing ingredients → show modal
+        missingMsg.innerHTML = "<strong>Missing:</strong> <br>" + missingItems.join("<br>");
+
+        missingModal.show();
+
+        // ✅ If YES → add only matched items
+        btnMissingConfirm.onclick = () => {
+            addRecipeIngredients(matchedItems, recipe);
+            missingModal.hide();
+        };
+
+        // ❌ NO → do nothing
+        document.getElementById('missingCancel').onclick = () => {
+            missingModal.hide();
+        };
+    }
+
+    function addRecipeIngredients(matchedItems, recipe) {
+        // Loop add only those NOT already in selectedCards
+        matchedItems.forEach((item, index) => {
+            const exists = selectedCards.some(c => c.item.foodItem_id === item.foodItem_id);
+            if (exists) return; // skip duplicates
+
+            selectedCards.push({
+                item,
+                quantity: recipe.ingredients[index].quantity
+            });
+        });
+
+        renderSelectedCard();
     }
 
     // ---------- COMBINED UPDATE ----------

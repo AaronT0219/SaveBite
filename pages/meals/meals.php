@@ -15,11 +15,15 @@
         <div class="w-100 h-100 px-3 mt-5" id="calendar"></div>
 
         <!-- Add Meal Modal -->
-        <div class="modal fade" id="addMealModal" tabindex="-1" aria-labelledby="addMealModalLabel" aria-hidden="true">
+        <div class="modal fade" id="addMealModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="addMealModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-fullscreen">
                 <div class="modal-content">
                     <div class="modal-body fs-4 fw-medium d-flex flex-column">
-                        <div class="row row-cols-2 gy-2 gx-4 mx-2 mb-auto">
+                        <div class="w-100 text-end">
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+
+                        <div class="row row-cols-2 gy-2 gx-4 mx-2 mb-3">
                             <!-- Current Inventory -->
                             <div class="col">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -131,6 +135,31 @@
                             <button type="button" id="quantityConfirm" class="btn btn-primary fw-medium text-dark w-100 mt-3">Confirm</button>
                         </form>
                     </div>
+                    
+                </div>
+            </div>
+        </div>
+
+        <!-- Missing Ingredients Modal -->
+        <div class="modal fade" id="missingIngredientsModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">Missing Ingredients</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <p id="missingIngredientsMsg"></p>
+                        <p>Do you want to continue and add the remaining ingredients?</p>
+
+                        <div class="d-flex gap-3">
+                            <button type="button" class="btn btn-secondary flex-fill" id="missingCancel" data-bs-dismiss="modal">No</button>
+                            <button type="button" class="btn flex-fill" id="missingConfirm">Yes</button>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
