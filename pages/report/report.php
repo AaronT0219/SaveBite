@@ -52,21 +52,24 @@
                     <option value="monthly" selected>Monthly</option>
                     <option value="weekly">Weekly</option>
                     <option value="category">By Category</option>
+                    <option value="dateRange">Date Range</option>
                 </select>
             </div>
-            <div class="filter-group">
-                <label class="form-label fw-bold mb-2">From:</label>
-                <input type="date" class="form-control form-control-lg" id="startDate" style="min-width: 180px;">
-            </div>
-            <div class="filter-group">
-                <label class="form-label fw-bold mb-2">To:</label>
-                <input type="date" class="form-control form-control-lg" id="endDate" style="min-width: 180px;">
-            </div>
-            <div class="filter-group align-self-end">
-                <button class="btn btn-dark btn-lg" id="applyDateRange">
-                    <i class="bi bi-filter me-2"></i>
-                    Apply Filter
-                </button>
+            <div id="dateRangeControls" class="align-items-center gap-3 flex-wrap" style="display: none;">
+                <div class="filter-group">
+                    <label class="form-label fw-bold mb-2">From:</label>
+                    <input type="date" class="form-control form-control-lg" id="startDate" style="min-width: 180px;">
+                </div>
+                <div class="filter-group">
+                    <label class="form-label fw-bold mb-2">To:</label>
+                    <input type="date" class="form-control form-control-lg" id="endDate" style="min-width: 180px;">
+                </div>
+                <div class="filter-group align-self-end">
+                    <button class="btn btn-dark btn-lg" id="applyDateRange">
+                        <i class="bi bi-filter me-2"></i>
+                        Apply Filter
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -103,6 +106,14 @@
                     <div class="chart-wrapper">
                         <h5 class="text-center mb-3">Food Items by Category</h5>
                         <canvas id="categoryBarChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Date Range Chart -->
+                <div class="col-12 chart-section" id="dateRangeSection" style="display: none;">
+                    <div class="chart-wrapper">
+                        <h5 class="text-center mb-3">Date Range Overview</h5>
+                        <canvas id="dateRangeChart"></canvas>
                     </div>
                 </div>
             </div>

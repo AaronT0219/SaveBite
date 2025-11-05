@@ -66,6 +66,18 @@
     align-items: center;
 }
 
+/* Date Range Controls */
+#dateRangeControls {
+    display: none !important;
+}
+
+#dateRangeControls.show {
+    display: flex !important;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
 .filter-group .form-label {
     color: #495057;
     margin-bottom: 0.5rem;
