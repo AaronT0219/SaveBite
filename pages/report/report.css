@@ -68,7 +68,7 @@
 
 /* Date Range Controls */
 #dateRangeControls {
-    display: none !important;
+    display: none;
 }
 
 #dateRangeControls.show {

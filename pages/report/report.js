@@ -581,26 +581,42 @@ function updateChartsWithDateRange(startDate, endDate) {
 
     // In a real application, you would fetch filtered data from the backend here
     // For now, we'll simulate data based on the date range
-    
+
     if (currentFilter === "dateRange" && dateRangeChart) {
         // Generate sample data for the date range
         const start = new Date(startDate);
         const end = new Date(endDate);
         const diffTime = Math.abs(end - start);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
+
         // Create labels based on date range (simplified - showing months or days)
         const labels = [];
         const donations = [];
         const quantities = [];
-        
+
         if (diffDays > 90) {
             // Show monthly data for longer ranges
-            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const months = [
+                "Jan",
+                "Feb",
+                "Mar",
+                "Apr",
+                "May",
+                "Jun",
+                "Jul",
+                "Aug",
+                "Sep",
+                "Oct",
+                "Nov",
+                "Dec",
+            ];
             const startMonth = start.getMonth();
             const endMonth = end.getMonth();
-            const monthsInRange = endMonth >= startMonth ? endMonth - startMonth + 1 : 12 - startMonth + endMonth + 1;
-            
+            const monthsInRange =
+                endMonth >= startMonth
+                    ? endMonth - startMonth + 1
+                    : 12 - startMonth + endMonth + 1;
+
             for (let i = 0; i < Math.min(monthsInRange, 6); i++) {
                 const monthIndex = (startMonth + i) % 12;
                 labels.push(months[monthIndex]);
@@ -616,7 +632,7 @@ function updateChartsWithDateRange(startDate, endDate) {
                 quantities.push(Math.floor(Math.random() * 25) + 10);
             }
         }
-        
+
         dateRangeChart.data.labels = labels;
         dateRangeChart.data.datasets[0].data = donations;
         dateRangeChart.data.datasets[1].data = quantities;
