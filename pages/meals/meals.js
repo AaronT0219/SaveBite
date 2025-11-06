@@ -82,29 +82,44 @@
                 const date = document.getElementById('mealDate').value;
                 const desc = document.getElementById('mealDescription').value.trim();
                 const mealSlot = document.getElementById('mealSlot').value;
-    
-    
-                // Add event to FullCalendar
-                calendar.addEvent({
-                    title: title,
-                    start: date,
-                    description: desc,
-                    mealSlot: mealSlot,
-                    selectedCards: selectedCards
+
+                fetch('../pages/meals/post_meal.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ selectedCards, title, desc, date, mealSlot })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success) {
+                        alert("Failed to store meal.");
+                        return;
+                    }
+                    
+                    fetchFoodItemsAndInit();
+
+                    // Add event to FullCalendar
+                    calendar.addEvent({
+                        title: title,
+                        start: date,
+                        description: desc,
+                        mealSlot: mealSlot,
+                        selectedCards: selectedCards
+                    });
+
+                    // Reset Add Meal Modal
+                    form.reset();
+                    form.classList.remove('was-validated');
+                    selectedCards = [];
+                    renderSelectedCard();
+                    const alertMsg = document.querySelector('.selectedCards-alert');
+                    if (alertMsg) alertMsg.remove();
+
+                    // Close modal
+                    addMealModal.hide();
+                })
+                .catch(() => {
+                    alert('Error: Failed to create meal plan.');
                 });
-
-                // Reset Add Meal Modal
-                form.reset();
-                form.classList.remove('was-validated');
-                selectedCards = [];
-                renderSelectedCard();
-
-                const alertMsg = document.querySelector('.selectedCards-alert');
-                if (alertMsg) alertMsg.remove();
-
-    
-                // Close modal
-                addMealModal.hide();
             } else {
                 form.classList.add('was-validated');
             }
