@@ -33,7 +33,7 @@ try{
   if ($owner === false) respond(404, ['success'=>false,'error'=>'Donation not found']);
   if ((int)$owner !== $uid) respond(403, ['success'=>false,'error'=>'Permission denied']);
 
-  // 找到所有关联的 fooditem（仅返回给前端做提示，不改动其 status）
+  // 找到所有关联的 fooditem（用于回写 status）
   $q = $pdo->prepare("SELECT fooditem_id FROM donation_fooditem WHERE donation_id = ?");
   $q->execute([$donationId]);
   $ids = array_map('intval', $q->fetchAll(PDO::FETCH_COLUMN));
@@ -43,18 +43,23 @@ try{
   // 1) 删除映射
   $delMap = $pdo->prepare("DELETE FROM donation_fooditem WHERE donation_id = ?");
   $delMap->execute([$donationId]);
-  $mapRows = $delMap->rowCount(); // 可能为 0（比如之前就没有映射）——允许
+  $mapRows = $delMap->rowCount(); // 可能为 0（允许）
 
-  // 2) 删除 donation（这里必须删到 1 行）
+  // 2) 删除 donation（必须删到 1 行）
   $delDon = $pdo->prepare("DELETE FROM donation WHERE donation_id = ?");
   $delDon->execute([$donationId]);
   $donRows = $delDon->rowCount();
   if ($donRows !== 1) {
-    // 没删除成功就回滚并报错（大概率是 donation_id 不存在或不属于当前用户）
     $pdo->rollBack();
     respond(404, ['success'=>false, 'error'=>'Delete failed: donation not found or already deleted', 'donation_id'=>$donationId]);
   }
 
+  // 3) 把这些库存项的状态设回 available
+  if (!empty($ids)) {
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    $upd = $pdo->prepare("UPDATE fooditem SET status = 'available' WHERE foodItem_id IN ($placeholders)");
+    $upd->execute($ids);
+  }
 
   $pdo->commit();
 
@@ -64,7 +69,7 @@ try{
     'donation_id' => $donationId,
     'map_rows'     => $mapRows,
     'donation_rows'=> $donRows,
-    'fooditem_ids' => $ids  // 仅告知哪些被解除关联的库存项
+    'fooditem_ids' => $ids
   ]);
 }
 catch (Throwable $e){

@@ -1,211 +1,74 @@
 /* Progress Indicator Styles */
 .progress {
-    border-radius: 10px;
-    background-color: #e9ecef;
+  border-radius: 10px;
+  background-color: #e9ecef;
 }
-
 .progress-bar {
-    border-radius: 10px;
-    transition: width 0.6s ease;
-    font-size: 1rem;
+  border-radius: 10px;
+  transition: width 0.6s ease;
+  font-size: 1rem;
 }
 
 /* Metric Cards Styles */
 .metric-card {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 15px;
-    padding: 2rem;
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    border: 1px solid #dee2e6;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 15px;
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  border: 1px solid #dee2e6;
 }
-
-.metric-icon {
-    color: #495057;
-    min-width: 120px;
-    text-align: center;
-}
-
-.metric-icon svg {
-    width: 80px;
-    height: 80px;
-    stroke-width: 1.5;
-}
-
-.metric-content {
-    flex: 1;
-}
-
-.metric-label {
-    color: #6c757d;
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
-    font-weight: 600;
-}
-
-.metric-value {
-    font-size: 3rem;
-    font-weight: bold;
-    color: #212529;
-    margin: 0;
-    line-height: 1;
-}
-
-.metric-unit {
-    color: #6c757d;
-    font-size: 0.9rem;
-    margin-top: 0.5rem;
-    margin-bottom: 0;
-}
+.metric-icon { color: #495057; min-width: 120px; text-align: center; }
+.metric-icon svg { width: 80px; height: 80px; stroke-width: 1.5; }
+.metric-content { flex: 1; }
+.metric-label { color: #6c757d; font-size: 1rem; margin-bottom: .5rem; font-weight: 600; }
+.metric-value { font-size: 3rem; font-weight: bold; color: #212529; margin: 0; line-height: 1; }
+.metric-unit  { color: #6c757d; font-size: .9rem; margin-top: .5rem; margin-bottom: 0; }
 
 /* Filter Group Styles */
-.filter-group {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
+.filter-group { display: flex; flex-direction: column; align-items: center; }
 
 /* Date Range Controls */
-#dateRangeControls {
-    display: none;
-}
-
+#dateRangeControls { display: none; }
 #dateRangeControls.show {
-    display: flex !important;
-    align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
+  display: flex !important; align-items: center; gap: 1rem; flex-wrap: wrap;
 }
-
-.filter-group .form-label {
-    color: #495057;
-    margin-bottom: 0.5rem;
-}
-
+.filter-group .form-label { color: #495057; margin-bottom: .5rem; }
 .filter-group .form-select {
-    border-radius: 10px;
-    border: 2px solid #212529;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    cursor: pointer;
+  border-radius: 10px; border: 2px solid #212529; font-weight: 600; transition: .3s; cursor: pointer;
 }
-
-.filter-group .form-select:focus {
-    border-color: #212529;
-    box-shadow: 0 0 0 0.25rem rgba(33, 37, 41, 0.25);
-}
-
-.filter-group .form-select:hover {
-    background-color: #f8f9fa;
-}
+.filter-group .form-select:focus { border-color:#212529; box-shadow: 0 0 0 .25rem rgba(33,37,41,.25); }
+.filter-group .form-select:hover { background-color:#f8f9fa; }
 
 /* Date Picker Button */
-#datePickerBtn {
-    border-radius: 25px;
-    padding: 0.75rem 2rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-#datePickerBtn:hover {
-    background-color: #212529;
-    color: white;
-    transform: scale(1.05);
-}
+#datePickerBtn { border-radius: 25px; padding: .75rem 2rem; font-weight: 600; transition: .3s; }
+#datePickerBtn:hover { background-color:#212529; color:#fff; transform: scale(1.05); }
 
 /* Charts Container */
-.charts-container {
-    margin-top: 2rem;
-    border: 1px solid #dee2e6;
-}
-
-.chart-section {
-    width: 100%;
-    transition: opacity 0.3s ease;
-}
-
-.chart-wrapper {
-    padding: 1rem;
-    background-color: #f8f9fa;
-    border-radius: 10px;
-    height: 100%;
-}
-
-.chart-wrapper h5 {
-    color: #495057;
-    font-weight: 600;
-}
-
-.chart-wrapper canvas {
-    max-height: 300px;
-}
+.charts-container { margin-top: 2rem; border: 1px solid #dee2e6; }
+.chart-section { width: 100%; transition: opacity .3s ease; }
+.chart-wrapper { padding: 1rem; background:#f8f9fa; border-radius: 10px; height:100%; }
+.chart-wrapper h5 { color:#495057; font-weight: 600; }
+.chart-wrapper canvas { max-height: 300px; }
 
 /* Modal Styles */
-.modal-content {
-    border-radius: 15px;
-    border: none;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-}
-
-.modal-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
-    border-radius: 15px 15px 0 0;
-}
-
-.modal-title {
-    font-weight: 600;
-    color: #212529;
-}
+.modal-content { border-radius: 15px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,.2); }
+.modal-header  { background:#f8f9fa; border-bottom:1px solid #dee2e6; border-radius: 15px 15px 0 0; }
+.modal-title   { font-weight: 600; color: #212529; }
 
 /* Form Controls */
-.form-control {
-    border-radius: 8px;
-    border: 1px solid #ced4da;
-    padding: 0.6rem;
-}
+.form-control { border-radius: 8px; border:1px solid #ced4da; padding:.6rem; }
+.form-control:focus { border-color:#495057; box-shadow:0 0 0 .2rem rgba(73,80,87,.25); }
 
-.form-control:focus {
-    border-color: #495057;
-    box-shadow: 0 0 0 0.2rem rgba(73, 80, 87, 0.25);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .metric-card {
-        flex-direction: column;
-        text-align: center;
-        padding: 1.5rem;
-    }
-
-    .metric-icon svg {
-        width: 60px;
-        height: 60px;
-    }
-
-    .metric-value {
-        font-size: 2.5rem;
-    }
-
-    .chart-wrapper canvas {
-        max-height: 250px;
-    }
+/* Responsive */
+@media (max-width:768px){
+  .metric-card { flex-direction: column; text-align:center; padding:1.5rem; }
+  .metric-icon svg { width:60px; height:60px; }
+  .metric-value { font-size:2.5rem; }
+  .chart-wrapper canvas { max-height:250px; }
 }
 
 /* Animation */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.metric-card,
-.charts-container {
-    animation: fadeIn 0.6s ease-out;
-}
+@keyframes fadeIn { from {opacity:0; transform:translateY(20px);} to {opacity:1; transform:translateY(0);} }
+.metric-card, .charts-container { animation: fadeIn .6s ease-out; }
