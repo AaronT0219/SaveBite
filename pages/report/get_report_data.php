@@ -1,208 +1,332 @@
 <?php
-declare(strict_types=1);
 session_start();
 require_once '../../config.php';
-header('Content-Type: application/json; charset=utf-8');
 
-/**
- * 统一用 $_SESSION['user_id']
- */
+// Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     http_response_code(401);
-    echo json_encode(["success" => false, "message" => "User not logged in"], JSON_UNESCAPED_UNICODE);
+    echo json_encode([
+        "success" => false,
+        "message" => "User not logged in"
+    ]);
     exit;
 }
-$user_id   = (int)$_SESSION['user_id'];
-$filter    = $_GET['filter']      ?? 'monthly';
-$startDate = $_GET['start_date']  ?? null;
-$endDate   = $_GET['end_date']    ?? null;
+
+$user_id = $_SESSION['id'];
+$filter = $_GET['filter'] ?? 'monthly';
+$start_date = $_GET['start_date'] ?? null;
+$end_date = $_GET['end_date'] ?? null;
 
 try {
-    $payload = [
+    $response = [
         "success" => true,
-        "data" => [
-            "metrics" => getTotalMetrics($pdo, $user_id),
-            "chart"   => getChartByFilter($pdo, $user_id, $filter, $startDate, $endDate),
-        ],
+        "data" => []
     ];
-    echo json_encode($payload, JSON_UNESCAPED_UNICODE);
-} catch (Throwable $e) {
-    http_response_code(500);
-    echo json_encode(["success"=>false, "message"=>"Error fetching data: ".$e->getMessage()], JSON_UNESCAPED_UNICODE);
-}
 
-/* ---------------- helpers ---------------- */
-
-function getChartByFilter(PDO $pdo, int $user_id, string $filter, ?string $start, ?string $end): array {
+    // Get total metrics
+    $response['data']['metrics'] = getTotalMetrics($pdo, $user_id);
+    
+    // Get chart data based on filter
     switch ($filter) {
-        case 'yearly':    return getYearlyData($pdo, $user_id);
-        case 'weekly':    return getWeeklyData($pdo, $user_id);
-        case 'category':  return getCategoryData($pdo, $user_id);
-        case 'dateRange': return getDateRangeData($pdo, $user_id, $start, $end);
+        case 'yearly':
+            $response['data']['chart'] = getYearlyData($pdo, $user_id);
+            break;
         case 'monthly':
-        default:          return getMonthlyData($pdo, $user_id);
+            $response['data']['chart'] = getMonthlyData($pdo, $user_id);
+            break;
+        case 'weekly':
+            $response['data']['chart'] = getWeeklyData($pdo, $user_id);
+            break;
+        case 'category':
+            $response['data']['chart'] = getCategoryData($pdo, $user_id);
+            break;
+        case 'dateRange':
+            $response['data']['chart'] = getDateRangeData($pdo, $user_id, $start_date, $end_date);
+            break;
+        default:
+            $response['data']['chart'] = getMonthlyData($pdo, $user_id);
     }
+
+    echo json_encode($response);
+
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode([
+        "success" => false,
+        "message" => "Error fetching data: " . $e->getMessage()
+    ]);
 }
 
-function getTotalMetrics(PDO $pdo, int $user_id): array {
-    // total food items saved
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM fooditem WHERE user_id = ?");
+function getTotalMetrics($pdo, $user_id) {
+    // Debug: Log the user_id being used
+    error_log("Getting metrics for user_id: " . $user_id);
+    
+    // Get total food items saved
+    $stmt = $pdo->prepare("SELECT COUNT(*) as total_food_save FROM fooditem WHERE user_id = ?");
     $stmt->execute([$user_id]);
-    $totalFoodSave = (int)$stmt->fetchColumn();
+    $foodSave = $stmt->fetch()['total_food_save'];
+    error_log("Food items found: " . $foodSave);
 
-    // total donations
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM donation WHERE donor_user_id = ?");
+    // Get total donations made by this user
+    $stmt = $pdo->prepare("SELECT COUNT(*) as total_donations FROM donation WHERE donor_user_id = ?");
     $stmt->execute([$user_id]);
-    $totalDonations = (int)$stmt->fetchColumn();
+    $donations = $stmt->fetch()['total_donations'];
+    error_log("Donations found: " . $donations);
 
-    // total quantity
-    $stmt = $pdo->prepare("SELECT COALESCE(SUM(quantity),0) FROM fooditem WHERE user_id = ?");
+    // Get total quantity of food saved
+    $stmt = $pdo->prepare("SELECT SUM(quantity) as total_quantity FROM fooditem WHERE user_id = ?");
     $stmt->execute([$user_id]);
-    $totalQuantity = (int)$stmt->fetchColumn();
+    $totalQuantity = $stmt->fetch()['total_quantity'] ?: 0;
+    error_log("Total quantity: " . $totalQuantity);
 
-    // a simple progress metric (donations/foodSave capped at 100)
-    $progress = $totalFoodSave > 0 ? min(100, ($totalDonations / $totalFoodSave) * 100) : 0;
+    // Calculate progress (example: based on donation ratio)
+    $progress = $donations > 0 ? min(($donations / max($foodSave, 1)) * 100, 100) : 0;
 
     return [
-        'totalFoodSave'  => $totalFoodSave,
-        'totalDonations' => $totalDonations,
-        'totalQuantity'  => $totalQuantity,
-        'progress'       => round($progress, 1),
+        'totalFoodSave' => (int)$foodSave,
+        'totalDonations' => (int)$donations,
+        'totalQuantity' => (int)$totalQuantity,
+        'progress' => round($progress, 1)
     ];
 }
 
-function getYearlyData(PDO $pdo, int $user_id): array {
-    $currentYear = (int)date('Y');
+function getYearlyData($pdo, $user_id) {
+    // Note: Since created_at doesn't exist yet, we'll use donation_date for donations
+    // and expiry_date for food items as a placeholder
+    
+    $current_year = date('Y');
     $years = [];
-    for ($i = 5; $i >= 0; $i--) { $years[] = $currentYear - $i; }
+    for ($i = 5; $i >= 0; $i--) {
+        $years[] = $current_year - $i;
+    }
 
     $labels = array_map('strval', $years);
     $donations = [];
     $quantities = [];
 
-    foreach ($years as $y) {
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM donation WHERE donor_user_id=? AND YEAR(donation_date)=?");
-        $stmt->execute([$user_id, $y]);
-        $donations[] = (int)$stmt->fetchColumn();
+    foreach ($years as $year) {
+        // Get donations for this year
+        $stmt = $pdo->prepare("
+            SELECT COUNT(*) as count 
+            FROM donation 
+            WHERE donor_user_id = ? AND YEAR(donation_date) = ?
+        ");
+        $stmt->execute([$user_id, $year]);
+        $donations[] = (int)$stmt->fetch()['count'];
 
-        // 以 expiry_date 近似统计数量
-        $stmt = $pdo->prepare("SELECT COALESCE(SUM(quantity),0) FROM fooditem WHERE user_id=? AND YEAR(expiry_date)=?");
-        $stmt->execute([$user_id, $y]);
-        $quantities[] = (int)$stmt->fetchColumn();
+        // Get sum of food quantities for this year (using expiry_date as placeholder)
+        $stmt = $pdo->prepare("
+            SELECT SUM(quantity) as total_quantity 
+            FROM fooditem 
+            WHERE user_id = ? AND YEAR(expiry_date) = ?
+        ");
+        $stmt->execute([$user_id, $year]);
+        $quantities[] = (int)($stmt->fetch()['total_quantity'] ?: 0);
     }
 
-    return ['labels'=>$labels, 'donations'=>$donations, 'quantity'=>$quantities];
+    return [
+        'labels' => $labels,
+        'donations' => $donations,
+        'quantity' => $quantities
+    ];
 }
 
-function getMonthlyData(PDO $pdo, int $user_id): array {
-    $currentYear = (int)date('Y');
-    $monthsText = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function getMonthlyData($pdo, $user_id) {
+    $current_year = date('Y');
+    $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     $donations = [];
     $quantities = [];
 
-    for ($m = 1; $m <= 12; $m++) {
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM donation WHERE donor_user_id=? AND YEAR(donation_date)=? AND MONTH(donation_date)=?");
-        $stmt->execute([$user_id, $currentYear, $m]);
-        $donations[] = (int)$stmt->fetchColumn();
+    for ($month = 1; $month <= 12; $month++) {
+        // Get donations for this month
+        $stmt = $pdo->prepare("
+            SELECT COUNT(*) as count 
+            FROM donation 
+            WHERE donor_user_id = ? AND YEAR(donation_date) = ? AND MONTH(donation_date) = ?
+        ");
+        $stmt->execute([$user_id, $current_year, $month]);
+        $donations[] = (int)$stmt->fetch()['count'];
 
-        $stmt = $pdo->prepare("SELECT COALESCE(SUM(quantity),0) FROM fooditem WHERE user_id=? AND YEAR(expiry_date)=? AND MONTH(expiry_date)=?");
-        $stmt->execute([$user_id, $currentYear, $m]);
-        $quantities[] = (int)$stmt->fetchColumn();
+        // Get sum of food quantities for this month (using expiry_date as placeholder)
+        $stmt = $pdo->prepare("
+            SELECT SUM(quantity) as total_quantity 
+            FROM fooditem 
+            WHERE user_id = ? AND YEAR(expiry_date) = ? AND MONTH(expiry_date) = ?
+        ");
+        $stmt->execute([$user_id, $current_year, $month]);
+        $quantities[] = (int)($stmt->fetch()['total_quantity'] ?: 0);
     }
 
-    return ['labels'=>$monthsText, 'donations'=>$donations, 'quantity'=>$quantities];
+    return [
+        'labels' => $months,
+        'donations' => $donations,
+        'quantity' => $quantities
+    ];
 }
 
-function getWeeklyData(PDO $pdo, int $user_id): array {
+function getWeeklyData($pdo, $user_id) {
     $labels = [];
     $donations = [];
     $quantities = [];
 
-    // 最近4周（以周一-周日为一周）
-    for ($w = 3; $w >= 0; $w--) {
-        $weekStart = date('Y-m-d', strtotime("-$w weeks monday"));
-        $weekEnd   = date('Y-m-d 23:59:59', strtotime("-$w weeks sunday"));
-        $labels[] = 'Week ' . (4 - $w);
+    // Get data for last 4 weeks
+    for ($week = 3; $week >= 0; $week--) {
+        $week_start = date('Y-m-d', strtotime("-$week weeks monday"));
+        $week_end = date('Y-m-d', strtotime("-$week weeks sunday"));
+        
+        $labels[] = "Week " . (4 - $week);
 
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM donation WHERE donor_user_id=? AND donation_date BETWEEN ? AND ?");
-        $stmt->execute([$user_id, $weekStart, $weekEnd]);
-        $donations[] = (int)$stmt->fetchColumn();
+        // Get donations for this week
+        $stmt = $pdo->prepare("
+            SELECT COUNT(*) as count 
+            FROM donation 
+            WHERE donor_user_id = ? AND donation_date BETWEEN ? AND ?
+        ");
+        $stmt->execute([$user_id, $week_start, $week_end]);
+        $donations[] = (int)$stmt->fetch()['count'];
 
-        $stmt = $pdo->prepare("SELECT COALESCE(SUM(quantity),0) FROM fooditem WHERE user_id=? AND expiry_date BETWEEN ? AND ?");
-        $stmt->execute([$user_id, $weekStart, $weekEnd]);
-        $quantities[] = (int)$stmt->fetchColumn();
+        // Get sum of food quantities for this week (using expiry_date as placeholder)
+        $stmt = $pdo->prepare("
+            SELECT SUM(quantity) as total_quantity 
+            FROM fooditem 
+            WHERE user_id = ? AND expiry_date BETWEEN ? AND ?
+        ");
+        $stmt->execute([$user_id, $week_start, $week_end]);
+        $quantities[] = (int)($stmt->fetch()['total_quantity'] ?: 0);
     }
 
-    return ['labels'=>$labels, 'donations'=>$donations, 'quantity'=>$quantities];
+    return [
+        'labels' => $labels,
+        'donations' => $donations,
+        'quantity' => $quantities
+    ];
 }
 
-function getCategoryData(PDO $pdo, int $user_id): array {
-    $stmt = $pdo->prepare("SELECT COALESCE(category,'Other') AS category, COUNT(*) AS c FROM fooditem WHERE user_id=? GROUP BY category ORDER BY c DESC");
+function getCategoryData($pdo, $user_id) {
+    // Get food items by category
+    $stmt = $pdo->prepare("
+        SELECT category, COUNT(*) as count 
+        FROM fooditem 
+        WHERE user_id = ? 
+        GROUP BY category 
+        ORDER BY count DESC
+    ");
     $stmt->execute([$user_id]);
-    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $results = $stmt->fetchAll();
 
     $labels = [];
     $data = [];
-    foreach ($rows as $r) {
-        $labels[] = $r['category'];
-        $data[]   = (int)$r['c'];
-    }
-    if (!$labels) { $labels=['No Data']; $data=[0]; }
 
-    return ['labels'=>$labels, 'data'=>$data];
+    foreach ($results as $row) {
+        $labels[] = $row['category'] ?: 'Other';
+        $data[] = (int)$row['count'];
+    }
+
+    // If no data, provide default categories
+    if (empty($labels)) {
+        $labels = ['No Data'];
+        $data = [0];
+    }
+
+    return [
+        'labels' => $labels,
+        'data' => $data
+    ];
 }
 
-function getDateRangeData(PDO $pdo, int $user_id, ?string $start, ?string $end): array {
-    if (!$start || !$end) {
-        return ['labels'=>['No Date Range'],'donations'=>[0],'quantity'=>[0]];
+function getDateRangeData($pdo, $user_id, $start_date, $end_date) {
+    if (!$start_date || !$end_date) {
+        return [
+            'labels' => ['No Date Range'],
+            'donations' => [0],
+            'quantity' => [0]
+        ];
     }
-    $startDate = new DateTime($start);
-    $endDate   = new DateTime($end.' 23:59:59'); // 包含当天
 
-    $days = (int)$startDate->diff($endDate)->days;
+    $start = new DateTime($start_date);
+    $end = new DateTime($end_date);
+    $interval = $start->diff($end);
+    $days = $interval->days;
+
     $labels = [];
     $donations = [];
     $quantities = [];
 
     if ($days > 90) {
-        // 按月
-        $cursor = new DateTime($startDate->format('Y-m-01'));
-        while ($cursor <= $endDate) {
-            $monthStart = $cursor->format('Y-m-01');
-            $monthEnd   = $cursor->format('Y-m-t').' 23:59:59';
-            if ($monthEnd > $endDate->format('Y-m-d H:i:s')) $monthEnd = $endDate->format('Y-m-d H:i:s');
+        // Monthly breakdown for longer ranges
+        $current = clone $start;
+        $current->modify('first day of this month');
+        
+        while ($current <= $end) {
+            $month_start = $current->format('Y-m-01');
+            $month_end = $current->format('Y-m-t');
+            
+            // Don't go beyond end date
+            if ($month_end > $end_date) {
+                $month_end = $end_date;
+            }
+            
+            $labels[] = $current->format('M Y');
 
-            $labels[] = $cursor->format('M Y');
+            // Get donations for this month
+            $stmt = $pdo->prepare("
+                SELECT COUNT(*) as count 
+                FROM donation 
+                WHERE donor_user_id = ? AND donation_date BETWEEN ? AND ?
+            ");
+            $stmt->execute([$user_id, $month_start, $month_end]);
+            $donations[] = (int)$stmt->fetch()['count'];
 
-            $stmt = $pdo->prepare("SELECT COUNT(*) FROM donation WHERE donor_user_id=? AND donation_date BETWEEN ? AND ?");
-            $stmt->execute([$user_id, $monthStart, $monthEnd]);
-            $donations[] = (int)$stmt->fetchColumn();
+            // Get sum of food quantities for this month
+            $stmt = $pdo->prepare("
+                SELECT SUM(quantity) as total_quantity 
+                FROM fooditem 
+                WHERE user_id = ? AND expiry_date BETWEEN ? AND ?
+            ");
+            $stmt->execute([$user_id, $month_start, $month_end]);
+            $quantities[] = (int)($stmt->fetch()['total_quantity'] ?: 0);
 
-            $stmt = $pdo->prepare("SELECT COALESCE(SUM(quantity),0) FROM fooditem WHERE user_id=? AND expiry_date BETWEEN ? AND ?");
-            $stmt->execute([$user_id, $monthStart, $monthEnd]);
-            $quantities[] = (int)$stmt->fetchColumn();
-
-            $cursor->modify('+1 month');
+            $current->modify('+1 month');
         }
     } else {
-        // 按周（最多8周）
-        $weeks = min(8, (int)ceil(($days + 1) / 7));
-        for ($i = 0; $i < $weeks; $i++) {
-            $weekStart = (new DateTime($start))->modify("+$i week")->format('Y-m-d');
-            $weekEnd   = (new DateTime($weekStart))->modify('+6 day')->format('Y-m-d 23:59:59');
-            if (new DateTime($weekEnd) > $endDate) $weekEnd = $endDate->format('Y-m-d H:i:s');
+        // Weekly breakdown for shorter ranges
+        $weeks = min(ceil($days / 7), 8);
+        
+        for ($week = 0; $week < $weeks; $week++) {
+            $week_start = date('Y-m-d', strtotime($start_date . " +$week weeks"));
+            $week_end = date('Y-m-d', strtotime($week_start . " +6 days"));
+            
+            // Don't go beyond end date
+            if ($week_end > $end_date) {
+                $week_end = $end_date;
+            }
+            
+            $labels[] = "Week " . ($week + 1);
 
-            $labels[] = 'Week '.($i+1);
+            // Get donations for this week
+            $stmt = $pdo->prepare("
+                SELECT COUNT(*) as count 
+                FROM donation 
+                WHERE donor_user_id = ? AND donation_date BETWEEN ? AND ?
+            ");
+            $stmt->execute([$user_id, $week_start, $week_end]);
+            $donations[] = (int)$stmt->fetch()['count'];
 
-            $stmt = $pdo->prepare("SELECT COUNT(*) FROM donation WHERE donor_user_id=? AND donation_date BETWEEN ? AND ?");
-            $stmt->execute([$user_id, $weekStart, $weekEnd]);
-            $donations[] = (int)$stmt->fetchColumn();
-
-            $stmt = $pdo->prepare("SELECT COALESCE(SUM(quantity),0) FROM fooditem WHERE user_id=? AND expiry_date BETWEEN ? AND ?");
-            $stmt->execute([$user_id, $weekStart, $weekEnd]);
-            $quantities[] = (int)$stmt->fetchColumn();
+            // Get sum of food quantities for this week
+            $stmt = $pdo->prepare("
+                SELECT SUM(quantity) as total_quantity 
+                FROM fooditem 
+                WHERE user_id = ? AND expiry_date BETWEEN ? AND ?
+            ");
+            $stmt->execute([$user_id, $week_start, $week_end]);
+            $quantities[] = (int)($stmt->fetch()['total_quantity'] ?: 0);
         }
     }
 
-    return ['labels'=>$labels,'donations'=>$donations,'quantity'=>$quantities];
+    return [
+        'labels' => $labels,
+        'donations' => $donations,
+        'quantity' => $quantities
+    ];
 }
+?>
