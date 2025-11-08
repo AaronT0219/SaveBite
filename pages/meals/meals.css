@@ -1,9 +1,14 @@
-/* current inventory */ 
+/* toast CSS */
+.toast-header {
+    background: #CCD5AE !important;
+}
+
+/* current inventory CSS */ 
 #foodCardContainer::-webkit-scrollbar {
     display: none;
 }
 
-.food-card, .recipe-card, #missingCancel {
+.food-card, .recipe-card, #missingCancel,#eventDlt-btn {
     transition: all 0.1s ease-in-out;
 }
 
@@ -17,7 +22,7 @@
 }
 
 /* add meal-btn CSS */
-.addMeal-btn, .filter-btn, #mealConfirm-btn, #quantityConfirm, #missingConfirm {
+.addMeal-btn, .filter-btn, #mealConfirm-btn, #quantityConfirm, #missingConfirm, #eventEdit-btn {
     --bs-btn-bg: #CCD5AE !important;
     --bs-btn-border-color: #CCD5AE;
     --bs-btn-hover-bg: rgb(182, 187, 143);
@@ -27,7 +32,7 @@
     transition: all 0.1s ease-in-out !important;
 }
 
-.addMeal-btn:active, .filter-btn:active, #missingCancel:active, #missingConfirm:active {
+.addMeal-btn:active, .filter-btn:active, #missingCancel:active, #missingConfirm:active, #eventDlt-btn:active, #eventEdit-btn:active {
     transform: scale(0.9);
 }
 
@@ -198,4 +203,36 @@
   height: 1px;
   background: red;
   box-shadow: 0 0 8px red;
+}
+
+.fc-popover {
+  background-color: #fffaf3;
+  border: 1px solid #ccc;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.fc-popover.closing {
+    opacity: 0;
+    transform: translateY(-20px);
+}
+.fc-popover-header {
+    font-weight: 500;
+    padding: 5px 10px !important;
+}
+.fc-more-popover .fc-event {
+  font-size: 0.85rem;
+}
+.fc-more-link {
+    font-weight: bolder;
+    text-decoration: none;
+    color: #212529e1;
+}
+
+.fc-daygrid-day-frame {
+    height: 200px !important;
+}
+.fc-daygrid-event,
+.fc-daygrid-more-link {
+  margin-bottom: 5px !important;
 }

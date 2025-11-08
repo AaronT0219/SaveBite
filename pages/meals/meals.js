@@ -25,20 +25,71 @@
             },
             initialView: "dayGridMonth",
             editable: true,
-            eventColor: "#D4A373",
             eventDisplay: "block",
-            events: [],
             eventTimeFormat: {
                 hour: "2-digit",
                 minute: "2-digit",
             },
-            eventClick: function (info) {
-                console.log(info.event.extendedProps.mealSlot);
-                console.log(info.event.extendedProps.selectedCards);
+
+            // Fix grid height & limit visible events
+            height: 'auto',
+            dayMaxEventRows: 2,   // show max 2 events
+            moreLinkClick: "popover",
+            moreLinkContent: (args) => `+${args.num} more meals`,
+
+            eventContent: function(arg) {
+                const mealSlot = arg.event.extendedProps.mealSlot;
+                const desc = arg.event.extendedProps.description;
+
+                // Create custom event-content's inner HTML
+                let innerHtml = `
+                    <div class="fc-event-time text-muted small">${mealSlot || ''}</div>
+                    <div class="fc-event-title text-dark fw-bolder">${arg.event.title}</div>
+                `;
+
+                if (desc) {
+                    innerHtml += `<div class="mt-1 small text-muted text-truncate">${desc}</div>`;
+                }
+
+                return { html: innerHtml };
+            },
+
+            eventClick: function(info) {
+                // show modal that contain event details
+                const event = info.event;
+                const meal = event.extendedProps;
+
+                const modal = new bootstrap.Modal(document.getElementById('eventModal'));
+                const modalTitle = document.getElementById('eventTitle');
+                const modalDesc = document.getElementById('eventDesc');
+                const modalIngredients = document.getElementById('eventIngredients');
+
+                modalTitle.textContent = event.title;
+                modalDesc.textContent = meal.description || 'No description';
+
+                modalIngredients.innerHTML = meal.selectedCards && meal.selectedCards.length
+                ? meal.selectedCards.map(i => `
+                    <tr"><th class="ps-3">${i.food_name}</th><td class="pe-4 text-end">${i.quantity}</td></tr>
+                `).join('')
+                : '<li>No ingredients</li>';
+
+                modal.show();
+
+                // close popover if it's opened (with animation)
+                const popover = document.querySelector('.fc-popover');
+                if (popover) {
+                   setTimeout(() => {
+                        popover.classList.add('closing');
+                        setTimeout(() => popover.remove(), 200);
+                    }, 100);
+                }
             }
         });
 
         calendar.render();
+
+        // retrive and load events from database
+        fetchAndRender_CalendarEvents(calendar);
 
         const todayBtn = document.querySelector('.fc-today-button');
         if (todayBtn) {
@@ -95,16 +146,16 @@
                         return;
                     }
                     
+                    //update latest fooditem's details
                     fetchFoodItemsAndInit();
 
-                    // Add event to FullCalendar
-                    calendar.addEvent({
-                        title: title,
-                        start: date,
-                        description: desc,
-                        mealSlot: mealSlot,
-                        selectedCards: selectedCards
-                    });
+                    // refresh calendar events
+                    fetchAndRender_CalendarEvents(calendar);
+
+                    // Show success toast
+                    const toastEl = document.getElementById('mealToast');
+                    const toast = new bootstrap.Toast(toastEl);
+                    toast.show();
 
                     // Reset Add Meal Modal
                     form.reset();
@@ -396,7 +447,7 @@
         recipes.forEach((recipe, idx) => {
             // Build full ingredient list in HTML format
             const ingredientsList = recipe.ingredients
-                .map(i => `<tr><th>${i.name}</th> <td class="text-end">${i.quantity}</td></tr>`)
+                .map(i => `<tr><th class="ps-3">${i.name}</th> <td class="text-end pe-4">${i.quantity}</td></tr>`)
                 .join('');
 
             const cardHtml = `
@@ -407,7 +458,7 @@
                             <span class="badge calories-badge fs-6">${recipe.calories} kcal</span>
                         </div>
                         <div class="card-body fw-medium">
-                            <table class="table table-sm table-striped fs-6">
+                            <table class="table table-sm table-striped fs-6 mb-0">
                                 <tbody>${ingredientsList}</tbody>
                             </table>
                         </div>
@@ -435,7 +486,7 @@
                     const missingItems = data.missingItems;          
 
                     if (data.success) {
-                        addRecipeIngredients(matchedItems, recipe);
+                        addRecipeDetails(matchedItems, recipe);
                         return;
                     }
 
@@ -466,7 +517,7 @@
 
         // ✅ If YES → add only matched items
         btnMissingConfirm.onclick = () => {
-            addRecipeIngredients(matchedItems, recipe);
+            addRecipeDetails(matchedItems, recipe);
             missingModal.hide();
         };
 
@@ -476,7 +527,10 @@
         };
     }
 
-    function addRecipeIngredients(matchedItems, recipe) {
+    function addRecipeDetails(matchedItems, recipe) {
+        const title = document.getElementById('mealTitle');
+        title.value = recipe.name;
+
         // Loop add only those NOT already in selectedCards
         matchedItems.forEach((item, index) => {
             const exists = selectedCards.some(c => c.item.foodItem_id === item.foodItem_id);
@@ -533,6 +587,44 @@
         })
         .catch(err => {
             console.error('Failed to fetch food items:', err);
+        });
+    }
+
+    function fetchAndRender_CalendarEvents(calendar) {
+        fetch('../pages/meals/get_calendar_events.php')
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                console.error("Failed to fetch events:", data.message);
+                return;
+            }
+
+            // clear existing events before addition
+            calendar.getEvents().forEach(event => event.remove());
+
+            const eventColor = {
+                breakfast: '#e9edc9',
+                lunch: '#ccd5ae',
+                dinner: '#d4a373',
+                snack: '#ddae80ff'
+            };
+
+            const events = data.data;
+
+            events.forEach(event => {
+                calendar.addEvent({
+                    id: event.mealplan_id,
+                    title: event.title,
+                    start: event.date,
+                    description: event.description,
+                    mealSlot: event.mealSlot,
+                    selectedCards: event.ingredients,
+                    color: eventColor[event.mealSlot] || 'gray'
+                });
+            });
+        })
+        .catch(err => {
+            console.error('Failed to fetch events:', err);
         });
     }
 

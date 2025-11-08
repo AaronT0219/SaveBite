@@ -105,6 +105,26 @@ try {
         $post_mealplan_fooditem->execute([$meal_id, $reserved_fooditem_id, $quantity]);
     }
 
+    // 7️⃣ Create a notification record for meal plan reminder
+    $insert_notification = $pdo->prepare("
+        INSERT INTO notification (
+            title, description, notification_date, status, target_type, target_id, user_id
+        ) VALUES (
+            :title, :description, :notification_date, :status, :target_type, :target_id, :user_id
+        )
+    ");
+
+    $insert_notification->execute([
+        ':title' => $title,
+        ':description' => $desc,
+        ':notification_date' => $date,
+        ':status' => 'new',
+        ':target_type' => 'meal_plan',
+        ':target_id' => $meal_id,
+        ':user_id' => $user_id 
+    ]);
+
+    
     // ✅ Commit if everything succeeds
     $pdo->commit();
 

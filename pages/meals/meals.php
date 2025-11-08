@@ -18,7 +18,7 @@
         <div class="modal fade" id="addMealModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="addMealModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-fullscreen">
                 <div class="modal-content">
-                    <div class="modal-body fs-4 fw-medium d-flex flex-column">
+                    <div class="modal-body fs-4 fw-medium d-flex flex-column p-2">
                         <div class="w-100 text-end">
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
@@ -160,6 +160,44 @@
                         </div>
                     </div>
 
+                </div>
+            </div>
+        </div>
+
+        <!-- Event Modal -->
+        <div class="modal fade" id="eventModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    
+                    <div class="modal-header">
+                        <h5 id="eventTitle" class="modal-title fw-bolder fs-4"></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <p id="eventDesc" class="mb-2"></p>
+                        <p class="fs-5 fw-medium mb-2">Ingredients:</p>
+                        <table id="eventIngredients" class="table table-striped mb-0"></table>
+                    </div>
+
+                    <div class="modal-footer justify-content-center gap-3">
+                        <button type="button" id="eventEdit-btn" class="btn fw-medium fs-5 d-flex justify-content-center align-items-center px-4"><span class="me-2" data-lucide="pencil"></span>Edit</button>
+                        <button type="button" id="eventDlt-btn" class="btn btn-danger fw-medium fs-5 d-flex justify-content-center align-items-center px-4"><span class="me-2" data-lucide="x"></span>Delete</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;">
+            <div id="mealToast" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <strong class="d-flex align-items-center gap-2 me-auto"><span data-lucide="clock"></span> Reminder set</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body fw-medium">
+                    Meal plan reminder has been set!
                 </div>
             </div>
         </div>
