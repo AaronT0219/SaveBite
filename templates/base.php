@@ -37,7 +37,7 @@ if (!isset($_SESSION['email'])) {
         <!-- content top container -->
         <div id="main-content-container" class="container-fluid p-0">
             <div id="topNav-main-content" class="w-100 pt-4 px-4 text-end">
-                <i data-lucide="bell" data-page="notifications" class="notification-icon"></i>
+                <i data-lucide="bell" data-page="notification" class="notification-icon"></i>
             </div>
 
             <!-- Main content area -->

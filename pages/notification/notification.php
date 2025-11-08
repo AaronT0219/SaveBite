@@ -10,7 +10,7 @@ require_once __DIR__ . '/../../config.php';
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Notifications</title>
   <style>
-    /* ===== 复用你原来的样式命名 ===== */
+
     .topbar{display:flex;justify-content:space-between;gap:12px;padding:20px 32px;}
     .title{font-size:28px;font-weight:700;}
     .top_right{display:flex;align-items:center;gap:12px;}
@@ -53,10 +53,6 @@ require_once __DIR__ . '/../../config.php';
           <option value="all">All</option>
         </select>
       </div>
-      <div id="bell" title="Notifications">
-        <span>🔔</span>
-        <span id="badge">0</span>
-      </div>
       <button id="markAll" class="mini" type="button">Mark all read</button>
     </div>
   </header>
@@ -78,13 +74,13 @@ $markAll.addEventListener('click', markAllRead);
 function smallTitleOf(type){
   if(type==='inventory') return 'Inventory alerts';
   if(type==='donation')  return 'Donation updates';
-  if(type==='meal')      return 'Meal Planning Reminders';
+  if(type==='meal_plan')      return 'Meal Planning Reminders';
   return 'Notifications';
 }
 function actionLabelOf(type){
   if(type==='inventory') return 'Donate';
   if(type==='donation')  return 'View status';
-  if(type==='meal')      return 'Open Planner';
+  if(type==='meal_plan')      return 'Open Planner';
   return 'Open';
 }
 function fmtTs(s){
@@ -201,7 +197,7 @@ async function trackIt(n){
   let url = '#';
   if (n.type === 'inventory') url = '/SaveBite/pages/inventory/view.php?id=' + (n.ref_id || '');
   if (n.type === 'donation')  url = '/SaveBite/pages/donationList/view.php?id=' + (n.ref_id || '');
-  if (n.type === 'meal')      url = '/SaveBite/pages/mealplan/view.php?id=' + (n.ref_id || '');
+  if (n.type === 'meal_plan')      url = '/SaveBite/pages/mealplan/view.php?id=' + (n.ref_id || '');
   window.location.href = url;
 }
 

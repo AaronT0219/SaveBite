@@ -1,15 +1,19 @@
 <?php
-// /SaveBite/pages/notifications/mark_read.php
 declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../../config.php';
+session_start();
 
 try {
   $id = (int)($_POST['id'] ?? 0);
   if ($id <= 0) throw new Exception('invalid id');
-  $userId = 1; // TODO: 接登录
 
-  $stmt = $pdo->prepare("UPDATE notification SET is_read=1 WHERE id=:id AND user_id=:uid");
+  $userId = $_SESSION['user_id'] ?? $_SESSION['id'] ?? 1;
+
+  $stmt = $pdo->prepare(
+    "UPDATE notification SET status='seen'
+     WHERE notification_id=:id AND user_id=:uid"
+  );
   $stmt->execute([':id'=>$id, ':uid'=>$userId]);
 
   echo json_encode(['ok'=>true], JSON_UNESCAPED_UNICODE);
