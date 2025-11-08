@@ -34,7 +34,7 @@ if ($fooditem_id <= 0) respond(400, ['success'=>false,'error'=>'fooditem_id requ
 // 允许值（枚举）
 $ALLOWED_CATEGORIES = ['Produce','Protein','Dairy & Bakery','Grains & Pantry','Snacks & Beverages'];
 $ALLOWED_LOCATIONS  = ['Fridge','Freezer','Pantry','Countertop'];
-$ALLOWED_STATUS     = ['used','available','expired'];
+$ALLOWED_STATUS     = ['used','available','expired','donation'];
 
 // 校验
 $errs=[];
@@ -42,7 +42,7 @@ if ($food_name==='')                                $errs[]='food_name required'
 if (!is_int($quantity) || $quantity < 0)            $errs[]='quantity invalid';
 if (!in_array($category, $ALLOWED_CATEGORIES, true))$errs[]='category invalid';
 if ($expiry_date==='')                              $errs[]='expiry_date required';
-if (!in_array($status, $ALLOWED_STATUS, true))      $errs[]='status invalid (used/reserved/expired)';
+if (!in_array($status, $ALLOWED_STATUS, true))      $errs[]='status invalid (used/available/expired/donation)';
 if (!in_array($storage_location, $ALLOWED_LOCATIONS, true)) $errs[]='storage_location invalid';
 if ($errs) respond(400, ['success'=>false,'error'=>implode('; ', $errs)]);
 

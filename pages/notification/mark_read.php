@@ -4,11 +4,16 @@ header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../../config.php';
 session_start();
 
+$userId = $_SESSION['user_id'] ?? $_SESSION['id'] ?? null;
+if (!$userId) {
+  http_response_code(401);
+  echo json_encode(['ok'=>false,'error'=>'unauthorized'], JSON_UNESCAPED_UNICODE);
+  exit;
+}
+
 try {
   $id = (int)($_POST['id'] ?? 0);
   if ($id <= 0) throw new Exception('invalid id');
-
-  $userId = $_SESSION['user_id'] ?? $_SESSION['id'] ?? 1;
 
   $stmt = $pdo->prepare(
     "UPDATE notification SET status='seen'

@@ -12,14 +12,24 @@ if (!$userId) {
 }
 
 try {
-  $stmt = $pdo->prepare(
-    "UPDATE notification SET status='seen'
-     WHERE user_id=:uid AND status='unread'"
-  );
-  $stmt->execute([':uid'=>$userId]);
+  if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['ok'=>false,'error'=>'method not allowed'], JSON_UNESCAPED_UNICODE);
+    exit;
+  }
 
-  echo json_encode(['ok'=>true], JSON_UNESCAPED_UNICODE);
+  $id = (int)($_POST['id'] ?? 0);
+  if ($id <= 0) throw new Exception('invalid id');
+
+  $stmt = $pdo->prepare(
+    "DELETE FROM notification WHERE notification_id = :id AND user_id = :uid"
+  );
+  $stmt->execute([':id'=>$id, ':uid'=>$userId]);
+  $deleted = $stmt->rowCount();
+
+  echo json_encode(['ok'=>true, 'deleted'=>$deleted], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
   http_response_code(500);
   echo json_encode(['ok'=>false,'error'=>$e->getMessage()], JSON_UNESCAPED_UNICODE);
 }
+

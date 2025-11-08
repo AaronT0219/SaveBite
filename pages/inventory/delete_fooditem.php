@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../../config.php';
 if (session_status() !== PHP_SESSION_ACTIVE) session_start();
@@ -22,14 +22,14 @@ $uid = (int)($_SESSION['user_id'] ?? $_SESSION['id'] ?? 0);
 if ($uid <= 0) respond(401, ['success'=>false,'error'=>'not logged in']);
 
 try {
-  // 先校验归属
+  // 校验归属
   $own = $pdo->prepare("SELECT user_id FROM fooditem WHERE foodItem_id = ?");
   $own->execute([$id]);
   $owner = $own->fetchColumn();
   if ($owner === false) respond(404, ['success'=>false,'error'=>'fooditem not found']);
   if ((int)$owner !== $uid) respond(403, ['success'=>false,'error'=>'permission denied']);
 
-  // 删除
+  // 简单删除（不做额外级联）
   $stmt = $pdo->prepare("DELETE FROM fooditem WHERE foodItem_id = ?");
   $stmt->execute([$id]);
   respond(200, ['success'=>true, 'deleted'=>true, 'fooditem_id'=>$id]);

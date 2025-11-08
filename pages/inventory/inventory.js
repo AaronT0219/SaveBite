@@ -115,6 +115,12 @@
       stSel.value = ['used','available','expired'].includes(v) ? v : 'available';
     }
 
+    if (stSel && (card.dataset.donated === '1' ||
+                  String(card.__orig.status || '').toLowerCase() === 'donation')) {
+      stSel.disabled = true;
+      stSel.title = 'This item is already donated (status=donation).';
+    }
+
 
     const loc = pickCell(card, 'storage_location');
     setHTML(loc, `
@@ -291,6 +297,10 @@
         donateBtn.style.opacity = '0.65';
         donateBtn.style.cursor = 'not-allowed';
       }
+
+      const stCell = card.querySelector('.value[data-field="status"]');
+      if (stCell) stCell.textContent = 'donated';
+      card.dataset.donated = '1';
 
       alert('Added to Donation List.');
     }catch(e){
