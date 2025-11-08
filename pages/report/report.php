@@ -6,7 +6,7 @@
         <h1 class="fw-bold">Track and Report</h1>
     </div>
 
-        <div class="mt-4 px-4">
+    <div class="mt-4 px-4">
         <div class="mb-5">
             <h3 class="fw-bold mb-3">Progress Indicator</h3>
             <div class="progress" style="height: 30px;">
