@@ -22,7 +22,7 @@
 }
 
 /* add meal-btn CSS */
-.addMeal-btn, .filter-btn, #mealConfirm-btn, #quantityConfirm, #missingConfirm, #eventEdit-btn {
+.addMeal-btn, .filter-btn, #mealConfirm-btn, #quantityConfirm, #missingConfirm, #eventEdit-btn, #eventEditConfirm {
     --bs-btn-bg: #CCD5AE !important;
     --bs-btn-border-color: #CCD5AE;
     --bs-btn-hover-bg: rgb(182, 187, 143);
@@ -32,7 +32,7 @@
     transition: all 0.1s ease-in-out !important;
 }
 
-.addMeal-btn:active, .filter-btn:active, #missingCancel:active, #missingConfirm:active, #eventDlt-btn:active, #eventEdit-btn:active {
+.addMeal-btn:active, .filter-btn:active, #missingCancel:active, #missingConfirm:active, #eventDlt-btn:active, #eventEdit-btn:active, #eventEditConfirm:active {
     transform: scale(0.9);
 }
 
@@ -190,6 +190,9 @@
 .fc-toolbar-title {
     font-weight: bold !important;
     font-size: 2em !important;
+    box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.616);
+    border-radius: 5px;
+    padding: 5px 10px;
 }
 
 /* Optional: glowing effect */
@@ -222,6 +225,12 @@
 }
 .fc-more-popover .fc-event {
   font-size: 0.85rem;
+}
+.fc-event {
+    transition: all 0.1s ease-in-out;
+}
+.fc-event:active {
+    transform: scale(0.9);
 }
 .fc-more-link {
     font-weight: bolder;

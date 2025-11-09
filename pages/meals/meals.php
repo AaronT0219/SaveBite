@@ -189,6 +189,67 @@
             </div>
         </div>
 
+        <!-- Event Edit Modal -->
+        <div class="modal fade" id="eventEditModal" tabindex="-1" aria-labelledby="eventEditModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <div class="modal-title fs-4 fw-bolder" id="eventEditModalLabel">Edit Meal Plan</div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <form id="eventEditForm">
+                        <div class="modal-body">
+                            <div class="row g-3 fs-5">
+                                <!-- Meal Title -->
+                                <div class="col-md-6">
+                                    <label for="eventEditTitle" class="form-label fw-medium ms-2">Meal Title</label>
+                                    <input type="text" id="eventEditTitle" class="form-control" required />
+                                    <div class="invalid-feedback">Please enter a title</div>
+                                </div>
+
+                                <!-- Meal Slot -->
+                                <div class="col-md-6">
+                                    <label for="eventEditSlot" class="form-label fw-medium ms-2">Meal Slot</label>
+                                    <select id="eventEditSlot" class="form-select">
+                                        <option value="breakfast">Breakfast</option>
+                                        <option value="lunch">Lunch</option>
+                                        <option value="dinner">Dinner</option>
+                                        <option value="snack">Snack</option>
+                                    </select>
+                                    <div class="invalid-feedback">Please choose a meal slot</div>
+                                </div>
+
+                                <!-- Date -->
+                                <div class="col-md-6">
+                                    <label for="eventEditDate" class="form-label fw-medium ms-2">Date</label>
+                                    <input type="date" id="eventEditDate" class="form-control" required />
+                                    <div class="invalid-feedback">Please select a date</div>
+                                </div>
+
+                                <!-- Description -->
+                                <div class="col-12">
+                                    <label for="eventEditDesc" class="form-label fw-medium ms-2">Description</label>
+                                    <textarea id="eventEditDesc" class="form-control" rows="3" placeholder="Enter description..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer justify-content-center gap-3">
+                            <button type="button" class="btn btn-secondary fw-medium fs-5 px-3" data-bs-dismiss="modal">
+                                Cancel
+                            </button>
+                            <button type="button" id="eventEditConfirm" class="btn text-dark fw-medium fs-5 px-3 d-flex align-items-center">
+                                <span data-lucide="save" class="me-2"></span> Save Changes
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
         <!-- Toast Notification -->
         <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;">
             <div id="mealToast" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true">

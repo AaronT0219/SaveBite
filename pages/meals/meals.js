@@ -24,7 +24,7 @@
                 }
             },
             initialView: "dayGridMonth",
-            editable: true,
+            editable: false,
             eventDisplay: "block",
             eventTimeFormat: {
                 hour: "2-digit",
@@ -44,7 +44,7 @@
                 // Create custom event-content's inner HTML
                 let innerHtml = `
                     <div class="fc-event-time text-muted small">${mealSlot || ''}</div>
-                    <div class="fc-event-title text-dark fw-bolder">${arg.event.title}</div>
+                    <div class="fc-event-title text-dark fw-bolder text-truncate">${arg.event.title}</div>
                 `;
 
                 if (desc) {
@@ -59,7 +59,7 @@
                 const event = info.event;
                 const meal = event.extendedProps;
 
-                const modal = new bootstrap.Modal(document.getElementById('eventModal'));
+                const eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
                 const modalTitle = document.getElementById('eventTitle');
                 const modalDesc = document.getElementById('eventDesc');
                 const modalIngredients = document.getElementById('eventIngredients');
@@ -73,7 +73,7 @@
                 `).join('')
                 : '<li>No ingredients</li>';
 
-                modal.show();
+                eventModal.show();
 
                 // close popover if it's opened (with animation)
                 const popover = document.querySelector('.fc-popover');
@@ -83,6 +83,82 @@
                         setTimeout(() => popover.remove(), 200);
                     }, 100);
                 }
+
+                // edit & delete button event listenr
+                const editBtn = document.getElementById('eventEdit-btn');
+                const dltBtn = document.getElementById('eventDlt-btn');
+
+                editBtn.onclick = () => {
+                    const editModal = new bootstrap.Modal(document.getElementById('eventEditModal'));
+                    document.getElementById('eventEditTitle').value = event.title;
+                    document.getElementById('eventEditDate').value = event.startStr;
+                    document.getElementById('eventEditDesc').value = event.extendedProps.description;
+                    document.getElementById('eventEditSlot').value = event.extendedProps.mealSlot;
+
+                    eventModal.hide();
+                    editModal.show();
+
+                    document.getElementById('eventEditConfirm').onclick = () => {
+                        const form = document.getElementById('eventEditForm');
+                        
+                        if (!form.checkValidity()) {
+                            form.classList.add('was-validated');
+                            return;
+                        }
+
+                        const updated = {
+                            meal_id: event.id,
+                            title: document.getElementById('eventEditTitle').value,
+                            date: document.getElementById('eventEditDate').value,
+                            desc: document.getElementById('eventEditDesc').value,
+                            mealSlot: document.getElementById('eventEditSlot').value
+                        };
+
+                        fetch('../pages/meals/update_meal.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(updated)
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (!data.success) {
+                                showToast("Update failed: " + data.message, "danger");
+                                return;
+                            }
+
+                            editModal.hide();
+                            showToast("Meal updated successfully!", "success");
+                            fetchAndRender_CalendarEvents(calendar);
+                        });
+
+                        form.classList.remove('was-validated');
+                    };
+                };
+
+                dltBtn.onclick = () => {
+                    if (!confirm("Are you sure you want to delete this meal plan?")) return;
+
+                    fetch('../pages/meals/delete_meal.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ meal_id: event.id })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (!data.success) {
+                            showToast(`Delete failed: ${data.message}`, "danger");
+                            return;
+                        }
+
+                        eventModal.hide();
+                        showToast("Meal plan deleted successfully!", "success");
+
+                        // Refresh UI
+                        fetchFoodItemsAndInit();
+                        fetchAndRender_CalendarEvents(calendar);
+                    })
+                    .catch(() => showToast("Error deleting meal plan.", "danger"));
+                };
             }
         });
 
@@ -545,6 +621,23 @@
         renderSelectedCard();
     }
 
+    function showToast(message, type = "info") {
+        const toastContainer = document.querySelector(".toast-container")
+
+        const toastEl = document.createElement("div");
+        toastEl.className = `toast align-items-center text-bg-${type} border-0 show`;
+        toastEl.role = "alert";
+        toastEl.innerHTML = `
+            <div class="d-flex px-3">
+                <div class="toast-body fs-6 fw-medium">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        toastContainer.appendChild(toastEl);
+
+        setTimeout(() => toastEl.remove(), 5000);
+    }
+
     // ---------- COMBINED UPDATE ----------
     function UpdateView() {
         renderTags();
@@ -606,7 +699,7 @@
                 breakfast: '#e9edc9',
                 lunch: '#ccd5ae',
                 dinner: '#d4a373',
-                snack: '#ddae80ff'
+                snack: '#d6b18bff'
             };
 
             const events = data.data;
