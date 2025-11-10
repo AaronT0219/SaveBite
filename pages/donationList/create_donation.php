@@ -75,7 +75,7 @@ try {
 
   $pdo->beginTransaction();
 
-  // 1) 新建 donation（可先留空的字段置空）
+  // 1) 新建 donation
   $insDon = $pdo->prepare("
     INSERT INTO donation (donor_user_id, status, pickup_location, availability, contact, donation_date, description, category)
     VALUES (:uid, :status, '', '', '', CURDATE(), NULL, :cat)
@@ -87,9 +87,13 @@ try {
   ]);
   $donationId = (int)$pdo->lastInsertId();
 
-  // 2) 建立映射（本方案不删除 fooditem、不改其 status）
+  // 2) 建立映射
   $insMap = $pdo->prepare("INSERT INTO donation_fooditem (donation_id, fooditem_id, quantity) VALUES (?, ?, ?)");
   $insMap->execute([$donationId, $foodItemId, $finalQty]);
+
+  // 3) 同步库存状态为 donation（用于 inventory 显示 donation）
+  $updFi = $pdo->prepare("UPDATE fooditem SET status = 'donation' WHERE foodItem_id = ?");
+  $updFi->execute([$foodItemId]);
 
   $pdo->commit();
   respond(200, ['success'=>true, 'donation_id'=>$donationId, 'quantity'=>$finalQty]);
