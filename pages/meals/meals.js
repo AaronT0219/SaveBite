@@ -6,7 +6,7 @@
             headerToolbar: {
                 right: 'prev,next today',
                 center: 'title',
-                left: 'dayGridMonth,timeGridWeek'
+                left: ''
             },
             customButtons: {
                 today: {
@@ -131,6 +131,7 @@
                             fetchAndRender_CalendarEvents(calendar);
                         });
 
+                        form.reset();
                         form.classList.remove('was-validated');
                     };
                 };
@@ -210,47 +211,89 @@
                 const desc = document.getElementById('mealDescription').value.trim();
                 const mealSlot = document.getElementById('mealSlot').value;
 
-                fetch('../pages/meals/post_meal.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ selectedCards, title, desc, date, mealSlot })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (!data.success) {
-                        alert("Failed to store meal.");
-                        return;
-                    }
-                    
-                    //update latest fooditem's details
-                    fetchFoodItemsAndInit();
-
-                    // refresh calendar events
-                    fetchAndRender_CalendarEvents(calendar);
-
-                    // Show success toast
-                    const toastEl = document.getElementById('mealToast');
-                    const toast = new bootstrap.Toast(toastEl);
-                    toast.show();
-
-                    // Reset Add Meal Modal
-                    form.reset();
-                    form.classList.remove('was-validated');
-                    selectedCards = [];
-                    renderSelectedCard();
-                    const alertMsg = document.querySelector('.selectedCards-alert');
-                    if (alertMsg) alertMsg.remove();
-
-                    // Close modal
-                    addMealModal.hide();
-                })
-                .catch(() => {
-                    alert('Error: Failed to create meal plan.');
+                // EXPIRY CHECK SECTION
+                const mealDate = new Date(date);
+                const expiredItems = selectedCards.filter(card => {
+                    if (!card.item.expiry) return false;
+                    return new Date(card.item.expiry) < mealDate;
                 });
+
+                if (expiredItems.length) {
+                    // show modal before proceeding
+                    showExpiryWarningModal(expiredItems, () => {
+                        // Proceed after confirmation
+                        submitMealPlan(selectedCards, title, desc, date, mealSlot, form, addMealModal, calendar);
+                    });
+                    return;
+                }
+
+                // No expiry conflict — proceed directly
+                submitMealPlan(selectedCards, title, desc, date, mealSlot, form, addMealModal, calendar);
+
             } else {
                 form.classList.add('was-validated');
             }
         });
+    }
+
+    function submitMealPlan(selectedCards, title, desc, date, mealSlot, form, addMealModal, calendar) {
+        fetch('../pages/meals/post_meal.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ selectedCards, title, desc, date, mealSlot })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) {
+                alert("Failed to store meal.");
+                return;
+            }
+
+            // update food items and calendar
+            fetchFoodItemsAndInit();
+            fetchAndRender_CalendarEvents(calendar);
+
+            // show success toast
+            const toastEl = document.getElementById('mealToast');
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+
+            // reset form and modal
+            form.reset();
+            form.classList.remove('was-validated');
+            selectedCards = [];
+            renderSelectedCard();
+            const alertMsg = document.querySelector('.selectedCards-alert');
+            if (alertMsg) alertMsg.remove();
+
+            addMealModal.hide();
+        })
+        .catch(() => {
+            alert('Error: Failed to create meal plan.');
+        });
+    }
+
+    function showExpiryWarningModal(expiredItems, onProceed) {
+        const modalEl = document.getElementById('expiryWarningModal');
+        const listEl = document.getElementById('expiryWarningList');
+        const proceedBtn = document.getElementById('expiryProceedBtn');
+
+        // populate list
+        listEl.innerHTML = expiredItems
+            .map(card => `<li class="list-group-item d-flex justify-content-between fw-medium">
+                            <span>${card.item.name}</span>
+                            <small class="text-danger">Expires ${card.item.expiry}</small>
+                        </li>`)
+            .join('');
+
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+
+        // handle proceed
+        proceedBtn.onclick = () => {
+            modal.hide();
+            onProceed();
+        };
     }
 
     // ===== FILTER + CARD RENDERING MODULE =====
@@ -389,7 +432,7 @@
 
                 // prevent duplicates
                 if (selectedCards.some(card => card.item.foodItem_id === item.foodItem_id)) {
-                    alert(`${item.name} has already been added.`);
+                    showToast(`${item.name} has already been added.`, 'danger');
                     return;
                 }
 
@@ -567,7 +610,7 @@
                     }
 
                     if (!matchedItems.length) {
-                        alert("None of the ingredients are available in your inventory");
+                        showToast("None of the ingredients are available in your inventory", 'danger');
                         return;
                     }
 

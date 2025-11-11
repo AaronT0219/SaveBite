@@ -28,14 +28,14 @@ if(isset($_SESSION['id'])) {
         $result = mysqli_query($conn, $sql);
 
         if (mysqli_num_rows($result) == 0) {
-            $errors[] = "$name not found in your inventory";
+            $errors[] = "<strong>$name</strong> not found in your inventory";
             continue;
         }
 
         $row = mysqli_fetch_assoc($result);
 
         if ($row['quantity'] < $neededQty) {
-            $errors[] = "$name only has {$row['quantity']} but needs $neededQty";
+            $errors[] = "<strong>$name</strong> only has <strong>{$row['quantity']}</strong> but needs <strong>$neededQty</strong>";
             continue;
         }
 

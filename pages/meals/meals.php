@@ -56,11 +56,13 @@
                                     </div>
                                 </div>
 
-                                <!-- Active Filter Container -->
-                                <div class="w-75 d-flex flex-wrap gap-4 px-4 mt-2 mb-3" id="filterTagContainer"></div>
-
-                                <!-- Food Item Container -->
-                                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 overflow-y-auto" id="foodCardContainer" style="max-height: 330px"></div>
+                                <div class="overflow-y-auto" id="currentInvContainer" style="height: 350px">
+                                    <!-- Active Filter Container -->
+                                    <div class="w-75 d-flex flex-wrap gap-4 px-4 mt-2 mb-3" id="filterTagContainer"></div>
+    
+                                    <!-- Food Item Container -->
+                                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3" id="foodCardContainer"></div>
+                                </div>
                             </div>
 
                             <!-- Meal Form -->
@@ -146,7 +148,7 @@
                 <div class="modal-content">
 
                     <div class="modal-header">
-                        <h5 class="modal-title fw-bold">Missing Ingredients</h5>
+                        <h5 class="modal-title fw-bolder fs-5">Missing Ingredients</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
 
@@ -154,9 +156,9 @@
                         <p id="missingIngredientsMsg"></p>
                         <p>Do you want to continue and add the remaining ingredients?</p>
 
-                        <div class="d-flex gap-3">
-                            <button type="button" class="btn btn-secondary flex-fill" id="missingCancel" data-bs-dismiss="modal">No</button>
-                            <button type="button" class="btn flex-fill" id="missingConfirm">Yes</button>
+                        <div class="modal-footer border-0 gap-2">
+                            <button type="button" class="btn btn-secondary flex-fill fw-medium" id="missingCancel" data-bs-dismiss="modal">No</button>
+                            <button type="button" class="btn flex-fill fw-medium" id="missingConfirm">Yes</button>
                         </div>
                     </div>
 
@@ -246,6 +248,29 @@
                         </div>
                     </form>
 
+                </div>
+            </div>
+        </div>
+
+        <!-- Expiry Warning Modal -->
+        <div class="modal fade" id="expiryWarningModal" tabindex="-1" aria-labelledby="expiryWarningLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bolder fs-4" id="expiryWarningLabel">Ingredient Expiry Warning</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="fs-6 mb-2">
+                        The following ingredients will expire <strong>before the planned meal date</strong>:
+                        </p>
+                        <ul id="expiryWarningList" class="list-group mb-3"></ul>
+                        <p class="text-muted mb-0">Do you still want to proceed with creating this meal plan?</p>
+                    </div>
+                    <div class="modal-footer border-0 justify-content-center gap-2">
+                        <button type="button" id="expiryCancelBtn" class="btn btn-secondary fw-medium flex-fill" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" id="expiryProceedBtn" class="btn fw-medium flex-fill">Proceed Anyway</button>
+                    </div>
                 </div>
             </div>
         </div>
