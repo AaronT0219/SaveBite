@@ -1,0 +1,291 @@
+<head>
+    <link rel="stylesheet" href="../pages/meal/meal.css">
+</head>
+
+<body>
+    <div class="container-fluid p-4" id="PWM">
+        <!-- Top Nav -->
+        <div class="d-flex justify-content-between align-items-center mb-2 py-3 px-4 bg-light rounded shadow">
+            <h1 class="fw-bold">Plan Weekly Meals</h1>
+
+            <button class="btn btn-lg fw-medium addMeal-btn" data-bs-target="#addMealModal"  data-bs-toggle="modal">Add Meal</button>
+        </div>
+
+        <!-- Calendar -->
+        <div class="w-100 h-100 px-3 mt-5" id="calendar"></div>
+
+        <!-- Add Meal Modal -->
+        <div class="modal fade" id="addMealModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="addMealModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-fullscreen">
+                <div class="modal-content">
+                    <div class="modal-body fs-4 fw-medium d-flex flex-column p-2">
+                        <div class="w-100 text-end">
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+
+                        <div class="row row-cols-2 gy-2 gx-4 mx-2 mb-3">
+                            <!-- Current Inventory -->
+                            <div class="col">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="fw-medium fs-3 fw-bolder">Current Inventory</div>
+
+                                    <div class="dropdown">
+                                        <button class="btn btn-lg dropdown-toggle px-3 filter-btn" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">Filter</button>
+                                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterDropdown" id="filterMenu">
+                                            <li class="dropdown-submenu">
+                                                <span id="categoryDropdown" class="dropdown-item disabled">Categories</span>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item filter-option" data-filter="category" data-value="Produce" href="#">Produce</a></li>
+                                                    <li><a class="dropdown-item filter-option" data-filter="category" data-value="Protein" href="#">Protein</a></li>
+                                                    <li><a class="dropdown-item filter-option" data-filter="category" data-value="Dairy & Bakery" href="#">Dairy & Bakery</a></li>
+                                                    <li><a class="dropdown-item filter-option" data-filter="category" data-value="Grains & Pantry" href="#">Grains & Pantry</a></li>
+                                                    <li><a class="dropdown-item filter-option" data-filter="category" data-value="Snacks & Beverages" href="#">Snacks & Beverages</a></li>
+                                                </ul>
+                                            </li>
+                                            <li><a class="dropdown-item filter-option" data-filter="expiry" href="#">Expiry Date (Soonest to Latest)</a></li>
+                                            <li class="dropdown-submenu">
+                                                <span id="storageDropdown" class="dropdown-item disabled">Storage Type</span>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item filter-option" data-filter="storage" data-value="Fridge" href="#">Fridge</a></li>
+                                                    <li><a class="dropdown-item filter-option" data-filter="storage" data-value="Freezer" href="#">Freezer</a></li>
+                                                    <li><a class="dropdown-item filter-option" data-filter="storage" data-value="Pantry" href="#">Pantry</a></li>
+                                                    <li><a class="dropdown-item filter-option" data-filter="storage" data-value="Countertop" href="#">Countertop</a></li>
+                                                </ul>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="overflow-y-auto" id="currentInvContainer" style="height: 350px">
+                                    <!-- Active Filter Container -->
+                                    <div class="w-75 d-flex flex-wrap gap-4 px-4 mt-2 mb-3" id="filterTagContainer"></div>
+    
+                                    <!-- Food Item Container -->
+                                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3" id="foodCardContainer"></div>
+                                </div>
+                            </div>
+
+                            <!-- Meal Form -->
+                            <div class="col">
+                                <form id="mealForm" class="input-fields h-100 d-flex flex-column gap-4 overflow-y-auto px-1 pb-1" style="max-height: 400px">
+                                    <div class="flex-fill">
+                                        <label for="mealTitle" class="form-label">Meal Name</label>
+                                        <input type="text" class="form-control fs-5" id="mealTitle" placeholder="e.g. Chicken Salad" required>
+                                    </div>
+        
+                                    <div class="flex-fill">
+                                        <label for="mealDescription" class="form-label">Description</label>
+                                        <textarea class="form-control fs-5" id="mealDescription" rows="3" placeholder="Optional" style="height: 150px"></textarea>
+                                    </div>
+
+                                    <div class="flex-fill d-flex align-items-center gap-3">
+                                        <div class="flex-fill">
+                                            <select id="mealSlot" class="form-select fw-medium fs-5" aria-label="Meal slot select">
+                                                <option selected value="breakfast" class="fw-medium">Breakfast</option>
+                                                <option value="lunch" class="fw-medium">Lunch</option>
+                                                <option value="dinner" class="fw-medium">Dinner</option>
+                                                <option value="snacks" class="fw-medium">Snacks</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="d-flex gap-2 align-items-center flex-fill">
+                                            <label for="mealDate" class="fs-5">Date</label>
+                                            <input type="date" class="form-control fs-5" id="mealDate" required>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Suggested Recipe -->
+                            <div class="col">
+                                <div class="fw-medium fs-3 fw-bolder">Suggested Recipe</div>
+
+                                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 mt-auto" id="recipeCardContainer"></div>
+                            </div>
+
+                            <!-- Selected Food Item -->
+                            <div class="col">
+                                <div class="fw-medium fs-3 fw-bolder mb-3">Selected Ingredients</div>
+
+                                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3" id="selectedCardContainer"></div>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn btn-primary w-100 fs-5 fw-medium text-dark" id="mealConfirm-btn">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quantity Input Modal -->
+        <div class="modal fade" id="quantityModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <div class="modal-title fs-5 fw-bold">Enter Quantity</div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <form id="quantityForm" novalidate>
+                            <input type="number" id="quantityInput" class="form-control" min="1" value="1">
+                            <div class="invalid-feedback">
+                                Please enter a valid quantity
+                            </div>
+    
+                            <button type="button" id="quantityConfirm" class="btn btn-primary fw-medium text-dark w-100 mt-3">Confirm</button>
+                        </form>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+
+        <!-- Missing Ingredients Modal -->
+        <div class="modal fade" id="missingIngredientsModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bolder fs-5">Missing Ingredients</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <p id="missingIngredientsMsg"></p>
+                        <p>Do you want to continue and add the remaining ingredients?</p>
+
+                        <div class="modal-footer border-0 gap-2">
+                            <button type="button" class="btn btn-secondary flex-fill fw-medium" id="missingCancel" data-bs-dismiss="modal">No</button>
+                            <button type="button" class="btn flex-fill fw-medium" id="missingConfirm">Yes</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Event Modal -->
+        <div class="modal fade" id="eventModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    
+                    <div class="modal-header">
+                        <h5 id="eventTitle" class="modal-title fw-bolder fs-4"></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <p id="eventDesc" class="mb-2"></p>
+                        <p class="fs-5 fw-medium mb-2">Ingredients:</p>
+                        <table id="eventIngredients" class="table table-striped mb-0"></table>
+                    </div>
+
+                    <div class="modal-footer justify-content-center gap-3">
+                        <button type="button" id="eventEdit-btn" class="btn fw-medium fs-5 d-flex justify-content-center align-items-center px-4"><span class="me-2" data-lucide="pencil"></span>Edit</button>
+                        <button type="button" id="eventDlt-btn" class="btn btn-danger fw-medium fs-5 d-flex justify-content-center align-items-center px-4"><span class="me-2" data-lucide="x"></span>Delete</button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Event Edit Modal -->
+        <div class="modal fade" id="eventEditModal" tabindex="-1" aria-labelledby="eventEditModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <div class="modal-title fs-4 fw-bolder" id="eventEditModalLabel">Edit Meal Plan</div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <form id="eventEditForm">
+                        <div class="modal-body">
+                            <div class="row g-3 fs-5">
+                                <!-- Meal Title -->
+                                <div class="col-md-6">
+                                    <label for="eventEditTitle" class="form-label fw-medium ms-2">Meal Title</label>
+                                    <input type="text" id="eventEditTitle" class="form-control" required />
+                                    <div class="invalid-feedback">Please enter a title</div>
+                                </div>
+
+                                <!-- Meal Slot -->
+                                <div class="col-md-6">
+                                    <label for="eventEditSlot" class="form-label fw-medium ms-2">Meal Slot</label>
+                                    <select id="eventEditSlot" class="form-select">
+                                        <option value="breakfast">Breakfast</option>
+                                        <option value="lunch">Lunch</option>
+                                        <option value="dinner">Dinner</option>
+                                        <option value="snack">Snack</option>
+                                    </select>
+                                    <div class="invalid-feedback">Please choose a meal slot</div>
+                                </div>
+
+                                <!-- Date -->
+                                <div class="col-md-6">
+                                    <label for="eventEditDate" class="form-label fw-medium ms-2">Date</label>
+                                    <input type="date" id="eventEditDate" class="form-control" required />
+                                    <div class="invalid-feedback">Please select a date</div>
+                                </div>
+
+                                <!-- Description -->
+                                <div class="col-12">
+                                    <label for="eventEditDesc" class="form-label fw-medium ms-2">Description</label>
+                                    <textarea id="eventEditDesc" class="form-control" rows="3" placeholder="Enter description..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer justify-content-center gap-3">
+                            <button type="button" class="btn btn-secondary fw-medium fs-5 px-3" data-bs-dismiss="modal">
+                                Cancel
+                            </button>
+                            <button type="button" id="eventEditConfirm" class="btn text-dark fw-medium fs-5 px-3 d-flex align-items-center">
+                                <span data-lucide="save" class="me-2"></span> Save Changes
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Expiry Warning Modal -->
+        <div class="modal fade" id="expiryWarningModal" tabindex="-1" aria-labelledby="expiryWarningLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bolder fs-4" id="expiryWarningLabel">Ingredient Expiry Warning</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="fs-6 mb-2">
+                        The following ingredients will expire <strong>before the planned meal date</strong>:
+                        </p>
+                        <ul id="expiryWarningList" class="list-group mb-3"></ul>
+                        <p class="text-muted mb-0">Do you still want to proceed with creating this meal plan?</p>
+                    </div>
+                    <div class="modal-footer border-0 justify-content-center gap-2">
+                        <button type="button" id="expiryCancelBtn" class="btn btn-secondary fw-medium flex-fill" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" id="expiryProceedBtn" class="btn fw-medium flex-fill">Proceed Anyway</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;">
+            <div id="mealToast" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <strong class="d-flex align-items-center gap-2 me-auto"><span data-lucide="clock"></span> Reminder set</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body fw-medium">
+                    Meal plan reminder has been set!
+                </div>
+            </div>
+        </div>
+     </div>
+</body>
