@@ -1,5 +1,5 @@
 <head>
-    <link rel="stylesheet" href="../pages/meals/meals.css">
+    <link rel="stylesheet" href="../pages/meal/meal.css">
 </head>
 
 <body>

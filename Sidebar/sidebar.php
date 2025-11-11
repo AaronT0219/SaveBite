@@ -17,7 +17,7 @@
                 <i data-lucide="search" class="me-3 icon"></i>
                 <span class="nav-text">Browse Food Items</span>
             </a>
-            <a class="nav-link" data-page="meals" data-tooltip="Plan Weekly Meals">
+            <a class="nav-link" data-page="meal" data-tooltip="Plan Weekly Meals">
                 <i data-lucide="calendar" class="me-3 icon"></i>
                 <span class="nav-text">Plan Weekly Meals</span>
             </a>

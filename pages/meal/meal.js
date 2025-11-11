@@ -114,7 +114,7 @@
                             mealSlot: document.getElementById('eventEditSlot').value
                         };
 
-                        fetch('../pages/meals/update_meal.php', {
+                        fetch('../pages/meal/update_meal.php', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(updated)
@@ -139,7 +139,7 @@
                 dltBtn.onclick = () => {
                     if (!confirm("Are you sure you want to delete this meal plan?")) return;
 
-                    fetch('../pages/meals/delete_meal.php', {
+                    fetch('../pages/meal/delete_meal.php', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ meal_id: event.id })
@@ -237,7 +237,7 @@
     }
 
     function submitMealPlan(selectedCards, title, desc, date, mealSlot, form, addMealModal, calendar) {
-        fetch('../pages/meals/post_meal.php', {
+        fetch('../pages/meal/post_meal.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ selectedCards, title, desc, date, mealSlot })
@@ -592,7 +592,7 @@
             card.addEventListener('click', function () {
                 const recipe = recipes[idx];
                 
-                fetch("../pages/meals/checkIngredients.php", {
+                fetch("../pages/meal/checkIngredients.php", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
@@ -711,7 +711,7 @@
     }
 
     function fetchFoodItemsAndInit() {
-        fetch('../pages/meals/get_available_fooditems.php')
+        fetch('../pages/meal/get_available_fooditems.php')
         .then(response => response.json())
         .then(data => {
             if (Array.isArray(data)) {
@@ -727,7 +727,7 @@
     }
 
     function fetchAndRender_CalendarEvents(calendar) {
-        fetch('../pages/meals/get_calendar_events.php')
+        fetch('../pages/meal/get_calendar_events.php')
         .then(response => response.json())
         .then(data => {
             if (!data.success) {
@@ -764,11 +764,11 @@
         });
     }
 
-    function initMealsPage() {
+    function initMealPage() {
         initializeCalendar();
         renderSuggestedRecipe(recipes);
         fetchFoodItemsAndInit();
     }
 
-    window.initMealsPage = initMealsPage;
+    window.initMealPage = initMealPage;
 })();
