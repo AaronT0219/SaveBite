@@ -50,7 +50,6 @@
                 <select class="form-select form-select-lg" id="chartFilter" style="min-width: 200px;">
                     <option value="yearly">Yearly</option>
                     <option value="monthly" selected>Monthly</option>
-                    <option value="weekly">Weekly</option>
                     <option value="category">By Category</option>
                     <option value="dateRange">Date Range</option>
                 </select>
@@ -90,14 +89,6 @@
                             <h5 class="text-center mb-3">Monthly Overview</h5>
                             <canvas id="monthlyChart"></canvas>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Weekly Chart -->
-                <div class="col-12 chart-section" id="weeklySection" style="display: none;">
-                    <div class="chart-wrapper">
-                        <h5 class="text-center mb-3">Weekly Overview</h5>
-                        <canvas id="weeklyChart"></canvas>
                     </div>
                 </div>
 

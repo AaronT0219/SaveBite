@@ -1,20 +1,50 @@
 // Initialize variables
-let yearlyChart, monthlyChart, weeklyChart, categoryBarChart, dateRangeChart;
+let yearlyChart, monthlyChart, categoryBarChart, dateRangeChart;
 let currentFilter = "monthly"; // Default filter
+
+// Sample data for demonstration
+const sampleData = {
+    monthly: {
+        labels: ["June", "July", "August", "September", "October", "November"],
+        donations: [12, 19, 15, 25, 22, 30],
+        food: [45, 67, 52, 89, 78, 105],
+    },
+    yearly: {
+        labels: ["2020", "2021", "2022", "2023", "2024", "2025"],
+        donations: [45, 78, 92, 134, 156, 189],
+        food: [234, 389, 456, 678, 734, 892],
+    },
+    categories: {
+        labels: [
+            "Produce",
+            "Protein",
+            "Dairy & Bakery",
+            "Grains & Pantry",
+            "Snacks & Beverages",
+        ],
+        data: [85, 62, 48, 73, 39],
+    },
+};
 
 // Global data object to store fetched data
 let reportData = {
-    totalFoodSave: 0,
-    totalDonations: 0,
-    progress: 0,
+    totalFoodSave: 307.5,
+    totalDonations: 123,
+    progress: 65,
     categories: {
-        labels: [],
-        data: [],
+        labels: [
+            "Produce",
+            "Protein",
+            "Dairy & Bakery",
+            "Grains & Pantry",
+            "Snacks & Beverages",
+        ],
+        data: [85, 62, 48, 73, 39],
     },
     timeData: {
-        labels: [],
-        donations: [],
-        quantity: [],
+        labels: ["June", "July", "August", "September", "October", "November"],
+        donations: [12, 19, 15, 25, 22, 30],
+        food: [45, 67, 52, 89, 78, 105],
     },
 };
 
@@ -29,7 +59,7 @@ function initReportPage() {
         script.src = "https://cdn.jsdelivr.net/npm/chart.js";
         script.onload = () => {
             console.log("✅ Chart.js loaded successfully");
-            loadReportData();
+            initializePageContent();
         };
         script.onerror = () => {
             console.error("❌ Failed to load Chart.js");
@@ -37,103 +67,79 @@ function initReportPage() {
         document.head.appendChild(script);
     } else {
         console.log("✅ Chart.js already loaded");
-        loadReportData();
+        initializePageContent();
     }
 }
 
-// Fetch data from database
-async function loadReportData(
-    filter = "monthly",
-    startDate = null,
-    endDate = null
-) {
-    try {
-        console.log("📊 Fetching report data from database...");
+// Load sample data based on filter
+function loadReportData(filter = "monthly", startDate = null, endDate = null) {
+    console.log(`📊 Loading sample data for ${filter} view...`);
 
-        let url = `../pages/report/get_report_data.php?filter=${filter}`;
-        if (startDate && endDate) {
-            url += `&start_date=${startDate}&end_date=${endDate}`;
-        }
-
-        const response = await fetch(url);
-        const result = await response.json();
-
-        if (result.success) {
-            reportData = result.data;
-            console.log("✅ Report data loaded successfully", reportData);
-
-            // Check if charts exist, if not initialize them
-            if (
-                !monthlyChart ||
-                !categoryBarChart ||
-                !yearlyChart ||
-                !weeklyChart ||
-                !dateRangeChart
-            ) {
-                initializePageContent();
-            } else {
-                // Just update existing charts and metrics
-                initializeMetrics();
-                updateCharts();
-                animateProgress();
-            }
-        } else {
-            console.error("❌ Failed to fetch report data:", result.message);
-            // Fall back to empty data
-            reportData = {
-                totalFoodSave: 0,
-                totalDonations: 0,
-                progress: 0,
-                categories: { labels: ["No Data"], data: [0] },
-                timeData: {
-                    labels: ["No Data"],
-                    donations: [0],
-                    quantity: [0],
-                },
+    switch (filter) {
+        case "yearly":
+            reportData.timeData = {
+                labels: sampleData.yearly.labels,
+                donations: sampleData.yearly.donations,
+                food: sampleData.yearly.food,
             };
+            break;
+        case "category":
+            reportData.timeData = {
+                labels: [],
+                donations: [],
+                food: [],
+            };
+            break;
+        case "dateRange":
+            if (startDate && endDate) {
+                // Generate sample data for date range
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                const days =
+                    Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+                const sampleDays = Math.min(days, 30); // Limit to 30 days for display
 
-            // Check if charts exist, if not initialize them
-            if (
-                !monthlyChart ||
-                !categoryBarChart ||
-                !yearlyChart ||
-                !weeklyChart ||
-                !dateRangeChart
-            ) {
-                initializePageContent();
-            } else {
-                // Just update existing charts and metrics
-                initializeMetrics();
-                updateCharts();
-                animateProgress();
+                reportData.timeData = {
+                    labels: [],
+                    donations: [],
+                    food: [],
+                };
+
+                for (let i = 0; i < sampleDays; i++) {
+                    const date = new Date(start);
+                    date.setDate(date.getDate() + i);
+                    reportData.timeData.labels.push(
+                        date.toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                        })
+                    );
+                    reportData.timeData.donations.push(
+                        Math.floor(Math.random() * 10) + 1
+                    );
+                    reportData.timeData.food.push(
+                        Math.floor(Math.random() * 30) + 10
+                    );
+                }
             }
-        }
-    } catch (error) {
-        console.error("❌ Error fetching report data:", error);
-        // Fall back to empty data
-        reportData = {
-            totalFoodSave: 0,
-            totalDonations: 0,
-            progress: 0,
-            categories: { labels: ["No Data"], data: [0] },
-            timeData: { labels: ["No Data"], donations: [0], quantity: [0] },
-        };
+            break;
+        default: // monthly
+            reportData.timeData = {
+                labels: sampleData.monthly.labels,
+                donations: sampleData.monthly.donations,
+                food: sampleData.monthly.food,
+            };
+            break;
+    }
 
-        // Check if charts exist, if not initialize them
-        if (
-            !monthlyChart ||
-            !categoryBarChart ||
-            !yearlyChart ||
-            !weeklyChart ||
-            !dateRangeChart
-        ) {
-            initializePageContent();
-        } else {
-            // Just update existing charts and metrics
-            initializeMetrics();
-            updateCharts();
-            animateProgress();
-        }
+    // Update charts and metrics
+    if (monthlyChart && categoryBarChart && yearlyChart && dateRangeChart) {
+        initializeMetrics();
+        updateCharts();
+        animateProgress();
+        showChartSection(filter);
+    } else {
+        initializePageContent();
     }
 }
 
@@ -215,7 +221,6 @@ function showChartSection(filter) {
     // Hide all sections
     document.getElementById("yearlySection").style.display = "none";
     document.getElementById("monthlySection").style.display = "none";
-    document.getElementById("weeklySection").style.display = "none";
     document.getElementById("categorySection").style.display = "none";
     document.getElementById("dateRangeSection").style.display = "none";
 
@@ -226,9 +231,6 @@ function showChartSection(filter) {
             break;
         case "monthly":
             document.getElementById("monthlySection").style.display = "block";
-            break;
-        case "weekly":
-            document.getElementById("weeklySection").style.display = "block";
             break;
         case "category":
             document.getElementById("categorySection").style.display = "block";
@@ -296,7 +298,6 @@ function initializeCharts() {
     createMonthlyChart();
     createCategoryBarChart();
     createYearlyChart();
-    createWeeklyChart();
     createDateRangeChart();
 }
 
@@ -313,10 +314,6 @@ function destroyAllCharts() {
     if (yearlyChart) {
         yearlyChart.destroy();
         yearlyChart = null;
-    }
-    if (weeklyChart) {
-        weeklyChart.destroy();
-        weeklyChart = null;
     }
     if (dateRangeChart) {
         dateRangeChart.destroy();
@@ -381,7 +378,7 @@ function createMonthlyChart() {
             labels: reportData.timeData.labels,
             datasets: [
                 {
-                    label: "Total Food Items",
+                    label: "Donations Made",
                     data: reportData.timeData.donations,
                     backgroundColor: "rgba(33, 37, 41, 0.8)",
                     borderColor: "#212529",
@@ -389,8 +386,8 @@ function createMonthlyChart() {
                     yAxisID: "y",
                 },
                 {
-                    label: "Total Quantity",
-                    data: reportData.timeData.quantity,
+                    label: "Food Save",
+                    data: reportData.timeData.food,
                     backgroundColor: "rgba(40, 167, 69, 0.8)",
                     borderColor: "#28a745",
                     borderWidth: 1,
@@ -421,7 +418,7 @@ function createMonthlyChart() {
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: "Food Items Count",
+                        text: "Donations Made",
                     },
                 },
                 y1: {
@@ -434,7 +431,7 @@ function createMonthlyChart() {
                     },
                     title: {
                         display: true,
-                        text: "Total Quantity",
+                        text: "Food Save",
                     },
                 },
             },
@@ -508,7 +505,7 @@ function createYearlyChart() {
             labels: reportData.timeData.labels,
             datasets: [
                 {
-                    label: "Total Food Items",
+                    label: "Donations Made",
                     data: reportData.timeData.donations,
                     backgroundColor: "rgba(33, 37, 41, 0.8)",
                     borderColor: "#212529",
@@ -516,8 +513,8 @@ function createYearlyChart() {
                     yAxisID: "y",
                 },
                 {
-                    label: "Total Quantity",
-                    data: reportData.timeData.quantity,
+                    label: "Food Save",
+                    data: reportData.timeData.food,
                     backgroundColor: "rgba(40, 167, 69, 0.8)",
                     borderColor: "#28a745",
                     borderWidth: 1,
@@ -546,7 +543,7 @@ function createYearlyChart() {
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: "Food Items Count",
+                        text: "Donations Made",
                     },
                 },
                 y1: {
@@ -559,75 +556,7 @@ function createYearlyChart() {
                     },
                     title: {
                         display: true,
-                        text: "Total Quantity",
-                    },
-                },
-            },
-        },
-    });
-}
-
-// Create Weekly Chart
-function createWeeklyChart() {
-    const ctx = document.getElementById("weeklyChart").getContext("2d");
-    weeklyChart = new Chart(ctx, {
-        type: "bar",
-        data: {
-            labels: reportData.timeData.labels,
-            datasets: [
-                {
-                    label: "Total Food Items",
-                    data: reportData.timeData.donations,
-                    backgroundColor: "rgba(33, 37, 41, 0.8)",
-                    borderColor: "#212529",
-                    borderWidth: 1,
-                    yAxisID: "y",
-                },
-                {
-                    label: "Total Quantity",
-                    data: reportData.timeData.quantity,
-                    backgroundColor: "rgba(40, 167, 69, 0.8)",
-                    borderColor: "#28a745",
-                    borderWidth: 1,
-                    yAxisID: "y1",
-                },
-            ],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: "top",
-                },
-                tooltip: {
-                    backgroundColor: "rgba(33, 37, 41, 0.9)",
-                    padding: 12,
-                },
-            },
-            scales: {
-                y: {
-                    type: "linear",
-                    display: true,
-                    position: "left",
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: "Food Items Count",
-                    },
-                },
-                y1: {
-                    type: "linear",
-                    display: true,
-                    position: "right",
-                    beginAtZero: true,
-                    grid: {
-                        drawOnChartArea: false,
-                    },
-                    title: {
-                        display: true,
-                        text: "Total Quantity",
+                        text: "Food Save",
                     },
                 },
             },
@@ -644,7 +573,7 @@ function createDateRangeChart() {
             labels: reportData.timeData.labels,
             datasets: [
                 {
-                    label: "Total Food Items",
+                    label: "Donations Made",
                     data: reportData.timeData.donations,
                     backgroundColor: "rgba(33, 37, 41, 0.8)",
                     borderColor: "#212529",
@@ -652,8 +581,8 @@ function createDateRangeChart() {
                     yAxisID: "y",
                 },
                 {
-                    label: "Total Quantity",
-                    data: reportData.timeData.quantity,
+                    label: "Food Save",
+                    data: reportData.timeData.food,
                     backgroundColor: "rgba(40, 167, 69, 0.8)",
                     borderColor: "#28a745",
                     borderWidth: 1,
@@ -684,7 +613,7 @@ function createDateRangeChart() {
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: "Food Items Count",
+                        text: "Donations Made",
                     },
                 },
                 y1: {
@@ -697,7 +626,7 @@ function createDateRangeChart() {
                     },
                     title: {
                         display: true,
-                        text: "Total Quantity",
+                        text: "Food Save",
                     },
                 },
             },
@@ -713,7 +642,7 @@ function updateCharts() {
     if (monthlyChart) {
         monthlyChart.data.labels = reportData.timeData.labels;
         monthlyChart.data.datasets[0].data = reportData.timeData.donations;
-        monthlyChart.data.datasets[1].data = reportData.timeData.quantity;
+        monthlyChart.data.datasets[1].data = reportData.timeData.food;
         monthlyChart.update();
     }
 
@@ -742,23 +671,15 @@ function updateCharts() {
     if (yearlyChart) {
         yearlyChart.data.labels = reportData.timeData.labels;
         yearlyChart.data.datasets[0].data = reportData.timeData.donations;
-        yearlyChart.data.datasets[1].data = reportData.timeData.quantity;
+        yearlyChart.data.datasets[1].data = reportData.timeData.food;
         yearlyChart.update();
-    }
-
-    // Update Weekly Chart
-    if (weeklyChart) {
-        weeklyChart.data.labels = reportData.timeData.labels;
-        weeklyChart.data.datasets[0].data = reportData.timeData.donations;
-        weeklyChart.data.datasets[1].data = reportData.timeData.quantity;
-        weeklyChart.update();
     }
 
     // Update Date Range Chart
     if (dateRangeChart) {
         dateRangeChart.data.labels = reportData.timeData.labels;
         dateRangeChart.data.datasets[0].data = reportData.timeData.donations;
-        dateRangeChart.data.datasets[1].data = reportData.timeData.quantity;
+        dateRangeChart.data.datasets[1].data = reportData.timeData.food;
         dateRangeChart.update();
     }
 }
@@ -766,6 +687,6 @@ function updateCharts() {
 // Export function to refresh all data
 function refreshReportData() {
     console.log("🔄 Refreshing all report data...");
-    // Reload data from the backend
+    // Reload sample data
     loadReportData(currentFilter);
 }
