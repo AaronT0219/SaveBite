@@ -92,7 +92,7 @@ CREATE TABLE `fooditem` (
   `description` varchar(80) DEFAULT NULL,
   `status` enum('available','used','expired','donation','reserved') NOT NULL,
   `user_id` int(20) UNSIGNED NOT NULL,
-  `created_at` date DEFAULT NULL
+  `created_at` date DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
