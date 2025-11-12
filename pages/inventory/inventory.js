@@ -25,7 +25,8 @@
   };
   const FIELD_KEYS = Object.keys(FIELD_ALIASES);
 
-  const toUILabel = (v='') => (String(v).toLowerCase()==='donation' ? 'donated' : (v||''));
+  // UI 一致性：直接展示后端状态值；donation 显示为 "donation"
+  const toUILabel = (v='') => (v || '');
 
   function pickCell(card, mainKey) {
     const names = FIELD_ALIASES[mainKey] || [mainKey];
@@ -113,6 +114,12 @@
     if (stSel) {
       const v = String(card.__orig.status || 'available').toLowerCase();
       stSel.value = ['used','available','expired'].includes(v) ? v : 'available';
+    }
+
+    if (stSel && (card.dataset.donated === '1' ||
+                  String(card.__orig.status || '').toLowerCase() === 'donation')) {
+      stSel.disabled = true;
+      stSel.title = 'This item is already donated (status=donation).';
     }
 
 
@@ -292,6 +299,10 @@
         donateBtn.style.cursor = 'not-allowed';
       }
 
+      const stCell = card.querySelector('.value[data-field="status"]');
+      if (stCell) stCell.textContent = 'donation';
+      card.dataset.donated = '1';
+
       alert('Added to Donation List.');
     }catch(e){
       console.error(e);
@@ -456,6 +467,15 @@
     window.__inventoryInited = true;
     updateEmptyHint();  // 初始化时同步一次提示
     console.log('[inventory] ready');
+
+    // Deep-link support: if URL hash matches a card id, scroll to it
+    const hash = (location.hash || '').slice(1);
+    if (hash) {
+      const el = document.getElementById(hash);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
   }
 
   window.initInventoryPage = initInventoryPage;

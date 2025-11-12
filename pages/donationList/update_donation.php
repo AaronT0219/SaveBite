@@ -34,10 +34,12 @@ try {
   $donationId = isset($b['donation_id']) ? (int)$b['donation_id'] : 0;
   if ($donationId <= 0) respond(400, ['success'=>false, 'error'=>'Missing or invalid donation_id']);
 
-  // 归属校验
-  $stmt = $pdo->prepare("SELECT donor_user_id FROM donation WHERE donation_id = ?");
+  // 归属校验 + 读取当前状态
+  $stmt = $pdo->prepare("SELECT donor_user_id, status FROM donation WHERE donation_id = ?");
   $stmt->execute([$donationId]);
-  $ownerId = $stmt->fetchColumn();
+  $row0 = $stmt->fetch(PDO::FETCH_ASSOC);
+  $ownerId = $row0 === false ? false : (int)$row0['donor_user_id'];
+  $oldStatus = $row0 === false ? null : (string)$row0['status'];
   if ($ownerId === false) respond(404, ['success'=>false, 'error'=>'Donation not found']);
   if ((int)$ownerId !== $uid) respond(403, ['success'=>false, 'error'=>'Permission denied']);
 
@@ -120,6 +122,46 @@ try {
     $fiParam[':id'] = $fid;
     $uu = $pdo->prepare($fiSql);
     $uu->execute($fiParam);
+  }
+
+  // 若将状态从 pending 更新为 picked_up，则插入一条通知
+  if (array_key_exists('donation_status', $b)) {
+    $newStatus = trim((string)$b['donation_status']);
+    if ($oldStatus !== 'picked_up' && $newStatus === 'picked_up') {
+      // 将关联的 fooditem 从 donation 置为 used
+      $uFi = $pdo->prepare(
+        "UPDATE fooditem f
+            JOIN donation_fooditem df ON df.fooditem_id = f.foodItem_id
+           SET f.status = 'used'
+         WHERE df.donation_id = :did AND f.status = 'donation'"
+      );
+      $uFi->execute([':did' => $donationId]);
+
+      // 找一条该捐赠的食品名与日期
+      $qName = $pdo->prepare(
+        "SELECT f.food_name
+           FROM donation_fooditem df
+           JOIN fooditem f ON f.foodItem_id = df.fooditem_id
+          WHERE df.donation_id = ?
+          LIMIT 1"
+      );
+      $qName->execute([$donationId]);
+      $firstName = (string)($qName->fetchColumn() ?: 'Donation');
+
+      $qDate = $pdo->prepare("SELECT donation_date FROM donation WHERE donation_id = ?");
+      $qDate->execute([$donationId]);
+      $donDate = (string)($qDate->fetchColumn() ?: '');
+
+      $desc = $donDate !== ''
+        ? ($firstName . ' picked up (Donated on: ' . $donDate . ')')
+        : ($firstName . ' picked up');
+
+      $ins = $pdo->prepare(
+        "INSERT INTO notification (user_id, target_type, target_id, title, description, status, notification_date)
+         VALUES (:uid, 'donation', :did, 'Donation picked up', :d, 'unread', NOW())"
+      );
+      $ins->execute([':uid'=>$uid, ':did'=>$donationId, ':d'=>$desc]);
+    }
   }
 
   $pdo->commit();

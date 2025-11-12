@@ -13,7 +13,7 @@ try{
   $sql = "
     SELECT
       d.donation_id, d.status AS donation_status, d.pickup_location, d.availability, d.contact,
-      d.description AS donation_desc, d.donation_date, d.claimant_user_id,
+      d.description AS donation_desc, d.donation_date,
       df.fooditem_id, df.quantity AS donated_quantity,
       f.food_name, f.quantity AS food_current_quantity, f.category, f.expiry_date, f.status AS food_status,
       f.storage_location, f.description AS food_desc
@@ -43,7 +43,6 @@ try{
       'contact'        => (string)($r['contact'] ?? ''),
       'donation_status'=> (string)($r['donation_status'] ?? 'pending'),
       'donation_date'  => (string)($r['donation_date'] ?? ''),
-      'claimant_user_id'=> $r['claimant_user_id'] === null ? null : (int)$r['claimant_user_id'],
     ];
   }, $rows);
 

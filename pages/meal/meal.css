@@ -1,0 +1,247 @@
+/* toast CSS */
+.toast-header {
+    background: #CCD5AE !important;
+}
+
+/* current inventory CSS */ 
+#currentInvContainer::-webkit-scrollbar {
+    display: none;
+}
+
+.food-card, .recipe-card, #missingCancel, #eventDlt-btn, #expiryCancelBtn {
+    transition: all 0.1s ease-in-out;
+}
+
+.food-card:active, .recipe-card:active {
+    transform: scale(0.97);
+}
+
+/* suggested recipe CSS */
+.calories-badge {
+    background: #d4a373;
+}
+
+/* add meal-btn CSS */
+.addMeal-btn, .filter-btn, #mealConfirm-btn, #quantityConfirm, #missingConfirm, #eventEdit-btn, #eventEditConfirm, #expiryProceedBtn {
+    --bs-btn-bg: #CCD5AE !important;
+    --bs-btn-border-color: #CCD5AE;
+    --bs-btn-hover-bg: rgb(182, 187, 143);
+    --bs-btn-active-bg: rgb(182, 187, 143);
+    --bs-btn-active-border-color: rgb(135, 139, 102);
+    --bs-btn-hover-border-color: rgb(135, 139, 102);
+    transition: all 0.1s ease-in-out !important;
+}
+
+.addMeal-btn:active, .filter-btn:active, #missingCancel:active, #missingConfirm:active, #eventDlt-btn:active, #eventEdit-btn:active, #eventEditConfirm:active , #expiryProceedBtn:active, #expiryCancelBtn:active {
+    transform: scale(0.9);
+}
+
+#mealConfirm-btn:active, #quantityConfirm:active {
+    transform: scale(.97);
+}
+
+/* filter btn & dropdown css */
+#filterTagContainer {
+    min-height: 11.19px;
+}
+
+.filter-tag {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    position: relative;
+    transition: all 0.3s ease-in-out;
+}
+
+.filter-tag.show {
+    max-height: 35.19px; /* Adjust based on expected tag height */
+    opacity: 1;
+}
+
+#categoryDropdown, #storageDropdown {
+    background-color: #e7e7e7;
+    color: black;
+    cursor: default;
+}
+
+.dropdown-item {
+    transition: all 0.2s ease-in-out;
+}
+
+.dropdown-item:hover {
+    background-color: #d4d8b6 !important;
+}
+
+.dropdown-item:active {
+    background-color: #afb396 !important;
+    color: black !important;
+        
+}
+
+.noMatch-icon {
+    height: 1.1em;
+    width: 1.1em;
+}
+
+#filterDropdown {
+    --bs-btn-bg: #CCD5AE;
+    --bs-btn-border-color: #CCD5AE;
+    --bs-btn-hover-bg: rgb(182, 187, 143);
+    --bs-btn-active-bg: rgb(182, 187, 143);
+    --bs-btn-active-border-color: rgb(135, 139, 102);
+    font-weight: 500;
+    transition: all 0.1s ease-in-out;
+}
+
+#filterDropdown:active {
+    transform: scale(0.9);
+}
+
+#filterMenu:has(.dropdown-submenu:nth-last-child(1):hover) {
+    padding-bottom: 0;
+}
+
+.dropdown-submenu {
+    position: relative;
+}
+
+.dropdown-submenu .dropdown-menu {
+    position: static;
+    left: auto;
+    top: auto;
+    margin-top: 0;
+    display: none;
+    box-shadow: none;
+}
+
+.dropdown-menu li a, .dropdown-menu li span {
+    font-weight: 500;
+}
+
+.dropdown-submenu:hover .dropdown-menu {
+    display: block;
+}
+
+/* FullCalendar CSS */
+.fc-col-header-cell-cushion, .fc-daygrid-day-number {
+    color: black;
+    text-decoration: none;
+}
+
+.fc-daygrid-day-number {
+    font-weight: 500;
+}
+
+.fc-event-main {
+    font-weight: 500;
+    font-size: 1.1em;
+    padding: 5px 10px;
+}
+
+/* Allow event titles to wrap to multiple lines */
+.fc-daygrid-event {
+  white-space: normal !important;
+  height: auto !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  line-height: 1.2em;
+  padding: 2px 4px;
+}
+
+/* Make sure the event title itself can wrap */
+.fc-event-title,
+.fc-event-title-container {
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+}
+
+.fc-button {
+    color: black !important;
+    background: none !important;
+    transition: all 0.1s ease-in-out;
+}
+
+.fc-button-active {
+    background: #CCD5AE !important;
+}
+
+.fc-button:hover {
+    background: #b3bb99 !important;
+}
+
+.fc-button:active {
+    transform: scale(.9);
+} 
+
+.fc-button[disabled], .fc-button[disabled]:hover, .fc-button[disabled]:active {
+    background: none !important;
+    transform: scale(1);
+}
+
+.fc-today-button {
+    margin-left: 24px !important;
+}
+
+.fc-header-toolbar {
+    padding: 0 24px !important;
+}
+
+.fc-toolbar-title {
+    font-weight: bold !important;
+    font-size: 2em !important;
+    box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.616);
+    border-radius: 5px;
+    padding: 5px 10px;
+}
+
+/* Optional: glowing effect */
+.fc-timegrid-now-indicator-line::after {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: red;
+  box-shadow: 0 0 8px red;
+}
+
+.fc-popover {
+  background-color: #fffaf3;
+  border: 1px solid #ccc;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.fc-popover.closing {
+    opacity: 0;
+    transform: translateY(-20px);
+}
+.fc-popover-header {
+    font-weight: 500;
+    padding: 5px 10px !important;
+}
+.fc-more-popover .fc-event {
+  font-size: 0.85rem;
+}
+.fc-event {
+    transition: all 0.1s ease-in-out;
+}
+.fc-event:active {
+    transform: scale(0.9);
+}
+.fc-more-link {
+    font-weight: bolder;
+    text-decoration: none;
+    color: #212529e1;
+}
+
+.fc-daygrid-day-frame {
+    height: 200px !important;
+}
+.fc-daygrid-event,
+.fc-daygrid-more-link {
+  margin-bottom: 5px !important;
+}

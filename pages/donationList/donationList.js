@@ -1,4 +1,5 @@
 
+
 (function () {
   'use strict';
 
@@ -22,10 +23,10 @@
     if (window.__donationInited) return;
 
     const list = document.getElementById('donation-list');
-    if (!list) return;  // 不是捐赠页，直接退出
+    if (!list) return;  // 娑撳秵妲搁幑鎰妞ょ绱濋惄瀛樺复闁偓閿?
     window.__donationInited = true;
 
-    // ------- 读取并渲染 -------
+    // ------- 鐠囪褰囬獮鑸佃閿?-------
     fetch(API_LIST, { method: 'GET' })
       .then(r => r.json())
       .then(json => {
@@ -33,7 +34,7 @@
         const items = json.items || [];
         render(items);
 
-        // 统计缺失取件信息并提醒
+        // 缂佺喕顓哥紓鍝勩亼閸欐牔娆㈡穱鈩冧紖楠炶埖褰侀敓?
         const missing = items.filter(it =>
           !String(it.pickup_location||'').trim() ||
           !String(it.availability||'').trim() ||
@@ -48,7 +49,7 @@
         list.innerHTML = `<p style="color:#c00">Failed to load donations: ${esc(err.message || err)}</p>`;
       });
 
-    // ------- 事件委托 -------
+    // ------- 娴滃娆㈡慨鏃€澧?-------
     list.addEventListener('click', (e) => {
       const btn  = e.target.closest('button'); if (!btn) return;
       const card = btn.closest('.card');       if (!card) return;
@@ -60,7 +61,7 @@
       if (act === 'delete')      { del(card); return; }
     });
 
-    // ------- 渲染 -------
+    // ------- 濞撳弶鐓?-------
     function render(data) {
       list.innerHTML = '';
       if (!data.length) { list.innerHTML = '<p class="empty-hint">No donated items yet.</p>'; return; }
@@ -68,8 +69,9 @@
       data.forEach(it => {
         const a = document.createElement('article');
         a.className = 'card';
+        if (it.donation_id) a.id = 'donation-' + String(it.donation_id);
         a.dataset.donationId = String(it.donation_id || '');
-        // manageId 是对应 inventory 的 foodItem_id（纯数字）
+        // manageId 閺勵垰顕敓?inventory 閿?foodItem_id閿涘牏鍑介弫鏉跨摟閿?
         a.dataset.fooditemId = String(it.manageId || '');
 
         a.innerHTML = `
@@ -118,9 +120,16 @@
         `;
         list.appendChild(a);
       });
+
+      // If hash refers to a donation card, scroll into view
+      const hash = (location.hash || '').slice(1);
+      if (hash) {
+        const target = document.getElementById(hash);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
     }
 
-    // ------- 编辑 -------
+    // ------- 缂傛牞绶?-------
     function enterEdit(card){
       if (card.dataset.editing === '1') return;
       card.dataset.editing = '1';
@@ -155,7 +164,7 @@
           <option value="picked_up"${o.donation_status==='picked_up' ? ' selected' : ''}>picked_up</option>
         </select>`;
 
-      // 捐赠日期：可编辑 input（今天 ~ +100 年）
+      // Donate on: provide date range but do not auto-fill when empty
       {
         const today = new Date();
         const pad = n => String(n).padStart(2,'0');
@@ -163,7 +172,7 @@
         const min = `${y}-${m}-${d}`;
         const max = `${y+100}-${m}-${d}`;
         const cur = (card.querySelector('[data-field="donation_date"]')?.textContent || '').trim();
-        const val = /^\d{4}-\d{2}-\d{2}$/.test(cur) ? cur : min;
+        const val = /^\d{4}-\d{2}-\d{2}$/.test(cur) ? cur : '';
         card.querySelector('[data-field="donation_date"]').innerHTML =
           `<input type="date" min="${min}" max="${max}" value="${val}">`;
       }
@@ -179,7 +188,7 @@
         <button class="mini" type="button" data-action="delete">Delete</button>`;
     }
 
-    // ------- 保存（落库） -------
+    // ------- 娣囨繂鐡ㄩ敍鍫ｆ儰鎼存搫绱?-------
     function saveEdit(card){
       const v = sel => { const el = card.querySelector(sel); return el ? String(el.value || '').trim() : ''; };
 
@@ -210,8 +219,9 @@
       if (!payload.pickup_location) errs.push('Pickup location is required.');
       if (!payload.availability)    errs.push('Availability is required.');
       if (!payload.contact)         errs.push('Contact is required.');
-      if (!/^\d+$/.test(payload.quantity || '')) errs.push('Quantity must be an integer ≥ 0.');
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(payload.donation_date || '')) errs.push('Donation date must be YYYY-MM-DD.');
+      if (!payload.donation_date)   errs.push('Donation date is required.');
+      if (!/^\d+$/.test(payload.quantity || '')) errs.push('Quantity must be an integer >= 0.');
+      if (payload.donation_date && !/^\d{4}-\d{2}-\d{2}$/.test(payload.donation_date)) errs.push('Donation date must be YYYY-MM-DD.');
       if (errs.length){ alert('Please fix:\n- ' + errs.join('\n- ')); return; }
 
       fetch(API_UPDATE, {
@@ -223,7 +233,7 @@
       .then(json=>{
         if (!json.success) throw new Error(json.error || 'Update failed');
 
-        // 同步 UI
+        // 閸氬本顒?UI
         card.querySelector('[data-field="donation_status"]').textContent = payload.donation_status;
         card.querySelector('[data-field="donation_date"]').textContent   = payload.donation_date;
         card.querySelector('[data-field="pickup_location"]').textContent = payload.pickup_location;
@@ -242,7 +252,7 @@
       .catch(err=>{ console.error(err); alert(err.message || 'Update failed'); });
     }
 
-    // ------- 取消 -------
+    // ------- 閸欐牗绉?-------
     function cancelEdit(card){
       let o={}; try{ o=JSON.parse(card.dataset.original||'{}'); }catch(e){ o={}; }
 
@@ -252,7 +262,7 @@
       card.querySelector('[data-field="expiry"]').textContent    = o.expiry    || '';
 
       card.querySelector('[data-field="donation_status"]').textContent = o.donation_status || 'pending';
-      // 还原 donation_date 为纯文本
+      // 鏉╂ê甯?donation_date 娑撹櫣鍑介弬鍥ㄦ拱
       card.querySelector('[data-field="donation_date"]').textContent = o.donation_date || '';
 
       card.querySelector('[data-field="desc"]').textContent      = o.desc || '';
@@ -266,7 +276,7 @@
         <button class="mini" type="button" data-action="delete">Delete</button>`;
     }
 
-    // ------- 删除（落库） -------
+    // ------- 閸掔娀娅庨敍鍫ｆ儰鎼存搫绱?-------
     function del(card){
       const donationId = Number(card.dataset.donationId||0);
       const foodItemId = Number(card.dataset.fooditemId||0);
@@ -295,10 +305,12 @@
         alert(err.message || 'Delete failed');
       });
     }
+
   }
 
-  // 暴露 & 自动初始化
+  // 閺嗘挳婀?& 閼奉亜濮╅崚婵嗩潗閿?
   window.initDonationListPage = initDonationListPage;
   if (document.readyState === 'complete' || document.readyState === 'interactive') initDonationListPage();
   else document.addEventListener('DOMContentLoaded', initDonationListPage, { once: true });
 })();
+

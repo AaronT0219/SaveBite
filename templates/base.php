@@ -21,6 +21,7 @@ if (!isset($_SESSION['email'])) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../templates/base.css">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js"></script>
     
     <!-- Additional page-specific CSS -->
     <?php if (isset($additionalCSS)): ?>
@@ -37,7 +38,7 @@ if (!isset($_SESSION['email'])) {
         <!-- content top container -->
         <div id="main-content-container" class="container-fluid p-0">
             <div id="topNav-main-content" class="w-100 pt-4 px-4 text-end">
-                <i data-lucide="bell" data-page="notifications" class="notification-icon"></i>
+                <i data-lucide="bell" data-page="notification" class="notification-icon"></i>
             </div>
 
             <!-- Main content area -->
