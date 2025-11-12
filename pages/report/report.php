@@ -1,3 +1,13 @@
+<?php 
+
+session_start();
+
+echo '<pre>';
+print_r($_SESSION);
+echo '</pre>';
+
+?>
+
 <link rel="stylesheet" href="../pages/report/report.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
