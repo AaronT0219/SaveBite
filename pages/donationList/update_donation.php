@@ -128,6 +128,15 @@ try {
   if (array_key_exists('donation_status', $b)) {
     $newStatus = trim((string)$b['donation_status']);
     if ($oldStatus !== 'picked_up' && $newStatus === 'picked_up') {
+      // 将关联的 fooditem 从 donation 置为 used
+      $uFi = $pdo->prepare(
+        "UPDATE fooditem f
+            JOIN donation_fooditem df ON df.fooditem_id = f.foodItem_id
+           SET f.status = 'used'
+         WHERE df.donation_id = :did AND f.status = 'donation'"
+      );
+      $uFi->execute([':did' => $donationId]);
+
       // 找一条该捐赠的食品名与日期
       $qName = $pdo->prepare(
         "SELECT f.food_name

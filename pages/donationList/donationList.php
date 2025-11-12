@@ -36,7 +36,8 @@
 
   <main class="content" id="donation-list"></main>
 
-  <script src="/SaveBite/pages/donationList/donationList.js"></script>
+  <?php $__dl_js_v = @filemtime(__DIR__ . '/donationList.js') ?: time(); ?>
+  <script src="/SaveBite/pages/donationList/donationList.js?v=<?= $__dl_js_v ?>"></script>
   <script> if (window.initDonationListPage) window.initDonationListPage(); </script>
 </body>
 </html>

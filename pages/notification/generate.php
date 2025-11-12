@@ -53,70 +53,11 @@ try {
     )";
   $pdo->exec($sql2a);
 
-  //   方案B：看 inventory 的 status=donation（防止有人直接改 status）
-  $sql2b = "
-  INSERT INTO notification (user_id, target_type, target_id, title, description, status, notification_date)
-  SELECT i.user_id, 'donation', i.foodItem_id,
-         'Moved to donation',
-         CONCAT('Item \"', i.food_name, '\" moved from inventory to donation'),
-         'unread', NOW()
-  FROM fooditem i
-  WHERE i.status='donation'
-    -- Avoid duplicate with rule 2a: if this fooditem is already mapped to a donation by the same user, skip here
-    AND NOT EXISTS (
-      SELECT 1
-      FROM donation_fooditem df
-      JOIN donation d ON d.donation_id = df.donation_id
-      WHERE df.fooditem_id = i.foodItem_id
-        AND d.donor_user_id = i.user_id
-    )
-    -- De-duplicate same title per item
-    AND NOT EXISTS (
-      SELECT 1 FROM notification n
-      WHERE n.user_id=i.user_id AND n.target_type='donation' AND n.target_id=i.foodItem_id
-        AND n.title='Moved to donation'
-    )";
-  $pdo->exec($sql2b);
+  // 移除：库存直接标记 donation 的兜底通知（仅保留 Donation created）
 
-  // 3) 捐赠领取日期前1天提醒（给捐赠者；若有认领者也可提醒）
-  $sql3_donor = "
-  INSERT INTO notification (user_id, target_type, target_id, title, description, status, notification_date)
-  SELECT d.donor_user_id, 'donation', d.donation_id,
-         'Pickup tomorrow',
-         CONCAT('Scheduled pickup on ', DATE_FORMAT(d.donation_date,'%Y-%m-%d'),
-                ' at ', IFNULL(d.pickup_location,'N/A')),
-         'unread', NOW()
-  FROM donation d
-  WHERE d.donation_date = CURDATE() + INTERVAL 1 DAY
-    AND d.status = 'pending'
-    AND d.donor_user_id IS NOT NULL
-    AND NOT EXISTS (
-      SELECT 1 FROM notification n
-      WHERE n.user_id=d.donor_user_id AND n.target_type='donation' AND n.target_id=d.donation_id
-        AND n.title='Pickup tomorrow'
-        AND DATE(n.notification_date)=CURDATE()
-    )";
-  $pdo->exec($sql3_donor);
+  // 移除：Pickup tomorrow 提醒（仅保留创建和 picked_up 两类捐赠通知）
 
-  // 可选：提醒认领者（如果 claimant_user_id 有值）
-  $sql3_claimant = "
-  INSERT INTO notification (user_id, target_type, target_id, title, description, status, notification_date)
-  SELECT d.claimant_user_id, 'donation', d.donation_id,
-         'Pickup tomorrow',
-         CONCAT('Please pick up on ', DATE_FORMAT(d.donation_date,'%Y-%m-%d'),
-                ' at ', IFNULL(d.pickup_location,'N/A')),
-         'unread', NOW()
-  FROM donation d
-  WHERE d.donation_date = CURDATE() + INTERVAL 1 DAY
-    AND d.status = 'pending'
-    AND d.claimant_user_id IS NOT NULL
-    AND NOT EXISTS (
-      SELECT 1 FROM notification n
-      WHERE n.user_id=d.claimant_user_id AND n.target_type='donation' AND n.target_id=d.donation_id
-        AND n.title='Pickup tomorrow'
-        AND DATE(n.notification_date)=CURDATE()
-    )";
-  $pdo->exec($sql3_claimant);
+  // 移除认领者提醒（不再使用 claimant_user_id）
 
   // 4) mealplan 的提醒时间（建议：提前 1 天 09:00，本地习惯）
   //   你的表只有 date，没有时间；这里按“明天”来判断，生成时间就用 NOW()

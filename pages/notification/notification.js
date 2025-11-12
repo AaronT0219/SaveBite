@@ -122,9 +122,10 @@ async function load(){
 
 async function openDetails(n){
   let url = '#';
-  if (n.type === 'inventory') url = '/SaveBite/?page=inventory#food-' + (n.ref_id || '');
-  if (n.type === 'donation')  url = '/SaveBite/?page=donationList#donation-' + (n.ref_id || '');
-  if (n.type === 'meal_plan') url = '/SaveBite/?page=mealplan#plan-' + (n.ref_id || '');
+  const base = '/SaveBite/templates/base.php?page=';
+  if (n.type === 'inventory') url = `${base}inventory#item-${n.ref_id || ''}`;
+  if (n.type === 'donation')  url = `${base}donationList#donation-${n.ref_id || ''}`;
+  if (n.type === 'meal_plan') url = `${base}mealplan#plan-${n.ref_id || ''}`;
   window.location.href = url;
 }
 
@@ -162,8 +163,7 @@ async function markAllRead(){
 // —�?�?PageLoader 调用的入�?—�?
 // 注意：不要用 DOMContentLoaded，这个页面是�?SPA 注入�?
 window.initNotificationPage = function initNotificationPage(){
-  if (window.__notificationInited) return;
-  window.__notificationInited = true;
+  // Always (re)bind to fresh DOM nodes after SPA navigation
   $list    = document.getElementById('list');
   $filter  = document.getElementById('filterSel');
   $typeSel = document.getElementById('typeSel');
@@ -174,7 +174,7 @@ window.initNotificationPage = function initNotificationPage(){
   if ($typeSel) $typeSel.onchange = load;
   if ($markAll) $markAll.onclick  = markAllRead;
 
-  // 先补齐通知，再加载
+  // Refresh list on each entry (safe and quick)
   (async () => {
     try { await fetch(`${API_BASE}/generate.php`, {method:'POST'}); } catch(_){}
     load();
