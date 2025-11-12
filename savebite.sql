@@ -4,7 +4,11 @@
 --
 -- Host: 127.0.0.1
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 -- Generation Time: Oct 15, 2025 at 06:42 AM
+=======
+-- Generation Time: Nov 12, 2025 at 09:44 AM
+>>>>>>> Stashed changes
 =======
 -- Generation Time: Nov 12, 2025 at 09:44 AM
 >>>>>>> Stashed changes
@@ -59,6 +63,9 @@ INSERT INTO `donation` (`donation_id`, `status`, `category`, `pickup_location`, 
 (52, 'pending', NULL, 'midvalley', NULL, '2025-10-30', 11, NULL, NULL, NULL),
 (54, 'pending', NULL, 'city kepong', NULL, '2025-11-01', 11, NULL, NULL, NULL),
 (57, 'picked_up', 'Produce', 'park', '11', '2025-12-12', 8, NULL, 'yes', '60 1919191919');
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 -- --------------------------------------------------------
@@ -86,6 +93,9 @@ INSERT INTO `donation_fooditem` (`donation_id`, `fooditem_id`, `quantity`) VALUE
 (49, 43, 1),
 (52, 48, 5),
 (57, 81, 1);
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 -- --------------------------------------------------------
@@ -103,8 +113,14 @@ CREATE TABLE `fooditem` (
   `storage_location` enum('Fridge','Freezer','Pantry','Countertop') NOT NULL,
   `description` varchar(80) DEFAULT NULL,
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   `status` enum('available','used','expired','donation') NOT NULL,
   `user_id` int(20) UNSIGNED NOT NULL
+=======
+  `status` enum('available','used','expired','donation','reserved') NOT NULL,
+  `user_id` int(20) UNSIGNED NOT NULL,
+  `created_at` date DEFAULT NULL
+>>>>>>> Stashed changes
 =======
   `status` enum('available','used','expired','donation','reserved') NOT NULL,
   `user_id` int(20) UNSIGNED NOT NULL,
@@ -117,6 +133,7 @@ CREATE TABLE `fooditem` (
 --
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 INSERT INTO `fooditem` (`foodItem_id`, `category`, `food_name`, `quantity`, `expiry_date`, `storage_location`, `description`, `status`, `user_id`) VALUES
 (38, 'Protein', 'apple', 0, '2025-12-12', 'Pantry', '111', 'used', 8),
 (40, 'Produce', '1', 1, '1111-11-11', 'Fridge', '1', 'available', 8),
@@ -125,6 +142,8 @@ INSERT INTO `fooditem` (`foodItem_id`, `category`, `food_name`, `quantity`, `exp
 (43, 'Produce', '1', 1, '1111-11-11', 'Fridge', '11', 'donation', 10),
 (44, 'Produce', '55', 5, '2222-05-05', 'Fridge', '55', 'available', 10);
 =======
+=======
+>>>>>>> Stashed changes
 INSERT INTO `fooditem` (`foodItem_id`, `category`, `food_name`, `quantity`, `expiry_date`, `storage_location`, `description`, `status`, `user_id`, `created_at`) VALUES
 (42, 'Produce', '34', 44, '2025-10-24', 'Fridge', '', 'used', 9, '2025-11-12'),
 (43, 'Produce', '1', 1, '1111-11-11', 'Fridge', '11', 'donation', 10, '2025-11-12'),
@@ -144,6 +163,9 @@ INSERT INTO `fooditem` (`foodItem_id`, `category`, `food_name`, `quantity`, `exp
 (78, 'Produce', 'Banana', 1, '2025-11-15', 'Fridge', '', 'reserved', 11, '2025-11-12'),
 (79, 'Dairy & Bakery', 'Cookie', 1, '2025-10-31', 'Pantry', 'delicious cookies :)', 'reserved', 11, '2025-11-12'),
 (81, 'Produce', 'apple', 1, '2025-11-12', 'Fridge', '', 'used', 8, NULL);
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 -- --------------------------------------------------------
@@ -358,7 +380,11 @@ ALTER TABLE `verification_codes`
 --
 ALTER TABLE `donation`
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   MODIFY `donation_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
+=======
+  MODIFY `donation_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
+>>>>>>> Stashed changes
 =======
   MODIFY `donation_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
 >>>>>>> Stashed changes
@@ -368,7 +394,11 @@ ALTER TABLE `donation`
 --
 ALTER TABLE `fooditem`
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   MODIFY `foodItem_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
+=======
+  MODIFY `foodItem_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=82;
+>>>>>>> Stashed changes
 =======
   MODIFY `foodItem_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=82;
 >>>>>>> Stashed changes
@@ -384,7 +414,11 @@ ALTER TABLE `mealplan`
 --
 ALTER TABLE `notification`
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   MODIFY `notification_id` int(20) NOT NULL AUTO_INCREMENT;
+=======
+  MODIFY `notification_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
+>>>>>>> Stashed changes
 =======
   MODIFY `notification_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
 >>>>>>> Stashed changes
