@@ -54,6 +54,10 @@ require_once __DIR__ . '/../../config.php';
 
   <main class="content" id="list"></main>
   <p id="emptyNotice" class="empty" style="display:none;">No new notifications</p>
-
 </body>
+<?php $___noti_js_v = @filemtime(__DIR__ . '/notification.js') ?: time(); ?>
+<script src="/SaveBite/pages/notification/notification.js?v=<?= $___noti_js_v ?>"></script>
+<script>
+  if (window.initNotificationPage) window.initNotificationPage();
+</script>
 </html>

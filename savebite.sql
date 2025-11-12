@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 11, 2025 at 10:59 AM
+-- Generation Time: Nov 12, 2025 at 09:44 AM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- PHP Version: 8.0.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -33,7 +33,7 @@ CREATE TABLE `donation` (
   `category` enum('Produce','Protein','Dairy & Bakery','Grains & Pantry','Snacks & Beverages') DEFAULT NULL,
   `pickup_location` varchar(60) DEFAULT NULL,
   `description` varchar(80) DEFAULT NULL,
-  `donation_date` date NOT NULL,
+  `donation_date` date DEFAULT NULL,
   `donor_user_id` int(20) UNSIGNED NOT NULL,
   `claimant_user_id` int(20) UNSIGNED DEFAULT NULL,
   `availability` varchar(255) DEFAULT NULL,
@@ -45,15 +45,13 @@ CREATE TABLE `donation` (
 --
 
 INSERT INTO `donation` (`donation_id`, `status`, `category`, `pickup_location`, `description`, `donation_date`, `donor_user_id`, `claimant_user_id`, `availability`, `contact`) VALUES
-(42, 'pending', 'Produce', '111', '111', '2025-10-15', 8, NULL, '111', '111'),
-(45, 'pending', 'Produce', '', NULL, '2025-10-15', 8, NULL, '', ''),
-(46, 'pending', 'Produce', '', NULL, '2025-10-15', 8, NULL, '', ''),
 (47, 'pending', 'Produce', '', NULL, '2025-10-15', 10, NULL, '', ''),
 (48, 'pending', 'Produce', '', NULL, '2025-10-15', 10, NULL, '', ''),
 (49, 'pending', NULL, 'ddd', NULL, '2025-10-15', 10, NULL, NULL, NULL),
 (51, 'pending', NULL, 'midvalley', NULL, '2025-10-22', 11, NULL, NULL, NULL),
 (52, 'pending', NULL, 'midvalley', NULL, '2025-10-30', 11, NULL, NULL, NULL),
-(54, 'pending', NULL, 'city kepong', NULL, '2025-11-01', 11, NULL, NULL, NULL);
+(54, 'pending', NULL, 'city kepong', NULL, '2025-11-01', 11, NULL, NULL, NULL),
+(57, 'picked_up', 'Produce', 'park', '11', '2025-12-12', 8, NULL, 'yes', '60 1919191919');
 
 -- --------------------------------------------------------
 
@@ -72,13 +70,11 @@ CREATE TABLE `donation_fooditem` (
 --
 
 INSERT INTO `donation_fooditem` (`donation_id`, `fooditem_id`, `quantity`) VALUES
-(42, 38, 1),
-(45, 40, 1),
-(46, 41, 1),
 (47, 43, 1),
 (48, 44, 5),
 (49, 43, 1),
-(52, 48, 5);
+(52, 48, 5),
+(57, 81, 1);
 
 -- --------------------------------------------------------
 
@@ -95,34 +91,33 @@ CREATE TABLE `fooditem` (
   `storage_location` enum('Fridge','Freezer','Pantry','Countertop') NOT NULL,
   `description` varchar(80) DEFAULT NULL,
   `status` enum('available','used','expired','donation','reserved') NOT NULL,
-  `user_id` int(20) UNSIGNED NOT NULL
+  `user_id` int(20) UNSIGNED NOT NULL,
+  `created_at` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `fooditem`
 --
 
-INSERT INTO `fooditem` (`foodItem_id`, `category`, `food_name`, `quantity`, `expiry_date`, `storage_location`, `description`, `status`, `user_id`) VALUES
-(38, 'Protein', 'apple', 0, '2025-12-12', 'Pantry', '111', 'used', 8),
-(40, 'Produce', '1', 1, '1111-11-11', 'Fridge', '1', 'available', 8),
-(41, 'Produce', '1', 1, '1111-11-11', 'Fridge', '1', 'available', 8),
-(42, 'Produce', '34', 44, '2025-10-24', 'Fridge', '', 'used', 9),
-(43, 'Produce', '1', 1, '1111-11-11', 'Fridge', '11', 'donation', 10),
-(44, 'Produce', '55', 5, '2222-05-05', 'Fridge', '55', 'available', 10),
-(47, 'Produce', 'Hush', 1, '2025-10-24', 'Fridge', '', 'available', 11),
-(48, 'Produce', 'HashBrown', 5, '2025-12-07', 'Fridge', '', 'donation', 11),
-(49, 'Dairy & Bakery', 'Burger', 8, '2025-11-08', 'Countertop', '', 'available', 11),
-(53, 'Dairy & Bakery', 'Burger', 2, '2025-11-08', 'Countertop', '', 'reserved', 11),
-(55, 'Produce', 'Apple', 2, '2025-11-15', 'Fridge', '', 'available', 11),
-(56, 'Produce', 'Banana', 2, '2025-11-15', 'Fridge', '', 'available', 11),
-(61, 'Produce', 'Apple', 1, '2025-11-15', 'Fridge', '', 'reserved', 11),
-(62, 'Produce', 'Banana', 1, '2025-11-15', 'Fridge', '', 'reserved', 11),
-(63, 'Produce', 'Grapes', 10, '2025-11-15', 'Fridge', '', 'reserved', 11),
-(67, 'Produce', 'Pineapple', 1, '2025-11-08', 'Fridge', '', 'available', 11),
-(72, 'Produce', 'Grapes', 3, '2025-11-22', 'Fridge', '', 'available', 11),
-(77, 'Produce', 'Apple', 1, '2025-11-15', 'Fridge', '', 'reserved', 11),
-(78, 'Produce', 'Banana', 1, '2025-11-15', 'Fridge', '', 'reserved', 11),
-(79, 'Dairy & Bakery', 'Cookie', 1, '2025-10-31', 'Pantry', 'delicious cookies :)', 'reserved', 11);
+INSERT INTO `fooditem` (`foodItem_id`, `category`, `food_name`, `quantity`, `expiry_date`, `storage_location`, `description`, `status`, `user_id`, `created_at`) VALUES
+(42, 'Produce', '34', 44, '2025-10-24', 'Fridge', '', 'used', 9, '2025-11-12'),
+(43, 'Produce', '1', 1, '1111-11-11', 'Fridge', '11', 'donation', 10, '2025-11-12'),
+(44, 'Produce', '55', 5, '2222-05-05', 'Fridge', '55', 'available', 10, '2025-11-12'),
+(47, 'Produce', 'Hush', 1, '2025-10-24', 'Fridge', '', 'available', 11, '2025-11-12'),
+(48, 'Produce', 'HashBrown', 5, '2025-12-07', 'Fridge', '', 'donation', 11, '2025-11-12'),
+(49, 'Dairy & Bakery', 'Burger', 8, '2025-11-08', 'Countertop', '', 'available', 11, '2025-11-12'),
+(53, 'Dairy & Bakery', 'Burger', 2, '2025-11-08', 'Countertop', '', 'reserved', 11, '2025-11-12'),
+(55, 'Produce', 'Apple', 2, '2025-11-15', 'Fridge', '', 'available', 11, '2025-11-12'),
+(56, 'Produce', 'Banana', 2, '2025-11-15', 'Fridge', '', 'available', 11, '2025-11-12'),
+(61, 'Produce', 'Apple', 1, '2025-11-15', 'Fridge', '', 'reserved', 11, '2025-11-12'),
+(62, 'Produce', 'Banana', 1, '2025-11-15', 'Fridge', '', 'reserved', 11, '2025-11-12'),
+(63, 'Produce', 'Grapes', 10, '2025-11-15', 'Fridge', '', 'reserved', 11, '2025-11-12'),
+(67, 'Produce', 'Pineapple', 1, '2025-11-08', 'Fridge', '', 'available', 11, '2025-11-12'),
+(72, 'Produce', 'Grapes', 3, '2025-11-22', 'Fridge', '', 'available', 11, '2025-11-12'),
+(77, 'Produce', 'Apple', 1, '2025-11-15', 'Fridge', '', 'reserved', 11, '2025-11-12'),
+(78, 'Produce', 'Banana', 1, '2025-11-15', 'Fridge', '', 'reserved', 11, '2025-11-12'),
+(79, 'Dairy & Bakery', 'Cookie', 1, '2025-10-31', 'Pantry', 'delicious cookies :)', 'reserved', 11, '2025-11-12'),
+(81, 'Produce', 'apple', 1, '2025-11-12', 'Fridge', '', 'used', 8, NULL);
 
 -- --------------------------------------------------------
 
@@ -202,9 +197,9 @@ CREATE TABLE `notification` (
   `notification_id` int(20) NOT NULL,
   `title` varchar(30) NOT NULL,
   `description` varchar(80) NOT NULL,
-  `notification_date` date NOT NULL,
-  `status` enum('new','seen','','') NOT NULL,
-  `target_type` enum('fooditem','donation','meal_plan','') NOT NULL,
+  `notification_date` datetime NOT NULL DEFAULT current_timestamp(),
+  `status` enum('unread','seen') NOT NULL,
+  `target_type` enum('inventory','donation','meal_plan','') NOT NULL,
   `target_id` int(20) NOT NULL,
   `user_id` int(20) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -214,8 +209,17 @@ CREATE TABLE `notification` (
 --
 
 INSERT INTO `notification` (`notification_id`, `title`, `description`, `notification_date`, `status`, `target_type`, `target_id`, `user_id`) VALUES
-(1, 'Fruit Salad', '', '2025-11-15', 'new', 'meal_plan', 15, 11),
-(9, 'Cookie Fruit Salad', '', '2025-11-12', 'new', 'meal_plan', 23, 11);
+(42, 'Apple will expire soon', 'Item \"Apple\" expires on 2025-11-15', '2025-11-12 16:29:11', 'unread', 'inventory', 55, 11),
+(43, 'Banana will expire soon', 'Item \"Banana\" expires on 2025-11-15', '2025-11-12 16:29:11', 'unread', 'inventory', 56, 11),
+(45, 'Donation created', 'You donated \"\" at ', '2025-11-12 16:29:11', 'unread', 'donation', 47, 10),
+(46, 'Donation created', 'You donated \"\" at ', '2025-11-12 16:29:11', 'unread', 'donation', 48, 10),
+(47, 'Donation created', 'You donated \"\" at ddd', '2025-11-12 16:29:11', 'unread', 'donation', 49, 10),
+(48, 'Donation created', 'You donated \"\" at midvalley', '2025-11-12 16:29:11', 'unread', 'donation', 51, 11),
+(49, 'Donation created', 'You donated \"\" at midvalley', '2025-11-12 16:29:11', 'unread', 'donation', 52, 11),
+(50, 'Donation created', 'You donated \"\" at city kepong', '2025-11-12 16:29:11', 'unread', 'donation', 54, 11),
+(53, 'apple will expire soon', 'Item \"apple\" expires on 2025-11-12', '2025-11-12 16:36:48', 'seen', 'inventory', 81, 8),
+(54, 'Donation created', 'You donated \"\" at ', '2025-11-12 16:36:53', 'seen', 'donation', 57, 8),
+(55, 'Donation picked up', 'apple picked up (Donated on: 2025-12-12)', '2025-11-12 16:38:07', 'seen', 'donation', 57, 8);
 
 -- --------------------------------------------------------
 
@@ -345,13 +349,13 @@ ALTER TABLE `verification_codes`
 -- AUTO_INCREMENT for table `donation`
 --
 ALTER TABLE `donation`
-  MODIFY `donation_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
+  MODIFY `donation_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
 
 --
 -- AUTO_INCREMENT for table `fooditem`
 --
 ALTER TABLE `fooditem`
-  MODIFY `foodItem_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=80;
+  MODIFY `foodItem_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=82;
 
 --
 -- AUTO_INCREMENT for table `mealplan`
@@ -363,7 +367,7 @@ ALTER TABLE `mealplan`
 -- AUTO_INCREMENT for table `notification`
 --
 ALTER TABLE `notification`
-  MODIFY `notification_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `notification_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
 
 --
 -- AUTO_INCREMENT for table `user`

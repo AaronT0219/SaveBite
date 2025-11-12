@@ -1,4 +1,4 @@
-const API_CLAIM = '/SaveBite/pages/donationList/claim_donation.php';
+
 
 (function () {
   'use strict';
@@ -59,7 +59,6 @@ const API_CLAIM = '/SaveBite/pages/donationList/claim_donation.php';
       if (act === 'save')        { saveEdit(card);  return; }
       if (act === 'cancel-edit') { cancelEdit(card); return; }
       if (act === 'delete')      { del(card); return; }
-      if (act === 'claim')       { claim(card); return; }
     });
 
     // ------- 濞撳弶鐓?-------
@@ -70,6 +69,7 @@ const API_CLAIM = '/SaveBite/pages/donationList/claim_donation.php';
       data.forEach(it => {
         const a = document.createElement('article');
         a.className = 'card';
+        if (it.donation_id) a.id = 'donation-' + String(it.donation_id);
         a.dataset.donationId = String(it.donation_id || '');
         // manageId 閺勵垰顕敓?inventory 閿?foodItem_id閿涘牏鍑介弫鏉跨摟閿?
         a.dataset.fooditemId = String(it.manageId || '');
@@ -83,7 +83,6 @@ const API_CLAIM = '/SaveBite/pages/donationList/claim_donation.php';
             </div>
             <div>
               <button class="mini" type="button" data-action="edit">Edit</button>
-              <button class="mini" type="button" data-action="claim">Claimed</button>
               <button class="mini" type="button" data-action="delete">Delete</button>
             </div>
           </div>
@@ -121,6 +120,13 @@ const API_CLAIM = '/SaveBite/pages/donationList/claim_donation.php';
         `;
         list.appendChild(a);
       });
+
+      // If hash refers to a donation card, scroll into view
+      const hash = (location.hash || '').slice(1);
+      if (hash) {
+        const target = document.getElementById(hash);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
     }
 
     // ------- 缂傛牞绶?-------
@@ -158,7 +164,7 @@ const API_CLAIM = '/SaveBite/pages/donationList/claim_donation.php';
           <option value="picked_up"${o.donation_status==='picked_up' ? ' selected' : ''}>picked_up</option>
         </select>`;
 
-      // 閹规劘绂掗弮銉︽埂閿涙艾褰茬紓鏍帆 input閿涘牅绮栭敓?~ +100 楠炶揪绱?
+      // Donate on: provide date range but do not auto-fill when empty
       {
         const today = new Date();
         const pad = n => String(n).padStart(2,'0');
@@ -166,7 +172,7 @@ const API_CLAIM = '/SaveBite/pages/donationList/claim_donation.php';
         const min = `${y}-${m}-${d}`;
         const max = `${y+100}-${m}-${d}`;
         const cur = (card.querySelector('[data-field="donation_date"]')?.textContent || '').trim();
-        const val = /^\d{4}-\d{2}-\d{2}$/.test(cur) ? cur : min;
+        const val = /^\d{4}-\d{2}-\d{2}$/.test(cur) ? cur : '';
         card.querySelector('[data-field="donation_date"]').innerHTML =
           `<input type="date" min="${min}" max="${max}" value="${val}">`;
       }
@@ -213,8 +219,9 @@ const API_CLAIM = '/SaveBite/pages/donationList/claim_donation.php';
       if (!payload.pickup_location) errs.push('Pickup location is required.');
       if (!payload.availability)    errs.push('Availability is required.');
       if (!payload.contact)         errs.push('Contact is required.');
-      if (!/^\d+$/.test(payload.quantity || '')) errs.push('Quantity must be an integer 閿?0.');
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(payload.donation_date || '')) errs.push('Donation date must be YYYY-MM-DD.');
+      if (!payload.donation_date)   errs.push('Donation date is required.');
+      if (!/^\d+$/.test(payload.quantity || '')) errs.push('Quantity must be an integer >= 0.');
+      if (payload.donation_date && !/^\d{4}-\d{2}-\d{2}$/.test(payload.donation_date)) errs.push('Donation date must be YYYY-MM-DD.');
       if (errs.length){ alert('Please fix:\n- ' + errs.join('\n- ')); return; }
 
       fetch(API_UPDATE, {
@@ -240,7 +247,6 @@ const API_CLAIM = '/SaveBite/pages/donationList/claim_donation.php';
         delete card.dataset.original; card.dataset.editing='0';
         card.querySelector('.card-head div:last-child').innerHTML = `
           <button class="mini" type="button" data-action="edit">Edit</button>
-          <button class="mini" type="button" data-action="claim">Claimed</button>
           <button class="mini" type="button" data-action="delete">Delete</button>`;
       })
       .catch(err=>{ console.error(err); alert(err.message || 'Update failed'); });
@@ -267,7 +273,6 @@ const API_CLAIM = '/SaveBite/pages/donationList/claim_donation.php';
       delete card.dataset.original; card.dataset.editing='0';
       card.querySelector('.card-head div:last-child').innerHTML = `
         <button class="mini" type="button" data-action="edit">Edit</button>
-        <button class="mini" type="button" data-action="claim">Claimed</button>
         <button class="mini" type="button" data-action="delete">Delete</button>`;
     }
 
@@ -300,40 +305,7 @@ const API_CLAIM = '/SaveBite/pages/donationList/claim_donation.php';
         alert(err.message || 'Delete failed');
       });
     }
-    // ------- 鐠併倝顣獮璺哄灩闂勩倧绱橠onation + Inventory 娑撯偓鐠у嘲鍨归敓?-------
-    function claim(card){
-      const donationId = Number(card.dataset.donationId||0);
-      if(!donationId){ alert('Missing donation_id'); return; }
 
-      const ok = confirm(
-        'Mark this donation as claimed? The record will be kept.'
-      );
-      if (!ok) return;
-
-      // 闂冨弶顒涢柌宥咁槻閿?
-      const btns = card.querySelectorAll('button');
-      btns.forEach(b => b.disabled = true);
-
-      fetch(API_CLAIM, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ donation_id: donationId })
-      })
-      .then(async r => {
-        const text = await r.text();
-        let json; try{ json = JSON.parse(text); } catch(e){ throw new Error('Bad JSON: ' + text); }
-        if (!json.success) throw new Error(json.error || 'Claim failed');
-        // Keep card; just inform user and re-enable buttons
-        // ensure single success prompt
-        alert('Marked as claimed. A notification has been created.');
-        btns.forEach(b => b.disabled = false);
-      })
-      .catch(err => {
-        console.error(err);
-        alert(err.message || 'Claim failed');
-        btns.forEach(b => b.disabled = false);
-      });
-    }
   }
 
   // 閺嗘挳婀?& 閼奉亜濮╅崚婵嗩潗閿?

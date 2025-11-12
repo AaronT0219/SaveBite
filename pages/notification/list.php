@@ -50,21 +50,19 @@ try {
   // Build pretty messages per type
   $fiIds = [];
   $donIds = [];
-  $donFoodIds = [];
+  // removed: $donFoodIds used for 'Moved to donation'
   $mpIds = [];
   foreach ($rows as $r) {
     $t = (string)($r['type'] ?? '');
     $ref = (int)($r['ref_id'] ?? 0);
     if ($t === 'inventory' && $ref > 0) $fiIds[$ref] = true;
-    if ($t === 'donation' && $ref > 0) {
-      if (($r['title'] ?? '') === 'Moved to donation') $donFoodIds[$ref] = true; else $donIds[$ref] = true;
-    }
+    if ($t === 'donation' && $ref > 0) { $donIds[$ref] = true; }
     if ($t === 'meal_plan' && $ref > 0) $mpIds[$ref] = true;
   }
 
   // Prefetch maps
   $foodMap = [];
-  $allFoodIds = array_keys($fiIds + $donFoodIds);
+  $allFoodIds = array_keys($fiIds);
   if ($allFoodIds) {
     $ph = implode(',', array_fill(0, count($allFoodIds), '?'));
     $q = $pdo->prepare("SELECT foodItem_id, food_name, expiry_date FROM fooditem WHERE user_id=? AND foodItem_id IN ($ph)");
@@ -131,24 +129,13 @@ try {
       }
     } elseif ($t === 'donation') {
       $title = (string)($r['title'] ?? '');
-      if ($title === 'Donation created' || $title === 'Pickup tomorrow') {
+      if ($title === 'Donation created') {
         if ($ref && isset($donMap[$ref])) {
           $date = (string)($donMap[$ref]['donation_date'] ?? '');
           $name = (string)($donNameMap[$ref] ?? 'Donation');
-          if ($title === 'Donation created') {
-            $msg = $date ? sprintf('%s marked as donated (Donated on: %s)', $name, $date)
-                         : sprintf('%s marked as donated', $name);
-          } else { // Pickup tomorrow
-            $msg = $date ? sprintf('%s pickup scheduled (Donated on: %s)', $name, $date)
-                         : sprintf('%s pickup scheduled', $name);
-          }
+          $msg = $date ? sprintf('%s marked as donated (Donated on: %s)', $name, $date)
+                       : sprintf('%s marked as donated', $name);
         }
-      } elseif ($title === 'Moved to donation') {
-        $name = isset($foodMap[$ref]) ? (string)$foodMap[$ref]['food_name'] : '';
-        $msg = $name ? sprintf('%s moved to donation list', $name) : 'Moved to donation list';
-      } elseif ($title === 'Donation claimed') {
-        // 此类通知在 claim 时写入了完整描述，优先使用 summary
-        $msg = (string)($r['summary'] ?? 'Donation claimed');
       } elseif ($title === 'Donation picked up') {
         if ($ref && isset($donMap[$ref])) {
           $date = (string)($donMap[$ref]['donation_date'] ?? '');
@@ -163,7 +150,9 @@ try {
       if ($ref && isset($mealMap[$ref])) {
         $name = (string)($mealMap[$ref]['meal_name'] ?? 'Meal');
         $date = (string)($mealMap[$ref]['mealplan_date'] ?? '');
-        $msg = $date ? sprintf('%s on %s', $name, $date) : $name;
+        $msg = $date
+          ? sprintf('%s planned on %s', $name, $date)
+          : sprintf('A new Meal Plan %s has been created', $name);
       }
     }
     $r['message'] = $msg;

@@ -73,7 +73,7 @@ try {
   // 3) 新建 donation
   $insDon = $pdo->prepare("
     INSERT INTO donation (donor_user_id, status, pickup_location, availability, contact, donation_date, description, category)
-    VALUES (:uid, :status, '', '', '', CURDATE(), NULL, :cat)
+    VALUES (:uid, :status, '', '', '', NULL, NULL, :cat)
   ");
   $insDon->execute([
     ':uid'    => $uid,
