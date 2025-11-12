@@ -262,6 +262,10 @@
       alert('This item is already used or expired and cannot be donated.');
       return;
     }
+    if (status === 'reserved') {
+      alert('This item is planned in a meal and cannot be donated.');
+      return;
+    }
 
     const id = Number(card.dataset.id);
     if (!id || isNaN(id)) { alert('Invalid fooditem id'); return; }

@@ -100,7 +100,7 @@
           <div class="row"><span class="label">Donation status:</span>
             <span class="value" data-field="donation_status">${esc(it.donation_status || 'pending')}</span>
           </div>
-          <div class="row"><span class="label">Donated on:</span>
+          <div class="row"><span class="label">Donation Date:</span>
             <span class="value" data-field="donation_date">${esc(it.donation_date || '')}</span>
           </div>
 

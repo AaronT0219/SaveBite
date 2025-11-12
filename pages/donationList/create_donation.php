@@ -53,6 +53,19 @@ try {
     respond(409, ['success'=>false,'error'=>'This item cannot be donated in current status.']);
   }
 
+  // Block donating items that are already planned for meals.
+  // Rule: if this specific item is reserved, disallow donation.
+  if ($curStatus === 'reserved') {
+    // Create a user-facing notification and block.
+    $insN = $pdo->prepare("INSERT INTO notification (user_id, target_type, target_id, title, description, status, notification_date)
+                           VALUES (:uid, 'inventory', :fid, 'Donation blocked',
+                                   'You cannot split an item between meal plan and donation. Create two separate items if needed.',
+                                   'unread', NOW())");
+    $insN->execute([':uid'=>$uid, ':fid'=>$foodItemId]);
+    $pdo->rollBack();
+    respond(409, ['success'=>false,'error'=>'This item is planned in a meal (reserved) and cannot be donated.']);
+  }
+
   // 2) 防重复：同一 fooditem 已存在 pending 记录则拒绝
   $dup = $pdo->prepare("
     SELECT 1

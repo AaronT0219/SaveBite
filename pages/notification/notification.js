@@ -125,7 +125,8 @@ async function openDetails(n){
   const base = '/SaveBite/templates/base.php?page=';
   if (n.type === 'inventory') url = `${base}inventory#item-${n.ref_id || ''}`;
   if (n.type === 'donation')  url = `${base}donationList#donation-${n.ref_id || ''}`;
-  if (n.type === 'meal_plan') url = `${base}mealplan#plan-${n.ref_id || ''}`;
+  // The actual page slug is 'meal', not 'mealplan'
+  if (n.type === 'meal_plan') url = `${base}meal`;
   window.location.href = url;
 }
 

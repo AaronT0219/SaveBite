@@ -25,11 +25,12 @@ try {
             description          AS summary,
             NULL                 AS details,
             CASE WHEN status='seen' THEN 1 ELSE 0 END AS is_read,
-            notification_date    AS created_at
+            CASE WHEN TIME(notification_date) = '00:00:00' THEN NOW() ELSE notification_date END AS created_at
           FROM notification
           WHERE user_id = :uid";
   if ($filter === 'unread') {
-    $sql .= " AND status='unread'";
+    // Treat any non-'seen' value as unread (covers legacy/invalid values)
+    $sql .= " AND status <> 'seen'";
   }
   if (is_string($type)) {
     $type = trim($type);
@@ -121,7 +122,16 @@ try {
     $ref = (int)($r['ref_id'] ?? 0);
     $msg = (string)($r['title'] ?? '');
     if ($t === 'inventory') {
-      if ($ref && isset($foodMap[$ref])) {
+      $title = (string)($r['title'] ?? '');
+      if ($title === 'Donation blocked') {
+        // Specific message when donating is blocked due to meal plan conflict
+        if ($ref && isset($foodMap[$ref])) {
+          $name = (string)($foodMap[$ref]['food_name'] ?? 'Item');
+          $msg = sprintf('Cannot split %s between meal plan and donation. Create two separate items.', $name);
+        } else {
+          $msg = 'Cannot split item between meal plan and donation. Create two separate items.';
+        }
+      } else if ($ref && isset($foodMap[$ref])) {
         $name = (string)($foodMap[$ref]['food_name'] ?? 'Item');
         $date = (string)($foodMap[$ref]['expiry_date'] ?? '');
         if ($date !== '') $msg = sprintf('%s will expire on %s', $name, $date);
@@ -133,14 +143,14 @@ try {
         if ($ref && isset($donMap[$ref])) {
           $date = (string)($donMap[$ref]['donation_date'] ?? '');
           $name = (string)($donNameMap[$ref] ?? 'Donation');
-          $msg = $date ? sprintf('%s marked as donated (Donated on: %s)', $name, $date)
+          $msg = $date ? sprintf('%s marked as donated (Donation Date: %s)', $name, $date)
                        : sprintf('%s marked as donated', $name);
         }
       } elseif ($title === 'Donation picked up') {
         if ($ref && isset($donMap[$ref])) {
           $date = (string)($donMap[$ref]['donation_date'] ?? '');
           $name = (string)($donNameMap[$ref] ?? 'Donation');
-          $msg = $date ? sprintf('%s picked up (Donated on: %s)', $name, $date)
+          $msg = $date ? sprintf('%s picked up (Donation Date: %s)', $name, $date)
                        : sprintf('%s picked up', $name);
         } else {
           $msg = 'Donation picked up';
@@ -159,9 +169,36 @@ try {
   }
   unset($r);
 
-  $cnt = $pdo->prepare("SELECT COUNT(*) FROM notification WHERE user_id=:uid AND status='unread'");
-  $cnt->execute([':uid' => $userId]);
-  $unread = (int)$cnt->fetchColumn();
+  // Only show meal_plan notifications for plans scheduled for tomorrow
+  if ($rows) {
+    $tomorrow = (new DateTime('tomorrow'))->format('Y-m-d');
+    $rows = array_values(array_filter($rows, function($r) use ($mealMap, $tomorrow) {
+      if ((string)($r['type'] ?? '') !== 'meal_plan') return true;
+      $ref = (int)($r['ref_id'] ?? 0);
+      $date = isset($mealMap[$ref]) ? (string)$mealMap[$ref]['mealplan_date'] : '';
+      return $date === $tomorrow;
+    }));
+  }
+
+  // Deduplicate meal_plan notifications caused by two sources
+  // Keep the newest per (type='meal_plan', ref_id)
+  if ($rows) {
+    $seen = [];
+    $unique = [];
+    foreach ($rows as $row) {
+      if (($row['type'] ?? '') === 'meal_plan') {
+        $k = 'meal_plan#' . (int)($row['ref_id'] ?? 0);
+        if (isset($seen[$k])) continue;
+        $seen[$k] = true;
+      }
+      $unique[] = $row;
+    }
+    $rows = $unique;
+  }
+
+  // Unread count based on filtered result set
+  $unread = 0;
+  foreach ($rows as $r) { if (!(int)($r['is_read'] ?? 0)) $unread++; }
 
   echo json_encode(['ok'=>true, 'unread_count'=>$unread, 'items'=>$rows], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {

@@ -30,9 +30,14 @@ try {
   if ((int)$owner !== $uid) respond(403, ['success'=>false,'error'=>'permission denied']);
 
   // 简单删除（不做额外级联）
+  $pdo->beginTransaction();
   $stmt = $pdo->prepare("DELETE FROM fooditem WHERE foodItem_id = ?");
   $stmt->execute([$id]);
-  respond(200, ['success'=>true, 'deleted'=>true, 'fooditem_id'=>$id]);
+  // Remove any notifications linked to this food item for the current user
+  $delNoti = $pdo->prepare("DELETE FROM notification WHERE user_id = ? AND target_type = 'inventory' AND target_id = ?");
+  $delNoti->execute([$uid, $id]);
+  $pdo->commit();
+  respond(200, ['success'=>true, 'deleted'=>true, 'fooditem_id'=>$id, 'notifications_deleted'=>true]);
 } catch (Throwable $e) {
   respond(500, ['success'=>false, 'error'=>$e->getMessage()]);
 }

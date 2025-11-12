@@ -153,7 +153,7 @@ try {
       $donDate = (string)($qDate->fetchColumn() ?: '');
 
       $desc = $donDate !== ''
-        ? ($firstName . ' picked up (Donated on: ' . $donDate . ')')
+        ? ($firstName . ' picked up (Donation Date: ' . $donDate . ')')
         : ($firstName . ' picked up');
 
       $ins = $pdo->prepare(

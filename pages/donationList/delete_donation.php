@@ -54,6 +54,10 @@ try{
     respond(404, ['success'=>false,'error'=>'Delete failed: donation not found or already deleted','donation_id'=>$donationId]);
   }
 
+  // 2.1) Remove related notifications for this donation
+  $delNoti = $pdo->prepare("DELETE FROM notification WHERE user_id = ? AND target_type = 'donation' AND target_id = ?");
+  $delNoti->execute([$uid, $donationId]);
+
   // 3) **尝试把对应 fooditem 恢复为 available**
   if (!empty($ids)) {
     $chk = $pdo->prepare("

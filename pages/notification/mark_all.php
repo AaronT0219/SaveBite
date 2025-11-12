@@ -14,7 +14,7 @@ if (!$userId) {
 try {
   $stmt = $pdo->prepare(
     "UPDATE notification SET status='seen'
-     WHERE user_id=:uid AND status='unread'"
+     WHERE user_id=:uid AND status <> 'seen'"
   );
   $stmt->execute([':uid'=>$userId]);
 
