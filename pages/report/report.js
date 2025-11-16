@@ -22,6 +22,16 @@ let reportData = {
 function initReportPage() {
     console.log("🚀 Initializing Report Page...");
 
+    // Always destroy existing charts first to ensure clean state
+    destroyAllCharts();
+
+    // Restore saved filter state if exists
+    const savedFilter = sessionStorage.getItem("reportFilter");
+    if (savedFilter) {
+        currentFilter = savedFilter;
+        console.log(`📌 Restored filter: ${currentFilter}`);
+    }
+
     // Check if Chart.js is loaded, if not load it first
     if (typeof Chart === "undefined") {
         console.log("📦 Loading Chart.js...");
@@ -29,7 +39,7 @@ function initReportPage() {
         script.src = "https://cdn.jsdelivr.net/npm/chart.js";
         script.onload = () => {
             console.log("✅ Chart.js loaded successfully");
-            loadReportData();
+            loadInitialData();
         };
         script.onerror = () => {
             console.error("❌ Failed to load Chart.js");
@@ -37,7 +47,47 @@ function initReportPage() {
         document.head.appendChild(script);
     } else {
         console.log("✅ Chart.js already loaded");
-        loadReportData();
+        loadInitialData();
+    }
+}
+
+// Load initial data based on current filter
+function loadInitialData() {
+    if (currentFilter === "dateRange") {
+        // Check if saved dates exist in session storage
+        const savedStartDate = sessionStorage.getItem("reportStartDate");
+        const savedEndDate = sessionStorage.getItem("reportEndDate");
+
+        let startDate, endDate;
+
+        if (savedStartDate && savedEndDate) {
+            // Use saved dates
+            startDate = savedStartDate;
+            endDate = savedEndDate;
+            console.log(
+                `📅 Loading saved date range: ${startDate} to ${endDate}`
+            );
+        } else {
+            // For date range, load default 7 days of data
+            const today = new Date();
+            const sevenDaysAgo = new Date(today);
+            sevenDaysAgo.setDate(today.getDate() - 7);
+
+            startDate = sevenDaysAgo.toISOString().split("T")[0];
+            endDate = today.toISOString().split("T")[0];
+
+            // Save default dates
+            sessionStorage.setItem("reportStartDate", startDate);
+            sessionStorage.setItem("reportEndDate", endDate);
+
+            console.log(
+                `📅 Loading default date range: ${startDate} to ${endDate}`
+            );
+        }
+
+        loadReportData("dateRange", startDate, endDate);
+    } else {
+        loadReportData(currentFilter);
     }
 }
 
@@ -62,21 +112,8 @@ async function loadReportData(
             reportData = result.data;
             console.log("✅ Report data loaded successfully", reportData);
 
-            // Check if charts exist, if not initialize them
-            if (
-                !monthlyChart ||
-                !categoryBarChart ||
-                !yearlyChart ||
-                !dateRangeChart
-            ) {
-                initializePageContent();
-            } else {
-                // Just update existing charts and metrics
-                initializeMetrics();
-                updateCharts();
-                animateProgress();
-                showChartSection(filter);
-            }
+            // Always initialize page content to ensure everything is set up
+            initializePageContent();
         } else {
             console.error("❌ Failed to fetch report data:", result.message);
             // Fall back to empty data
@@ -88,21 +125,8 @@ async function loadReportData(
                 timeData: { labels: ["No Data"], donations: [0], food: [0] },
             };
 
-            // Check if charts exist, if not initialize them
-            if (
-                !monthlyChart ||
-                !categoryBarChart ||
-                !yearlyChart ||
-                !dateRangeChart
-            ) {
-                initializePageContent();
-            } else {
-                // Just update existing charts and metrics
-                initializeMetrics();
-                updateCharts();
-                animateProgress();
-                showChartSection(filter);
-            }
+            // Show empty state since there's no data
+            initializePageContent();
         }
     } catch (error) {
         console.error("❌ Error fetching report data:", error);
@@ -115,54 +139,140 @@ async function loadReportData(
             timeData: { labels: ["No Data"], donations: [0], food: [0] },
         };
 
-        // Check if charts exist, if not initialize them
-        if (
-            !monthlyChart ||
-            !categoryBarChart ||
-            !yearlyChart ||
-            !dateRangeChart
-        ) {
-            initializePageContent();
-        } else {
-            // Just update existing charts and metrics
-            initializeMetrics();
-            updateCharts();
-            animateProgress();
-            showChartSection(filter);
-        }
+        // Show empty state since there's no data
+        initializePageContent();
     }
 }
 
 // Initialize all page content
 function initializePageContent() {
-    initializeMetrics();
-    initializeDatePicker();
-    initializeChartFilter();
-    initializeCharts();
-    updateCharts(); // Update charts with current data
-    animateProgress();
-    showChartSection(currentFilter);
+    // Check if user has any data
+    const hasData =
+        reportData.totalFoodSave > 0 || reportData.totalDonations > 0;
+
+    console.log(
+        `📊 Data check: totalFoodSave=${reportData.totalFoodSave}, totalDonations=${reportData.totalDonations}, hasData=${hasData}`
+    );
+
+    if (!hasData) {
+        // Show empty state message
+        showEmptyState();
+    } else {
+        // Show charts and initialize everything
+        hideEmptyState();
+        initializeMetrics();
+        initializeDatePicker();
+        initializeChartFilter();
+        initializeCharts();
+        updateCharts(); // Update charts with current data
+        showChartSection(currentFilter);
+    }
+}
+
+// Show empty state message
+function showEmptyState() {
+    console.log("🔍 Showing empty state message");
+
+    const emptyState = document.getElementById("emptyStateMessage");
+    const chartsContent = document.getElementById("chartsContent");
+    const filterControls = document.querySelector(
+        ".d-flex.justify-content-center"
+    );
+    const metricsRow = document.querySelector(".row.g-4.mb-4");
+
+    if (emptyState) {
+        emptyState.style.display = "block";
+        console.log("✅ Empty state message shown");
+    }
+    if (chartsContent) chartsContent.style.display = "none";
+    if (filterControls) filterControls.style.display = "none";
+    if (metricsRow) metricsRow.style.display = "none";
+
+    // Reinitialize Lucide icons for the empty state
+    if (typeof lucide !== "undefined") {
+        lucide.createIcons();
+    }
+}
+
+// Hide empty state message
+function hideEmptyState() {
+    console.log("🔍 Hiding empty state message");
+
+    const emptyState = document.getElementById("emptyStateMessage");
+    const chartsContent = document.getElementById("chartsContent");
+    const filterControls = document.querySelector(
+        ".d-flex.justify-content-center"
+    );
+    const metricsRow = document.querySelector(".row.g-4.mb-4");
+
+    if (emptyState) emptyState.style.display = "none";
+    if (chartsContent) {
+        chartsContent.style.display = "block";
+        console.log("✅ Charts content shown");
+    }
+    if (filterControls) filterControls.style.display = "flex";
+    if (metricsRow) metricsRow.style.display = "flex";
 }
 
 // Export to window for page loader
 window.initReportPage = initReportPage;
 
+// Export refresh function for when page is loaded via navigation
+window.refreshReportPage = function () {
+    console.log("🔄 Refreshing report page via navigation...");
+    if (document.getElementById("emptyStateMessage")) {
+        // Destroy existing charts first
+        destroyAllCharts();
+        // Reinitialize everything
+        initReportPage();
+    }
+};
+
 // Initialize on page load (for standalone loading)
 document.addEventListener("DOMContentLoaded", function () {
-    if (document.getElementById("progressBar")) {
+    if (document.getElementById("emptyStateMessage")) {
+        initReportPage();
+    }
+});
+
+// Reinitialize when page becomes visible (e.g., when navigating back)
+document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && document.getElementById("emptyStateMessage")) {
+        console.log("🔄 Page visible again, reinitializing...");
+        // Destroy existing charts first
+        destroyAllCharts();
+        // Reinitialize everything
         initReportPage();
     }
 });
 
 // Initialize metrics display
 function initializeMetrics() {
-    animateValue("totalFoodSave", 0, reportData.totalFoodSave, 2000);
-    animateValue("totalDonations", 0, reportData.totalDonations, 2000);
+    // Get current values or start from 0
+    const currentFoodSave =
+        parseFloat(document.getElementById("totalFoodSave")?.textContent) || 0;
+    const currentDonations =
+        parseInt(document.getElementById("totalDonations")?.textContent) || 0;
+
+    animateValue(
+        "totalFoodSave",
+        currentFoodSave,
+        reportData.totalFoodSave,
+        1000
+    );
+    animateValue(
+        "totalDonations",
+        currentDonations,
+        reportData.totalDonations,
+        1000
+    );
 }
 
 // Animate number counting
 function animateValue(id, start, end, duration) {
     const element = document.getElementById(id);
+    if (!element) return;
+
     const range = end - start;
     const increment = range / (duration / 16);
     let current = start;
@@ -173,8 +283,7 @@ function animateValue(id, start, end, duration) {
             current = end;
             clearInterval(timer);
         }
-        element.textContent =
-            id === "totalFoodSave" ? current.toFixed(1) : Math.floor(current);
+        element.textContent = Math.floor(current);
     }, 16);
 }
 
@@ -182,15 +291,58 @@ function animateValue(id, start, end, duration) {
 function initializeChartFilter() {
     const chartFilter = document.getElementById("chartFilter");
 
-    chartFilter.addEventListener("change", (e) => {
+    // Remove existing event listener by cloning and replacing the element
+    const newChartFilter = chartFilter.cloneNode(true);
+    chartFilter.parentNode.replaceChild(newChartFilter, chartFilter);
+
+    // Restore saved filter in dropdown AFTER replacing
+    if (currentFilter) {
+        newChartFilter.value = currentFilter;
+    }
+
+    newChartFilter.addEventListener("change", (e) => {
         currentFilter = e.target.value;
         console.log(`🔄 Switching to ${currentFilter} view`);
+
+        // Save filter to session storage
+        sessionStorage.setItem("reportFilter", currentFilter);
 
         // Reload data for the new filter
         if (currentFilter !== "dateRange") {
             loadReportData(currentFilter);
         } else {
-            // Just show the date range section without loading data
+            // For date range, check if saved dates exist
+            const savedStartDate = sessionStorage.getItem("reportStartDate");
+            const savedEndDate = sessionStorage.getItem("reportEndDate");
+
+            let startDate, endDate;
+
+            if (savedStartDate && savedEndDate) {
+                // Use saved dates
+                startDate = savedStartDate;
+                endDate = savedEndDate;
+                console.log(
+                    `📅 Using saved date range: ${startDate} to ${endDate}`
+                );
+            } else {
+                // Use default 7 days of data
+                const today = new Date();
+                const sevenDaysAgo = new Date(today);
+                sevenDaysAgo.setDate(today.getDate() - 7);
+
+                startDate = sevenDaysAgo.toISOString().split("T")[0];
+                endDate = today.toISOString().split("T")[0];
+
+                // Save default dates
+                sessionStorage.setItem("reportStartDate", startDate);
+                sessionStorage.setItem("reportEndDate", endDate);
+
+                console.log(
+                    `📅 Loading default date range: ${startDate} to ${endDate}`
+                );
+            }
+
+            loadReportData("dateRange", startDate, endDate);
             showChartSection(currentFilter);
         }
     });
@@ -231,37 +383,46 @@ function showChartSection(filter) {
     }
 }
 
-// Animate progress bar
-function animateProgress() {
-    const progressBar = document.getElementById("progressBar");
-    const targetProgress = reportData.progress;
-
-    setTimeout(() => {
-        progressBar.style.width = targetProgress + "%";
-        progressBar.setAttribute("aria-valuenow", targetProgress);
-        progressBar.querySelector("span").textContent = targetProgress + "%";
-    }, 500);
-}
-
 // Initialize date picker
 function initializeDatePicker() {
     const applyBtn = document.getElementById("applyDateRange");
     const startDateInput = document.getElementById("startDate");
     const endDateInput = document.getElementById("endDate");
 
-    // Set default dates
-    const today = new Date();
-    const sixMonthsAgo = new Date(
-        today.getFullYear(),
-        today.getMonth() - 6,
-        today.getDate()
-    );
+    // Check if saved dates exist in session storage
+    const savedStartDate = sessionStorage.getItem("reportStartDate");
+    const savedEndDate = sessionStorage.getItem("reportEndDate");
 
-    startDateInput.valueAsDate = sixMonthsAgo;
-    endDateInput.valueAsDate = today;
+    if (savedStartDate && savedEndDate) {
+        // Use saved dates
+        startDateInput.value = savedStartDate;
+        endDateInput.value = savedEndDate;
+        console.log(
+            `📅 Restored saved dates: ${savedStartDate} to ${savedEndDate}`
+        );
+    } else {
+        // Set default dates - 1 week from current day
+        const today = new Date();
+        const oneWeekAgo = new Date(today);
+        oneWeekAgo.setDate(today.getDate() - 7);
+
+        const defaultStartDate = oneWeekAgo.toISOString().split("T")[0];
+        const defaultEndDate = today.toISOString().split("T")[0];
+
+        startDateInput.value = defaultStartDate;
+        endDateInput.value = defaultEndDate;
+
+        // Save default dates to session storage
+        sessionStorage.setItem("reportStartDate", defaultStartDate);
+        sessionStorage.setItem("reportEndDate", defaultEndDate);
+    }
+
+    // Remove existing event listener by cloning and replacing the button
+    const newApplyBtn = applyBtn.cloneNode(true);
+    applyBtn.parentNode.replaceChild(newApplyBtn, applyBtn);
 
     // Apply date range
-    applyBtn.addEventListener("click", () => {
+    newApplyBtn.addEventListener("click", () => {
         const startDate = startDateInput.value;
         const endDate = endDateInput.value;
 
@@ -272,6 +433,11 @@ function initializeDatePicker() {
             }
 
             console.log(`📅 Applying date range: ${startDate} to ${endDate}`);
+
+            // Save dates to session storage
+            sessionStorage.setItem("reportStartDate", startDate);
+            sessionStorage.setItem("reportEndDate", endDate);
+
             // Fetch data for the date range
             loadReportData("dateRange", startDate, endDate);
         } else {
@@ -406,6 +572,10 @@ function createMonthlyChart() {
                     display: true,
                     position: "left",
                     beginAtZero: true,
+                    ticks: {
+                        precision: 0,
+                        stepSize: 1,
+                    },
                     title: {
                         display: true,
                         text: "Donations Made",
@@ -416,6 +586,10 @@ function createMonthlyChart() {
                     display: true,
                     position: "right",
                     beginAtZero: true,
+                    ticks: {
+                        precision: 0,
+                        stepSize: 1,
+                    },
                     grid: {
                         drawOnChartArea: false,
                     },
@@ -479,6 +653,7 @@ function createCategoryBarChart() {
                     beginAtZero: true,
                     ticks: {
                         precision: 0,
+                        stepSize: 1,
                     },
                 },
             },
@@ -531,6 +706,10 @@ function createYearlyChart() {
                     display: true,
                     position: "left",
                     beginAtZero: true,
+                    ticks: {
+                        precision: 0,
+                        stepSize: 1,
+                    },
                     title: {
                         display: true,
                         text: "Donations Made",
@@ -541,6 +720,10 @@ function createYearlyChart() {
                     display: true,
                     position: "right",
                     beginAtZero: true,
+                    ticks: {
+                        precision: 0,
+                        stepSize: 1,
+                    },
                     grid: {
                         drawOnChartArea: false,
                     },
@@ -601,6 +784,10 @@ function createDateRangeChart() {
                     display: true,
                     position: "left",
                     beginAtZero: true,
+                    ticks: {
+                        precision: 0,
+                        stepSize: 1,
+                    },
                     title: {
                         display: true,
                         text: "Donations Made",
@@ -611,6 +798,10 @@ function createDateRangeChart() {
                     display: true,
                     position: "right",
                     beginAtZero: true,
+                    ticks: {
+                        precision: 0,
+                        stepSize: 1,
+                    },
                     grid: {
                         drawOnChartArea: false,
                     },
@@ -627,6 +818,12 @@ function createDateRangeChart() {
 // Update all charts with current data
 function updateCharts() {
     console.log("🔄 Updating all charts with new data");
+
+    // Verify canvas elements exist before updating
+    if (!document.getElementById("monthlyChart")) {
+        console.warn("⚠️ Chart canvases not found in DOM");
+        return;
+    }
 
     // Update Monthly Chart
     if (monthlyChart) {

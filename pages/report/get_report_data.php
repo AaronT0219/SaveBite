@@ -28,8 +28,8 @@ try {
         "data" => []
     ];
 
-    // Get total food items saved (sum of quantity from food_items)
-    $stmt = $pdo->prepare("SELECT COALESCE(SUM(quantity), 0) as total_food_save FROM fooditem WHERE user_id = ?");
+    // Get total food items saved (sum of quantity from food_items, excluding expired items)
+    $stmt = $pdo->prepare("SELECT COALESCE(SUM(quantity), 0) as total_food_save FROM fooditem WHERE user_id = ? AND status != 'expired'");
     $stmt->execute([$user_id]);
     $totalFoodSave = $stmt->fetch()['total_food_save'];
 
@@ -60,7 +60,7 @@ try {
             category, 
             COALESCE(SUM(quantity), 0) as total_quantity 
         FROM fooditem 
-        WHERE user_id = ? AND category IN ($placeholders)
+        WHERE user_id = ? AND category IN ($placeholders) AND status != 'expired'
         GROUP BY category 
         ORDER BY FIELD(category, 'Produce', 'Protein', 'Dairy & Bakery', 'Grains & Pantry', 'Snacks & Beverages')
     ");
@@ -85,11 +85,11 @@ try {
             // Get donations count and food save per year
             $stmtDonations = $pdo->prepare("
                 SELECT 
-                    YEAR(donation_date) as year,
+                    YEAR(created_at) as year,
                     COUNT(*) as count
                 FROM donation 
                 WHERE donor_user_id = ? 
-                GROUP BY YEAR(donation_date) 
+                GROUP BY YEAR(created_at) 
                 ORDER BY year DESC 
                 LIMIT 6
             ");
@@ -98,11 +98,11 @@ try {
             
             $stmtFood = $pdo->prepare("
                 SELECT 
-                    YEAR(expiry_date) as year,
+                    YEAR(created_at) as year,
                     COALESCE(SUM(quantity), 0) as total
                 FROM fooditem 
-                WHERE user_id = ? 
-                GROUP BY YEAR(expiry_date) 
+                WHERE user_id = ? AND status != 'expired'
+                GROUP BY YEAR(created_at) 
                 ORDER BY year DESC 
                 LIMIT 6
             ");
@@ -139,11 +139,11 @@ try {
             if ($startDate && $endDate) {
                 $stmtDonations = $pdo->prepare("
                     SELECT 
-                        DATE(donation_date) as date,
+                        DATE(created_at) as date,
                         COUNT(*) as count
                     FROM donation 
-                    WHERE donor_user_id = ? AND DATE(donation_date) BETWEEN ? AND ?
-                    GROUP BY DATE(donation_date) 
+                    WHERE donor_user_id = ? AND DATE(created_at) BETWEEN ? AND ?
+                    GROUP BY DATE(created_at) 
                     ORDER BY date ASC
                 ");
                 $stmtDonations->execute([$user_id, $startDate, $endDate]);
@@ -151,11 +151,11 @@ try {
                 
                 $stmtFood = $pdo->prepare("
                     SELECT 
-                        DATE(expiry_date) as date,
+                        DATE(created_at) as date,
                         COALESCE(SUM(quantity), 0) as total
                     FROM fooditem 
-                    WHERE user_id = ? AND DATE(expiry_date) BETWEEN ? AND ?
-                    GROUP BY DATE(expiry_date) 
+                    WHERE user_id = ? AND DATE(created_at) BETWEEN ? AND ? AND status != 'expired'
+                    GROUP BY DATE(created_at) 
                     ORDER BY date ASC
                 ");
                 $stmtFood->execute([$user_id, $startDate, $endDate]);
@@ -170,13 +170,19 @@ try {
                     $dateData[$row['date']]['food'] = (int)$row['total'];
                 }
                 
-                ksort($dateData);
+                // Fill in ALL dates in the range (including dates with no data)
+                $start = new DateTime($startDate);
+                $end = new DateTime($endDate);
+                $end->modify('+1 day'); // Include end date
+                $interval = new DateInterval('P1D');
+                $dateRange = new DatePeriod($start, $interval, $end);
                 
                 $timeData = ['labels' => [], 'donations' => [], 'food' => []];
-                foreach ($dateData as $date => $data) {
-                    $timeData['labels'][] = date('M d', strtotime($date));
-                    $timeData['donations'][] = $data['donations'] ?? 0;
-                    $timeData['food'][] = $data['food'] ?? 0;
+                foreach ($dateRange as $date) {
+                    $dateStr = $date->format('Y-m-d');
+                    $timeData['labels'][] = $date->format('M d');
+                    $timeData['donations'][] = $dateData[$dateStr]['donations'] ?? 0;
+                    $timeData['food'][] = $dateData[$dateStr]['food'] ?? 0;
                 }
             } else {
                 $timeData = ['labels' => [], 'donations' => [], 'food' => []];
@@ -187,51 +193,43 @@ try {
             // Get donations count and food save per month for current year
             $stmtDonations = $pdo->prepare("
                 SELECT 
-                    MONTH(donation_date) as month,
-                    MONTHNAME(donation_date) as month_name,
+                    MONTH(created_at) as month,
                     COUNT(*) as count
                 FROM donation 
-                WHERE donor_user_id = ? AND YEAR(donation_date) = YEAR(CURDATE())
-                GROUP BY MONTH(donation_date), MONTHNAME(donation_date)
-                ORDER BY MONTH(donation_date) ASC
+                WHERE donor_user_id = ? AND YEAR(created_at) = YEAR(CURDATE())
+                GROUP BY MONTH(created_at)
             ");
             $stmtDonations->execute([$user_id]);
             $donationsData = $stmtDonations->fetchAll(PDO::FETCH_ASSOC);
             
             $stmtFood = $pdo->prepare("
                 SELECT 
-                    MONTH(expiry_date) as month,
-                    MONTHNAME(expiry_date) as month_name,
+                    MONTH(created_at) as month,
                     COALESCE(SUM(quantity), 0) as total
                 FROM fooditem 
-                WHERE user_id = ? AND YEAR(expiry_date) = YEAR(CURDATE())
-                GROUP BY MONTH(expiry_date), MONTHNAME(expiry_date)
-                ORDER BY MONTH(expiry_date) ASC
+                WHERE user_id = ? AND YEAR(created_at) = YEAR(CURDATE()) AND status != 'expired'
+                GROUP BY MONTH(created_at)
             ");
             $stmtFood->execute([$user_id]);
             $foodData = $stmtFood->fetchAll(PDO::FETCH_ASSOC);
             
-            // Merge data by month
+            // Create array to store data by month
             $monthlyData = [];
             foreach ($donationsData as $row) {
-                $monthlyData[$row['month']]['name'] = $row['month_name'];
                 $monthlyData[$row['month']]['donations'] = (int)$row['count'];
             }
             foreach ($foodData as $row) {
-                if (!isset($monthlyData[$row['month']]['name'])) {
-                    $monthlyData[$row['month']]['name'] = $row['month_name'];
-                }
                 $monthlyData[$row['month']]['food'] = (int)$row['total'];
             }
             
-            ksort($monthlyData);
-            $monthlyData = array_slice($monthlyData, -6, 6, true);
+            // Create array with all 12 months of the year
+            $monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             
             $timeData = ['labels' => [], 'donations' => [], 'food' => []];
-            foreach ($monthlyData as $data) {
-                $timeData['labels'][] = $data['name'];
-                $timeData['donations'][] = $data['donations'] ?? 0;
-                $timeData['food'][] = $data['food'] ?? 0;
+            for ($month = 1; $month <= 12; $month++) {
+                $timeData['labels'][] = $monthNames[$month - 1];
+                $timeData['donations'][] = $monthlyData[$month]['donations'] ?? 0;
+                $timeData['food'][] = $monthlyData[$month]['food'] ?? 0;
             }
             break;
     }

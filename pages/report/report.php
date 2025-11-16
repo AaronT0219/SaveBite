@@ -1,10 +1,10 @@
 <?php 
 
-session_start();
+// session_start();
 
-echo '<pre>';
-print_r($_SESSION);
-echo '</pre>';
+// echo '<pre>';
+// print_r($_SESSION);
+// echo '</pre>';
 
 ?>
 
@@ -16,17 +16,7 @@ echo '</pre>';
         <h1 class="fw-bold">Track and Report</h1>
     </div>
 
-    <div class="mt-4 px-4">
-        <div class="mb-5">
-            <h3 class="fw-bold mb-3">Progress Indicator</h3>
-            <div class="progress" style="height: 30px;">
-                <div id="progressBar" class="progress-bar bg-dark" role="progressbar" style="width: 50%;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">
-                    <span class="fw-bold">50%</span>
-                </div>
-            </div>
-            <span class="text-muted small mt-2 d-block">Keep going</span>
-        </div>
-
+    <div class="mt-5 px-4">
         <div class="row g-4 mb-4">
             <div class="col-md-6">
                 <div class="metric-card shadow-sm">
@@ -36,7 +26,7 @@ echo '</pre>';
                     <div class="metric-content">
                         <h5 class="metric-label">Total Food Save</h5>
                         <h2 class="metric-value" id="totalFoodSave">0</h2>
-                        <p class="metric-unit">foods</p></p>
+                        <p class="metric-unit">foods</p>
                     </div>
                 </div>
             </div>
@@ -82,8 +72,31 @@ echo '</pre>';
             </div>
         </div>
 
-        <div class="charts-container shadow-sm p-4 bg-white rounded">
-            <div class="row g-4">
+        <div class="charts-container shadow-sm p-4 bg-white rounded" style="min-height: 425px;">
+            <!-- Empty State Message -->
+            <div id="emptyStateMessage" class="text-center py-5" style="display: none;">
+                <div class="mb-4">
+                    <i data-lucide="bar-chart-3" style="width: 80px; height: 80px; color: #6c757d;"></i>
+                </div>
+                <h3 class="fw-bold mb-3">No Data Yet</h3>
+                <p class="text-muted fs-5 mb-4">Start your journey to reduce food waste!</p>
+                <p class="text-muted mb-4">
+                    Begin logging food items in your inventory and making donations<br>
+                    to track your progress and see your impact.
+                </p>
+                <div class="d-flex gap-3 justify-content-center">
+                    <a href="#inventory" class="btn btn-dark btn-lg" onclick="loadPage(event, '../pages/inventory/inventory.php', 'inventory')">
+                        <i data-lucide="package" class="me-2" style="width: 20px; height: 20px;"></i>
+                        Add Food Items
+                    </a>
+                    <a href="#donationList" class="btn btn-outline-dark btn-lg" onclick="loadPage(event, '../pages/donationList/donationList.php', 'donationList')">
+                        <i data-lucide="heart" class="me-2" style="width: 20px; height: 20px;"></i>
+                        Make a Donation
+                    </a>
+                </div>
+            </div>
+
+            <div class="row g-4" id="chartsContent">
                 <!-- Yearly Chart -->
                 <div class="col-12 chart-section" id="yearlySection" style="display: none;">
                     <div class="chart-wrapper">
@@ -120,3 +133,4 @@ echo '</pre>';
             </div>
         </div>
     </div>
+</div>
