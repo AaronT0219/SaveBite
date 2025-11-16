@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 12, 2025 at 09:44 AM
+-- Generation Time: Nov 16, 2025 at 12:56 PM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.0.30
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -33,25 +33,29 @@ CREATE TABLE `donation` (
   `category` enum('Produce','Protein','Dairy & Bakery','Grains & Pantry','Snacks & Beverages') DEFAULT NULL,
   `pickup_location` varchar(60) DEFAULT NULL,
   `description` varchar(80) DEFAULT NULL,
-  `donation_date` date DEFAULT NULL,
+  `donation_date` date DEFAULT current_timestamp(),
   `donor_user_id` int(20) UNSIGNED NOT NULL,
   `claimant_user_id` int(20) UNSIGNED DEFAULT NULL,
   `availability` varchar(255) DEFAULT NULL,
-  `contact` varchar(255) DEFAULT NULL
+  `contact` varchar(255) DEFAULT NULL,
+  `created_at` date DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `donation`
 --
 
-INSERT INTO `donation` (`donation_id`, `status`, `category`, `pickup_location`, `description`, `donation_date`, `donor_user_id`, `claimant_user_id`, `availability`, `contact`) VALUES
-(47, 'pending', 'Produce', '', NULL, '2025-10-15', 10, NULL, '', ''),
-(48, 'pending', 'Produce', '', NULL, '2025-10-15', 10, NULL, '', ''),
-(49, 'pending', NULL, 'ddd', NULL, '2025-10-15', 10, NULL, NULL, NULL),
-(51, 'pending', NULL, 'midvalley', NULL, '2025-10-22', 11, NULL, NULL, NULL),
-(52, 'pending', NULL, 'midvalley', NULL, '2025-10-30', 11, NULL, NULL, NULL),
-(54, 'pending', NULL, 'city kepong', NULL, '2025-11-01', 11, NULL, NULL, NULL),
-(57, 'picked_up', 'Produce', 'park', '11', '2025-12-12', 8, NULL, 'yes', '60 1919191919');
+INSERT INTO `donation` (`donation_id`, `status`, `category`, `pickup_location`, `description`, `donation_date`, `donor_user_id`, `claimant_user_id`, `availability`, `contact`, `created_at`) VALUES
+(47, 'pending', 'Produce', '', NULL, '2025-10-15', 10, NULL, '', '', '2025-11-12'),
+(48, 'pending', 'Produce', '', NULL, '2025-10-15', 10, NULL, '', '', '2025-11-12'),
+(49, 'pending', NULL, 'ddd', NULL, '2025-10-15', 10, NULL, NULL, NULL, '2025-11-12'),
+(51, 'pending', NULL, 'midvalley', NULL, '2025-10-22', 11, NULL, NULL, NULL, '2025-11-12'),
+(52, 'pending', NULL, 'midvalley', NULL, '2025-10-30', 11, NULL, NULL, NULL, '2025-11-12'),
+(54, 'pending', NULL, 'city kepong', NULL, '2025-11-01', 11, NULL, NULL, NULL, '2025-11-12'),
+(57, 'picked_up', 'Produce', 'park', '11', '2025-12-12', 8, NULL, 'yes', '60 1919191919', '2025-11-12'),
+(62, 'pending', 'Protein', '', NULL, NULL, 12, NULL, '', '', '2025-11-12'),
+(63, 'pending', 'Grains & Pantry', '', NULL, NULL, 12, NULL, '', '', '2025-11-12'),
+(64, 'pending', 'Dairy & Bakery', '', NULL, NULL, 12, NULL, '', '', '2025-11-16');
 
 -- --------------------------------------------------------
 
@@ -74,7 +78,14 @@ INSERT INTO `donation_fooditem` (`donation_id`, `fooditem_id`, `quantity`) VALUE
 (48, 44, 5),
 (49, 43, 1),
 (52, 48, 5),
-(57, 81, 1);
+(57, 81, 1),
+(58, 87, 2),
+(59, 45, 5),
+(60, 43, 1),
+(61, 19, 4),
+(62, 86, 20),
+(63, 44, 3),
+(64, 91, 5);
 
 -- --------------------------------------------------------
 
@@ -92,7 +103,7 @@ CREATE TABLE `fooditem` (
   `description` varchar(80) DEFAULT NULL,
   `status` enum('available','used','expired','donation','reserved') NOT NULL,
   `user_id` int(20) UNSIGNED NOT NULL,
-  `created_at` date DEFAULT NULL
+  `created_at` date DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -100,24 +111,56 @@ CREATE TABLE `fooditem` (
 --
 
 INSERT INTO `fooditem` (`foodItem_id`, `category`, `food_name`, `quantity`, `expiry_date`, `storage_location`, `description`, `status`, `user_id`, `created_at`) VALUES
-(42, 'Produce', '34', 44, '2025-10-24', 'Fridge', '', 'used', 9, '2025-11-12'),
-(43, 'Produce', '1', 1, '1111-11-11', 'Fridge', '11', 'donation', 10, '2025-11-12'),
-(44, 'Produce', '55', 5, '2222-05-05', 'Fridge', '55', 'available', 10, '2025-11-12'),
-(47, 'Produce', 'Hush', 1, '2025-10-24', 'Fridge', '', 'available', 11, '2025-11-12'),
-(48, 'Produce', 'HashBrown', 5, '2025-12-07', 'Fridge', '', 'donation', 11, '2025-11-12'),
-(49, 'Dairy & Bakery', 'Burger', 8, '2025-11-08', 'Countertop', '', 'available', 11, '2025-11-12'),
-(53, 'Dairy & Bakery', 'Burger', 2, '2025-11-08', 'Countertop', '', 'reserved', 11, '2025-11-12'),
-(55, 'Produce', 'Apple', 2, '2025-11-15', 'Fridge', '', 'available', 11, '2025-11-12'),
-(56, 'Produce', 'Banana', 2, '2025-11-15', 'Fridge', '', 'available', 11, '2025-11-12'),
-(61, 'Produce', 'Apple', 1, '2025-11-15', 'Fridge', '', 'reserved', 11, '2025-11-12'),
-(62, 'Produce', 'Banana', 1, '2025-11-15', 'Fridge', '', 'reserved', 11, '2025-11-12'),
-(63, 'Produce', 'Grapes', 10, '2025-11-15', 'Fridge', '', 'reserved', 11, '2025-11-12'),
-(67, 'Produce', 'Pineapple', 1, '2025-11-08', 'Fridge', '', 'available', 11, '2025-11-12'),
-(72, 'Produce', 'Grapes', 3, '2025-11-22', 'Fridge', '', 'available', 11, '2025-11-12'),
-(77, 'Produce', 'Apple', 1, '2025-11-15', 'Fridge', '', 'reserved', 11, '2025-11-12'),
-(78, 'Produce', 'Banana', 1, '2025-11-15', 'Fridge', '', 'reserved', 11, '2025-11-12'),
-(79, 'Dairy & Bakery', 'Cookie', 1, '2025-10-31', 'Pantry', 'delicious cookies :)', 'reserved', 11, '2025-11-12'),
-(81, 'Produce', 'apple', 1, '2025-11-12', 'Fridge', '', 'used', 8, NULL);
+(1, 'Produce', 'Apples', 10, '2023-02-10', 'Fridge', 'Fresh red apples', 'used', 12, '2023-01-15'),
+(2, 'Protein', 'Chicken Breast', 6, '2023-03-05', 'Freezer', 'Boneless chicken breast 500g', 'used', 12, '2023-02-15'),
+(3, 'Dairy & Bakery', 'Milk', 3, '2023-03-25', 'Fridge', 'Low-fat milk 1L', 'expired', 12, '2023-03-01'),
+(4, 'Grains & Pantry', 'Rice', 5, '2023-09-10', 'Pantry', 'White jasmine rice 5kg', 'available', 12, '2023-06-15'),
+(5, 'Snacks & Beverages', 'Cookies', 8, '2023-07-15', 'Pantry', 'Chocolate chip cookies', 'available', 12, '2023-07-01'),
+(6, 'Produce', 'Carrots', 12, '2023-10-12', 'Fridge', 'Organic carrots', 'available', 12, '2023-09-25'),
+(7, 'Protein', 'Eggs', 12, '2023-05-20', 'Fridge', 'Free-range eggs', 'used', 12, '2023-05-01'),
+(8, 'Dairy & Bakery', 'Cheese', 2, '2023-11-10', 'Fridge', 'Cheddar cheese block', 'available', 12, '2023-10-15'),
+(9, 'Grains & Pantry', 'Oats', 3, '2023-12-30', 'Pantry', 'Instant oats 1kg', 'available', 12, '2023-12-01'),
+(10, 'Snacks & Beverages', 'Juice', 5, '2023-08-15', 'Fridge', 'Orange juice 1L', 'used', 12, '2023-08-01'),
+(11, 'Produce', 'Lettuce', 2, '2023-11-22', 'Fridge', 'Fresh lettuce leaves', 'available', 12, '2023-11-10'),
+(12, 'Protein', 'Fish Fillet', 3, '2023-09-05', 'Freezer', 'Salmon fillet 200g', 'used', 12, '2023-08-20'),
+(13, 'Dairy & Bakery', 'Butter', 2, '2023-12-20', 'Fridge', 'Salted butter 250g', 'available', 12, '2023-12-01'),
+(14, 'Grains & Pantry', 'Flour', 4, '2023-10-10', 'Pantry', 'All-purpose flour 2kg', 'available', 12, '2023-09-30'),
+(15, 'Snacks & Beverages', 'Chocolate Bar', 6, '2023-12-28', 'Pantry', 'Dark chocolate 70%', 'available', 12, '2023-12-10'),
+(16, 'Produce', 'Bananas', 8, '2024-02-03', 'Countertop', 'Ripe yellow bananas', 'used', 12, '2024-01-30'),
+(17, 'Protein', 'Tofu', 3, '2024-04-12', 'Fridge', 'Soft soybean tofu', 'available', 12, '2024-03-20'),
+(18, 'Dairy & Bakery', 'Yogurt', 5, '2024-05-05', 'Fridge', 'Greek yogurt cup', 'used', 12, '2024-04-25'),
+(19, 'Grains & Pantry', 'Pasta', 4, '2024-06-15', 'Pantry', 'Spaghetti pasta 500g', 'available', 12, '2024-06-01'),
+(20, 'Snacks & Beverages', 'Chips', 7, '2024-06-20', 'Pantry', 'Potato chips family pack', 'used', 12, '2024-06-10'),
+(21, 'Produce', 'Tomatoes', 6, '2024-07-10', 'Fridge', 'Cherry tomatoes pack', 'available', 12, '2024-07-01'),
+(22, 'Protein', 'Beef', 4, '2024-08-20', 'Freezer', 'Lean ground beef 500g', 'available', 12, '2024-08-01'),
+(23, 'Dairy & Bakery', 'Bread', 2, '2024-09-10', 'Countertop', 'Wholemeal bread loaf', 'used', 12, '2024-09-05'),
+(24, 'Grains & Pantry', 'Cereal', 3, '2024-10-05', 'Pantry', 'Honey oat cereal', 'available', 12, '2024-09-20'),
+(25, 'Snacks & Beverages', 'Soda', 6, '2024-10-25', 'Pantry', 'Canned soda drinks', 'available', 12, '2024-10-10'),
+(26, 'Produce', 'Spinach', 3, '2024-11-12', 'Fridge', 'Baby spinach leaves', 'used', 12, '2024-11-01'),
+(27, 'Protein', 'Sausages', 5, '2024-12-20', 'Freezer', 'Chicken sausages pack', 'available', 12, '2024-12-01'),
+(28, 'Dairy & Bakery', 'Croissant', 4, '2024-12-15', 'Countertop', 'Buttery croissant', 'used', 12, '2024-12-05'),
+(29, 'Grains & Pantry', 'Sugar', 4, '2024-11-30', 'Pantry', 'Brown sugar 1kg', 'available', 12, '2024-11-15'),
+(30, 'Snacks & Beverages', 'Energy Drink', 8, '2024-12-22', 'Pantry', 'Canned energy drink', 'available', 12, '2024-12-10'),
+(31, 'Produce', 'Mangoes', 5, '2025-03-01', 'Countertop', 'Sweet ripe mangoes', 'used', 12, '2025-02-20'),
+(32, 'Protein', 'Shrimp', 4, '2025-03-15', 'Freezer', 'Frozen shrimp 300g', 'available', 12, '2025-03-01'),
+(33, 'Dairy & Bakery', 'Cream Cheese', 2, '2025-04-05', 'Fridge', 'Cream cheese tub', 'available', 12, '2025-03-15'),
+(34, 'Grains & Pantry', 'Lentils', 3, '2025-05-25', 'Pantry', 'Red lentils 1kg', 'available', 12, '2025-05-10'),
+(35, 'Snacks & Beverages', 'Tea', 2, '2025-06-15', 'Pantry', 'Green tea bags 20pcs', 'available', 12, '2025-06-01'),
+(36, 'Produce', 'Oranges', 6, '2025-07-05', 'Countertop', 'Sweet oranges', 'used', 12, '2025-06-20'),
+(37, 'Protein', 'Pork Chop', 3, '2025-07-25', 'Freezer', 'Marinated pork chops', 'available', 12, '2025-07-10'),
+(38, 'Dairy & Bakery', 'Cream', 2, '2025-08-18', 'Fridge', 'Whipping cream 200ml', 'used', 12, '2025-08-10'),
+(39, 'Grains & Pantry', 'Beans', 5, '2025-09-10', 'Pantry', 'Canned baked beans', 'available', 12, '2025-08-30'),
+(40, 'Snacks & Beverages', 'Instant Coffee', 3, '2025-09-25', 'Pantry', 'Instant coffee jar', 'available', 12, '2025-09-10'),
+(41, 'Produce', 'Strawberries', 4, '2025-10-05', 'Fridge', 'Fresh strawberries pack', 'available', 12, '2025-09-28'),
+(42, 'Protein', 'Duck Meat', 2, '2025-11-05', 'Freezer', 'Frozen duck breast', 'reserved', 12, '2025-10-25'),
+(43, 'Dairy & Bakery', 'Whipped Cream', 1, '2025-11-12', 'Fridge', 'Spray whipped cream', 'available', 12, '2025-11-01'),
+(44, 'Grains & Pantry', 'Bread Crumbs', 3, '2025-12-10', 'Pantry', 'Seasoned bread crumbs', 'donation', 12, '2025-11-25'),
+(45, 'Snacks & Beverages', 'Biscuits', 5, '2025-12-20', 'Pantry', 'Butter biscuits tin', 'available', 12, '2025-12-01'),
+(86, 'Protein', 'Coconuts', 20, '2025-12-26', 'Fridge', '', 'donation', 12, '2025-11-12'),
+(88, 'Protein', 'Sprite', 10, '2026-01-01', 'Fridge', '', 'available', 12, '2025-11-16'),
+(89, 'Snacks & Beverages', 'Donuts', 5, '2025-11-19', 'Freezer', '', 'available', 12, '2025-11-16'),
+(90, 'Grains & Pantry', 'Pineapples', 10, '2026-03-05', 'Pantry', '', 'used', 12, '2025-11-16'),
+(91, 'Dairy & Bakery', 'Watermelon', 5, '2026-01-23', 'Fridge', '', 'donation', 12, '2025-11-16');
 
 -- --------------------------------------------------------
 
@@ -219,7 +262,18 @@ INSERT INTO `notification` (`notification_id`, `title`, `description`, `notifica
 (50, 'Donation created', 'You donated \"\" at city kepong', '2025-11-12 16:29:11', 'unread', 'donation', 54, 11),
 (53, 'apple will expire soon', 'Item \"apple\" expires on 2025-11-12', '2025-11-12 16:36:48', 'seen', 'inventory', 81, 8),
 (54, 'Donation created', 'You donated \"\" at ', '2025-11-12 16:36:53', 'seen', 'donation', 57, 8),
-(55, 'Donation picked up', 'apple picked up (Donated on: 2025-12-12)', '2025-11-12 16:38:07', 'seen', 'donation', 57, 8);
+(55, 'Donation picked up', 'apple picked up (Donated on: 2025-12-12)', '2025-11-12 16:38:07', 'seen', 'donation', 57, 8),
+(56, 'Donuts will expire soon', 'Item \"Donuts\" expires on 2025-11-19', '2025-11-16 19:52:05', 'unread', 'inventory', 89, 12),
+(59, 'Donation created', 'You donated \"\" at ', '2025-11-16 19:52:05', 'unread', 'donation', 47, 10),
+(60, 'Donation created', 'You donated \"\" at ', '2025-11-16 19:52:05', 'unread', 'donation', 48, 10),
+(61, 'Donation created', 'You donated \"\" at ddd', '2025-11-16 19:52:05', 'unread', 'donation', 49, 10),
+(62, 'Donation created', 'You donated \"\" at midvalley', '2025-11-16 19:52:05', 'unread', 'donation', 51, 11),
+(63, 'Donation created', 'You donated \"\" at midvalley', '2025-11-16 19:52:05', 'unread', 'donation', 52, 11),
+(64, 'Donation created', 'You donated \"\" at city kepong', '2025-11-16 19:52:05', 'unread', 'donation', 54, 11),
+(65, 'Donation created', 'You donated \"11\" at park', '2025-11-16 19:52:05', 'unread', 'donation', 57, 8),
+(66, 'Donation created', 'You donated \"\" at ', '2025-11-16 19:52:05', 'unread', 'donation', 62, 12),
+(67, 'Donation created', 'You donated \"\" at ', '2025-11-16 19:52:05', 'unread', 'donation', 63, 12),
+(68, 'Donation created', 'You donated \"\" at ', '2025-11-16 19:52:05', 'unread', 'donation', 64, 12);
 
 -- --------------------------------------------------------
 
@@ -244,7 +298,8 @@ INSERT INTO `user` (`user_id`, `user_name`, `email`, `password`, `household_numb
 (8, 'QuJiaWei', 'b2400595@helplive.edu.my', '$2y$10$oXBwXpnGZXsGyVOcTaS35uZn1H.51V31s17NwJ9ahs9bt.b49lIhq', 0, 0),
 (9, 'Qu JiaWei', 'b2300733@helplive.edu.my', '$2y$10$K0b7t1yNqheIBfUAcBfXsOF2EAqO5ja2CtowF4/IaVturAdNuG0AC', 0, 0),
 (10, 'jia', 'nazermy.qu@gmail.com', '$2y$10$t0kDtd4R8SG8ApmX9S8Bv./YGG7IKbXvvO5cxA45RjS8HSvVBaytK', 0, 1),
-(11, 'Aaron', 'kianpoh0219@gmail.com', '$2y$10$SthVD4qsV7Hj9DFszANEoOEQulbwoxfK2QFB3owAjTdTdCMOyh9D.', 69, 0);
+(11, 'Aaron', 'kianpoh0219@gmail.com', '$2y$10$SthVD4qsV7Hj9DFszANEoOEQulbwoxfK2QFB3owAjTdTdCMOyh9D.', 69, 0),
+(12, 'leejl1652@gmail.com', 'leejl1652@gmail.com', '$2y$10$GPgii4/el9QE6/RvaaAkVe9wBhFBG9iYwkNloCgoRe2j2oy4AeP82', 0, 0);
 
 -- --------------------------------------------------------
 
@@ -349,13 +404,13 @@ ALTER TABLE `verification_codes`
 -- AUTO_INCREMENT for table `donation`
 --
 ALTER TABLE `donation`
-  MODIFY `donation_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
+  MODIFY `donation_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
 
 --
 -- AUTO_INCREMENT for table `fooditem`
 --
 ALTER TABLE `fooditem`
-  MODIFY `foodItem_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=82;
+  MODIFY `foodItem_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=94;
 
 --
 -- AUTO_INCREMENT for table `mealplan`
@@ -367,13 +422,13 @@ ALTER TABLE `mealplan`
 -- AUTO_INCREMENT for table `notification`
 --
 ALTER TABLE `notification`
-  MODIFY `notification_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
+  MODIFY `notification_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=74;
 
 --
 -- AUTO_INCREMENT for table `user`
 --
 ALTER TABLE `user`
-  MODIFY `user_id` int(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `user_id` int(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `verification_codes`
@@ -393,30 +448,10 @@ ALTER TABLE `donation`
   ADD CONSTRAINT `donorUser_user_id_fk` FOREIGN KEY (`donor_user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Constraints for table `donation_fooditem`
---
-ALTER TABLE `donation_fooditem`
-  ADD CONSTRAINT `donation_fooditem_fk` FOREIGN KEY (`donation_id`) REFERENCES `donation` (`donation_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fooditem_donation_fk` FOREIGN KEY (`fooditem_id`) REFERENCES `fooditem` (`foodItem_id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `fooditem`
---
-ALTER TABLE `fooditem`
-  ADD CONSTRAINT `fooditem_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
 -- Constraints for table `mealplan`
 --
 ALTER TABLE `mealplan`
   ADD CONSTRAINT `mealplan_user_id_fk` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `mealplan_fooditem`
---
-ALTER TABLE `mealplan_fooditem`
-  ADD CONSTRAINT `fooditem_mealplan_fk` FOREIGN KEY (`fooditem_id`) REFERENCES `fooditem` (`foodItem_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `mealplan_fooditem_fk` FOREIGN KEY (`mealplan_id`) REFERENCES `mealplan` (`mealplan_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `notification`
