@@ -25,7 +25,7 @@
                 <i data-lucide="chart-no-axes-column" class="me-3 icon"></i>
                 <span class="nav-text">Track and Report</span>
             </a>
-            <a class="nav-link" data-page="notification" data-tooltip="Notifications">
+            <a class="nav-link" data-page="notification" data-tooltip="Notification">
                 <i data-lucide="bell" class="me-3 icon"></i>
                 <span class="nav-text">Notifications</span>
             </a>
