@@ -10,8 +10,8 @@ require_once __DIR__ . '/../../config.php';
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Notifications</title>
   <style>
-    .topbar{display:flex;justify-content:space-between;gap:12px;padding:20px 32px;}
-    .title{font-size:28px;font-weight:700;}
+    .topbar{}
+    .title{}
     .top_right{display:flex;align-items:center;gap:12px;}
     .toolbar select{padding:6px 8px;border:1px solid #bbb;border-radius:8px;background:#eee;}
     .mini{border:1px solid #aaa;background:#ddd;border-radius:8px;padding:6px 10px;cursor:pointer;}
@@ -33,12 +33,13 @@ require_once __DIR__ . '/../../config.php';
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <h1 class="title">Notifications</h1>
-    <div class="top_right">
-      <div class="toolbar">
-        <select id="filterSel">
-          <option value="unread">Unread</option>
+  <header class="container-fluid p-4">
+    <div class="d-flex mb-2 py-3 px-4 bg-light rounded shadow justify-content-between">
+      <h1 class="title fw-bold">Notifications</h1>
+      <div class="top_right">
+        <div class="toolbar">
+          <select id="filterSel">
+            <option value="unread">Unread</option>
           <option value="all" selected>All</option>
         </select>
         <select id="typeSel" style="margin-left:8px;">

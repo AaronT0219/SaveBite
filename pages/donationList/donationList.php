@@ -7,7 +7,7 @@
   <title>Donation List</title>
   <style>
     .topbar{display:flex;justify-content:space-between;gap:12px;padding:20px 32px;}
-    .title{font-size:28px;font-weight:700;margin:0;}
+    .title{margin:0;}
     .top_botton{display:flex;align-items:center;gap:16px;}
     .go_manage_btn{padding:10px 14px;font-size:14px;border:1px solid #bbb;background:#ddd;border-radius:25px;text-decoration:none;color:#222;cursor:pointer;}
     .content{width:100%;max-width:820px;margin:0 auto;padding:16px;}
@@ -27,10 +27,12 @@
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <h1 class="title">Donation List</h1>
-    <div class="top_botton">
-      <a class="go_manage_btn" href="/SaveBite/templates/base.php?page=inventory">Back to Manage</a>
+  <header class="container-fluid p-4">
+    <div class="d-flex mb-2 py-3 px-4 bg-light rounded shadow justify-content-between">
+      <h1 class="title fw-bold">Donation List</h1>
+      <div class="top_botton">
+        <a class="go_manage_btn" href="/SaveBite/templates/base.php?page=inventory">Back to Manage</a>
+      </div>
     </div>
   </header>
 

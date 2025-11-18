@@ -41,8 +41,8 @@ function e($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Food Inventory</title>
   <style>
-    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 32px;}
-    .title{font-size:28px;font-weight:700;margin:0;}
+    .topbar{}
+    .title{margin:0;}
     .actions{display:flex;align-items:center;gap:12px;}
     .btn,.plus{padding:8px 12px;border:1px solid #bbb;background:#eee;border-radius:22px;cursor:pointer;text-decoration:none;color:#222;}
     .btn.mini{padding:6px 10px;border-radius:16px;}
@@ -60,23 +60,25 @@ function e($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <h1 class="title">Food Inventory</h1>
-    <div class="actions">
-      <!-- 过滤下拉 -->
-      <div class="controls">
-        <select id="filterSel">
-          <option value="all" selected>All</option>
-          <option value="recent">Recent</option>
-          <option value="near">Near expiry (7d)</option>
-        </select>
+  <header class="container-fluid p-4">
+    <div class="d-flex mb-2 py-3 px-4 bg-light rounded shadow justify-content-between">
+      <h1 class="title fw-bold">Food Inventory</h1>
+      <div class="actions">
+        <!-- 过滤下拉 -->
+        <div class="controls">
+          <select id="filterSel">
+            <option value="all" selected>All</option>
+            <option value="recent">Recent</option>
+            <option value="near">Near expiry (7d)</option>
+          </select>
+        </div>
+
+        <!-- 跳到 Donation List -->
+        <a class="btn" href="/SaveBite/templates/base.php?page=donationList">View Donation List</a>
+
+        <!-- 新建卡片（前端插入一张可编辑卡片） -->
+        <a class="plus" href="#" title="Add new">＋</a>
       </div>
-
-      <!-- 跳到 Donation List -->
-      <a class="btn" href="/SaveBite/templates/base.php?page=donationList">View Donation List</a>
-
-      <!-- 新建卡片（前端插入一张可编辑卡片） -->
-      <a class="plus" href="#" title="Add new">＋</a>
     </div>
   </header>
 
