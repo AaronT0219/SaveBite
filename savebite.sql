@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 16, 2025 at 12:56 PM
+-- Generation Time: Nov 18, 2025 at 10:17 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -160,7 +160,24 @@ INSERT INTO `fooditem` (`foodItem_id`, `category`, `food_name`, `quantity`, `exp
 (88, 'Protein', 'Sprite', 10, '2026-01-01', 'Fridge', '', 'available', 12, '2025-11-16'),
 (89, 'Snacks & Beverages', 'Donuts', 5, '2025-11-19', 'Freezer', '', 'available', 12, '2025-11-16'),
 (90, 'Grains & Pantry', 'Pineapples', 10, '2026-03-05', 'Pantry', '', 'used', 12, '2025-11-16'),
-(91, 'Dairy & Bakery', 'Watermelon', 5, '2026-01-23', 'Fridge', '', 'donation', 12, '2025-11-16');
+(91, 'Dairy & Bakery', 'Watermelon', 5, '2026-01-23', 'Fridge', '', 'donation', 12, '2025-11-16'),
+(94, 'Produce', 'Broccoli', 3, '2025-11-25', 'Fridge', 'Fresh broccoli head', 'available', 12, '2025-11-18'),
+(95, 'Protein', 'Salmon', 2, '2025-11-28', 'Freezer', 'Atlantic salmon fillet', 'available', 12, '2025-11-18'),
+(96, 'Grains & Pantry', 'Quinoa', 1, '2026-01-15', 'Pantry', 'Organic white quinoa', 'available', 12, '2025-11-18'),
+(97, 'Dairy & Bakery', 'Yogurt Drink', 4, '2025-11-23', 'Fridge', 'Low sugar yogurt drink', 'available', 12, '2025-11-18'),
+(98, 'Snacks & Beverages', 'Granola Bar', 6, '2026-02-01', 'Pantry', 'Healthy granola bars', 'available', 12, '2025-11-18'),
+(99, 'Produce', 'Broccoli', 3, '2025-11-25', 'Fridge', 'Fresh broccoli head', 'reserved', 12, '2025-11-18'),
+(100, 'Protein', 'Salmon', 2, '2025-11-28', 'Freezer', 'Atlantic salmon fillet', 'reserved', 12, '2025-11-18'),
+(101, 'Grains & Pantry', 'Quinoa', 1, '2026-01-15', 'Pantry', 'Organic white quinoa', 'reserved', 12, '2025-11-18'),
+(102, 'Dairy & Bakery', 'Yogurt Drink', 4, '2025-11-23', 'Fridge', 'Low sugar yogurt drink', 'reserved', 12, '2025-11-18'),
+(103, 'Snacks & Beverages', 'Granola Bar', 6, '2026-02-01', 'Pantry', 'Healthy granola bars', 'reserved', 12, '2025-11-18'),
+(104, 'Produce', 'Apple', 4, '2025-11-29', 'Fridge', '', 'available', 12, '2025-11-18'),
+(105, 'Produce', 'Banana', 4, '2025-11-30', 'Countertop', '', 'available', 12, '2025-11-18'),
+(107, 'Produce', 'Apple', 1, '2025-11-29', 'Fridge', '', 'reserved', 12, '2025-11-18'),
+(108, 'Produce', 'Banana', 1, '2025-11-30', 'Countertop', '', 'reserved', 12, '2025-11-18'),
+(110, 'Produce', 'Chicken Breast', 2, '2025-11-23', 'Fridge', '', 'available', 12, '2025-11-18'),
+(111, 'Produce', 'Mayonnaise', 2, '2025-11-25', 'Fridge', '', 'available', 12, '2025-11-18'),
+(112, 'Produce', 'Bread', 5, '2025-11-26', 'Countertop', '', 'available', 12, '2025-11-18');
 
 -- --------------------------------------------------------
 
@@ -203,7 +220,12 @@ CREATE TABLE `mealplan` (
 INSERT INTO `mealplan` (`mealplan_id`, `meal_name`, `mealplan_date`, `meal_type`, `description`, `user_id`) VALUES
 (12, 'Burger MealPlan', '2025-11-15', 'lunch', 'Delicious tasting Burger, with amazing and fresh ingredients!', 11),
 (15, 'Fruit Salad', '2025-11-15', 'breakfast', 'Delicious tasting Burger, with amazing and fresh ingredients!', 11),
-(23, 'Cookies Fruit Salad', '2025-11-12', 'breakfast', '', 11);
+(23, 'Cookies Fruit Salad', '2025-11-12', 'breakfast', '', 11),
+(24, 'Healthy Broccoli Lunch', '2025-11-20', 'lunch', 'Steamed broccoli with light spices and olive oil.', 12),
+(25, 'Salmon Dinner Bowl', '2025-11-20', 'dinner', 'Grilled salmon paired with vegetables and light soy glaze.', 12),
+(26, 'Morning Yogurt Cup', '2025-11-21', 'breakfast', 'Refreshing probiotic yogurt with granola.', 12),
+(27, 'Quinoa Power Dinner', '2025-11-22', 'dinner', 'High-energy quinoa bowl with balanced macros.', 12),
+(28, 'Fruit Salad', '2025-11-20', 'lunch', '', 12);
 
 -- --------------------------------------------------------
 
@@ -228,7 +250,17 @@ INSERT INTO `mealplan_fooditem` (`mealplan_id`, `fooditem_id`, `quantity`) VALUE
 (15, 63, 10),
 (23, 77, 1),
 (23, 78, 1),
-(23, 79, 1);
+(23, 79, 1),
+(24, 99, 2),
+(25, 100, 1),
+(25, 99, 1),
+(26, 102, 1),
+(26, 103, 1),
+(27, 101, 1),
+(27, 100, 1),
+(28, 107, 1),
+(28, 108, 1),
+(28, 109, 10);
 
 -- --------------------------------------------------------
 
@@ -273,7 +305,12 @@ INSERT INTO `notification` (`notification_id`, `title`, `description`, `notifica
 (65, 'Donation created', 'You donated \"11\" at park', '2025-11-16 19:52:05', 'unread', 'donation', 57, 8),
 (66, 'Donation created', 'You donated \"\" at ', '2025-11-16 19:52:05', 'unread', 'donation', 62, 12),
 (67, 'Donation created', 'You donated \"\" at ', '2025-11-16 19:52:05', 'unread', 'donation', 63, 12),
-(68, 'Donation created', 'You donated \"\" at ', '2025-11-16 19:52:05', 'unread', 'donation', 64, 12);
+(68, 'Donation created', 'You donated \"\" at ', '2025-11-16 19:52:05', 'unread', 'donation', 64, 12),
+(74, 'Meal Plan Created', 'Your meal plan \"Healthy Broccoli Lunch\" is ready.', '2025-11-18 17:02:33', 'unread', 'meal_plan', 24, 12),
+(75, 'Meal Plan Created', 'Your meal plan \"Salmon Dinner Bowl\" is ready.', '2025-11-18 17:02:33', 'unread', 'meal_plan', 25, 12),
+(76, 'Meal Plan Created', 'Your meal plan \"Morning Yogurt Cup\" is ready.', '2025-11-18 17:02:33', 'unread', 'meal_plan', 26, 12),
+(77, 'Meal Plan Created', 'Your meal plan \"Quinoa Power Dinner\" is ready.', '2025-11-18 17:02:33', 'unread', 'meal_plan', 27, 12),
+(78, 'Fruit Salad', '', '2025-11-20 00:00:00', '', 'meal_plan', 28, 12);
 
 -- --------------------------------------------------------
 
@@ -410,19 +447,19 @@ ALTER TABLE `donation`
 -- AUTO_INCREMENT for table `fooditem`
 --
 ALTER TABLE `fooditem`
-  MODIFY `foodItem_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=94;
+  MODIFY `foodItem_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=113;
 
 --
 -- AUTO_INCREMENT for table `mealplan`
 --
 ALTER TABLE `mealplan`
-  MODIFY `mealplan_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `mealplan_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `notification`
 --
 ALTER TABLE `notification`
-  MODIFY `notification_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=74;
+  MODIFY `notification_id` int(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=79;
 
 --
 -- AUTO_INCREMENT for table `user`
